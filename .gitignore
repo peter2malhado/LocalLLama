@@ -364,3 +364,4 @@ FodyWeavers.xsd
 /chatbot/chatbot.csproj
 /chatbot/modelos de ai/llama-3.2-1b-instruct-q8_0.gguf
 /chatbot/modelos de ai/llama-3.2-1b-instruct-q8_0.gguf
+/chatbot/modelos/llama-3.2-1b-instruct-q8_0.gguf
