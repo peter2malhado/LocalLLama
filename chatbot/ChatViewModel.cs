@@ -1,29 +1,18 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Collections.ObjectModel;
-using System.Linq;
-using System.Threading.Tasks;
+﻿using System.Collections.ObjectModel;
 using System.Windows.Input;
 using LLama;
 using LLama.Common;
-using chatbot.Services;
 using chatbot.Models;
-using Microsoft.Maui.Controls; // For BindableObject / Command
+using chatbot.Services;
 
 public class ChatViewModel : BindableObject
 {
     private string _currentMessage;
-
-    // LLama session (nome diferente + tipo qualificado para evitar ambiguidade)
-    private LLama.ChatSession _llamaSession;
-
+    private LLama.ChatSession _session;
     private InferenceParams _inferenceParams;
+    private chatbot.Models.ChatSession _currentChat;
 
-    // Conversa ativa (o teu modelo)
-    private chatbot.Models.ChatSession currentSession;
-    private List<chatbot.Models.ChatSession> allChats;
-
-    public ObservableCollection<Message> Messages { get; } = new();
+    public ObservableCollection<Message> Messages { get; set; } = new();
 
     public string CurrentMessage
     {
@@ -37,50 +26,40 @@ public class ChatViewModel : BindableObject
 
     public ICommand SendMessageCommand { get; }
 
-    public ChatViewModel()
+    private readonly string _chatId;
+
+    public ChatViewModel(string chatId)
     {
+        _chatId = chatId;
         SendMessageCommand = new Command(async () => await SendMessage());
-
-        // Inicializa o LLaMA em background para não bloquear a UI
-        Task.Run(() => InitLLama());
-
-        // Carrega as conversas guardadas (não bloqueante)
-        _ = LoadSessionAsync();
+        InitLLama();
+        LoadSession();
     }
 
     private void InitLLama()
     {
-        try
+        string modelPath = @"llama-3.2-1b-instruct-q8_0.gguf";
+
+        var parameters = new ModelParams(modelPath)
         {
-            string modelPath = @"llama-3.2-1b-instruct-q8_0.gguf";
+            ContextSize = 1024,
+            GpuLayerCount = 5
+        };
 
-            var parameters = new ModelParams(modelPath)
-            {
-                ContextSize = 1024,
-                GpuLayerCount = 5
-            };
+        var model = LLamaWeights.LoadFromFile(parameters);
+        var context = model.CreateContext(parameters);
+        var executor = new InteractiveExecutor(context);
 
-            var model = LLamaWeights.LoadFromFile(parameters);
-            var context = model.CreateContext(parameters);
-            var executor = new InteractiveExecutor(context);
+        var chatHistory = new ChatHistory();
+        chatHistory.AddMessage(AuthorRole.System,
+            "Transcrição de uma caixa de diálogo, onde o Usuário interage com um Assistente chamado Bob. Bob é prestativo, gentil, honesto, bom em escrever e responde com clareza.");
+        _session = new LLama.ChatSession(executor, chatHistory);
 
-            var chatHistory = new ChatHistory();
-            chatHistory.AddMessage(AuthorRole.System, "Transcrição de uma caixa de diálogo, onde o Usuário interage com um Assistente chamado Bob. Bob é prestativo, gentil, honesto, bom em escrever e nunca deixa de responder aos pedidos do usuário imediatamente e com precisão.");
-
-            // Usa o tipo qualificado LLama.ChatSession
-            _llamaSession = new LLama.ChatSession(executor, chatHistory);
-
-            _inferenceParams = new InferenceParams()
-            {
-                MaxTokens = 256,
-                AntiPrompts = new List<string> { "User:", "System:", "Assistant:" } // evita que o modelo escreva papéis
-            };
-        }
-        catch (Exception ex)
+        _inferenceParams = new InferenceParams()
         {
-            // Guarda/mostra o erro (podes adaptar para um logger ou mostrar na UI)
-            System.Diagnostics.Debug.WriteLine("InitLLama error: " + ex);
-        }
+            MaxTokens = 256,
+            AntiPrompts = new List<string> { "User:" }
+        };
     }
 
     private async Task SendMessage()
@@ -88,93 +67,88 @@ public class ChatViewModel : BindableObject
         if (string.IsNullOrWhiteSpace(CurrentMessage))
             return;
 
-        // Texto do utilizador
+        // Adicionar mensagem do utilizador
+        Messages.Add(new Message { Text = CurrentMessage, IsUser = true });
+
         string userInput = CurrentMessage;
-
-        // Adicionar mensagem do utilizador na UI
-        Messages.Add(new Message { Text = userInput, IsUser = true });
-
-        // Garantir que a sessão atual e a lista de chats estão carregadas
-        if (allChats == null || currentSession == null)
-        {
-            allChats = await ChatStorage.LoadChatsAsync();
-            currentSession = allChats.FirstOrDefault(c => c.Id == "default");
-            if (currentSession == null)
-            {
-                currentSession = new chatbot.Models.ChatSession
-                {
-                    Id = "default",
-                    Title = "Conversa Principal"
-                };
-                allChats.Add(currentSession);
-            }
-        }
-
-        // Adicionar ao histórico guardado e salvar
-        currentSession.Messages.Add(new ChatMessage { Role = "user", Text = userInput });
-        await ChatStorage.SaveChatsAsync(allChats);
-
-        // limpa input
         CurrentMessage = string.Empty;
 
-        // Gerar resposta do modelo
         string botReply = "";
 
-        if (_llamaSession == null)
+        await foreach (var text in _session.ChatAsync(
+            new ChatHistory.Message(AuthorRole.User, userInput),
+            _inferenceParams))
         {
-            // O modelo ainda não carregou — resposta curta para o utilizador
-            botReply = "O modelo ainda está a carregar. Tenta novamente em alguns segundos.";
+            botReply += text;
+        }
+
+        botReply = botReply.Replace("bob:", "", StringComparison.OrdinalIgnoreCase)
+                           .Replace("User:", "", StringComparison.OrdinalIgnoreCase)
+                           .Trim();
+
+        // Adicionar resposta do bot
+        Messages.Add(new Message { Text = botReply, IsUser = false });
+
+        // Guardar conversa atualizada
+        await SaveSessionAsync();
+    }
+
+    private async void LoadSession()
+    {
+        var allChats = await ChatStorage.LoadChatsAsync();
+        _currentChat = allChats.FirstOrDefault(c => c.Id == _chatId);
+
+        if (_currentChat == null)
+        {
+            // Caso não exista (backup)
+            _currentChat = new chatbot.Models.ChatSession
+            {
+                Id = _chatId,
+                Title = "Nova Conversa"
+            };
+            allChats.Add(_currentChat);
+            await ChatStorage.SaveChatsAsync(allChats);
+        }
+
+        // Carregar mensagens salvas na UI
+        Messages.Clear();
+        foreach (var msg in _currentChat.Messages)
+        {
+            Messages.Add(new Message
+            {
+                Text = msg.Text,
+                IsUser = msg.Role == "user"
+            });
+        }
+    }
+
+    private async Task SaveSessionAsync()
+    {
+        var allChats = await ChatStorage.LoadChatsAsync();
+        var existing = allChats.FirstOrDefault(c => c.Id == _chatId);
+
+        if (existing != null)
+        {
+            existing.Messages = Messages.Select(m => new ChatMessage
+            {
+                Role = m.IsUser ? "user" : "bot",
+                Text = m.Text
+            }).ToList();
         }
         else
         {
-            await foreach (var text in _llamaSession.ChatAsync(
-                new ChatHistory.Message(AuthorRole.User, userInput),
-                _inferenceParams))
+            allChats.Add(new chatbot.Models.ChatSession
             {
-                botReply += text;
-            }
-
-            botReply = botReply
-                .Replace("bob:", "", StringComparison.OrdinalIgnoreCase)
-                .Replace("User:", "", StringComparison.OrdinalIgnoreCase)
-                .Trim();
-        }
-
-        // Adicionar resposta do bot na UI
-        Messages.Add(new Message { Text = botReply, IsUser = false });
-
-        // Guardar resposta no JSON
-        currentSession.Messages.Add(new ChatMessage { Role = "bot", Text = botReply });
-        await ChatStorage.SaveChatsAsync(allChats);
-    }
-
-    private async Task LoadSessionAsync()
-    {
-        try
-        {
-            allChats = await ChatStorage.LoadChatsAsync();
-
-            currentSession = allChats.FirstOrDefault(c => c.Id == "default");
-            if (currentSession == null)
-            {
-                currentSession = new chatbot.Models.ChatSession
+                Id = _chatId,
+                Title = "Nova Conversa",
+                Messages = Messages.Select(m => new ChatMessage
                 {
-                    Id = "default",
-                    Title = "Conversa Principal"
-                };
-                allChats.Add(currentSession);
-                await ChatStorage.SaveChatsAsync(allChats);
-            }
+                    Role = m.IsUser ? "user" : "bot",
+                    Text = m.Text
+                }).ToList()
+            });
+        }
 
-            // Carregar mensagens salvas para a UI
-            foreach (var msg in currentSession.Messages)
-            {
-                Messages.Add(new Message { Text = msg.Text, IsUser = (msg.Role == "user") });
-            }
-        }
-        catch (Exception ex)
-        {
-            System.Diagnostics.Debug.WriteLine("LoadSessionAsync error: " + ex);
-        }
+        await ChatStorage.SaveChatsAsync(allChats);
     }
 }
