@@ -6,8 +6,7 @@ Uma aplicação moderna construída em **.NET MAUI** que permite conversar com m
 
 ## 🚀 Funcionalidades
 
-✅ Interface tipo ChatGPT com suporte a **User / Bot messages**  
-✅ Envio com tecla **Enter**  
+✅ Interface tipo ChatGPT com suporte a **User / Bot messages**   
 ✅ Carregamento de **modelos GGUF locais**  
 ✅ Compatível com **Windows / Android / Linux** (através de MAUI)  
 
