@@ -1,16 +1,3 @@
-## Table of Contents
-- [localllama](##-🚀-Funcionalidades)
-- [What's New](#-whats-new)
-- [Certification](#-certification)
-- [How to Build](#-how-to-build)
-- [Documentation](#-documentation)
-- [Feedback and Contributions](#-feedback-and-contributions)
-- [License](#-license)
-- [Contacts](#%EF%B8%8F-contacts)
-
-
-
-
 
 # 🤖 LocalGPT MAUI — ChatGPT Offline no Teu Dispositivo
 
