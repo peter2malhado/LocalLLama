@@ -17,5 +17,8 @@ namespace chatbot.Models
         public string Id { get; set; }       // Ex: "chat1"
         public string Title { get; set; }    // Ex: "Conversa sobre música"
         public List<ChatMessage> Messages { get; set; } = new();
+        
+        // Propriedade para exibir o número de mensagens
+        public int MessageCount => Messages?.Count ?? 0;
     }
 }

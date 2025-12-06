@@ -16,12 +16,33 @@ namespace chatbot
             LoadChats();
         }
 
+        // Atualizar lista quando a página aparecer (quando voltar de outra página)
+        protected override void OnAppearing()
+        {
+            base.OnAppearing();
+            LoadChats();
+        }
+
         private async void LoadChats()
         {
-            var chats = await ChatStorage.LoadChatsAsync();
-            Conversations.Clear();
-            foreach (var chat in chats)
-                Conversations.Add(chat);
+            try
+            {
+                var chats = await ChatStorage.LoadChatsAsync();
+                Conversations.Clear();
+                foreach (var chat in chats)
+                    Conversations.Add(chat);
+            }
+            catch (Exception ex)
+            {
+                await DisplayAlert("Erro", $"Erro ao carregar chats: {ex.Message}", "OK");
+            }
+        }
+
+        // 🔄 Botão para recarregar chats da base de dados
+        private async void OnLoadChatsClicked(object sender, EventArgs e)
+        {
+            await LoadChats();
+            await DisplayAlert("Sucesso", $"Carregados {Conversations.Count} chat(s) da base de dados.", "OK");
         }
 
         // 👉 Botão "Nova Conversa"
