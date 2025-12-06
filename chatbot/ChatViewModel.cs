@@ -73,21 +73,43 @@ public class ChatViewModel : BindableObject
         string userInput = CurrentMessage;
         CurrentMessage = string.Empty;
 
+        // Criar mensagem do bot imediatamente (vazia) para mostrar em tempo real
+        var botMessage = new Message { Text = "", IsUser = false };
+        Messages.Add(botMessage);
+
         string botReply = "";
 
+        // Atualizar a mensagem em tempo real conforme os chunks chegam
+        int updateCount = 0;
         await foreach (var text in _session.ChatAsync(
             new ChatHistory.Message(AuthorRole.User, userInput),
             _inferenceParams))
         {
             botReply += text;
+            updateCount++;
+            
+            // Limpar prefixos indesejados enquanto está escrevendo
+            var cleanedReply = botReply.Replace("bob:", "", StringComparison.OrdinalIgnoreCase)
+                                      .Replace("User:", "", StringComparison.OrdinalIgnoreCase)
+                                      .Trim();
+            
+            // Atualizar o texto da mensagem em tempo real
+            // A propriedade Text já notifica a UI automaticamente via INotifyPropertyChanged
+            botMessage.Text = cleanedReply;
+            
+            // Fazer scroll a cada 3 chunks para não sobrecarregar a UI
+            if (updateCount % 3 == 0)
+            {
+                await Task.Delay(1); // Pequeno delay para permitir que a UI atualize
+            }
         }
 
+        // Limpeza final
         botReply = botReply.Replace("bob:", "", StringComparison.OrdinalIgnoreCase)
                            .Replace("User:", "", StringComparison.OrdinalIgnoreCase)
                            .Trim();
-
-        // Adicionar resposta do bot
-        Messages.Add(new Message { Text = botReply, IsUser = false });
+        
+        botMessage.Text = botReply;
 
         // Guardar conversa atualizada
         await SaveSessionAsync();

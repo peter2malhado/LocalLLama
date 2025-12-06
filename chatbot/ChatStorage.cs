@@ -1,4 +1,4 @@
-﻿ using System;
+﻿using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Threading.Tasks;
@@ -137,13 +137,37 @@ namespace chatbot.Services
             {
                 using var connection = DatabaseHelper.GetConnection();
 
-                // Encontrar o próximo ID disponível
-                var countCommand = new SqliteCommand(
-                    "SELECT COUNT(*) FROM ChatSessions",
-                    connection);
-                var count = Convert.ToInt32(countCommand.ExecuteScalar());
-                int nextId = count + 1;
-                string newId = $"chat{nextId}";
+                // Encontrar o próximo ID disponível verificando IDs existentes
+                string newId = string.Empty; // Inicialização necessária
+                int attempt = 1;
+                bool idExists = true;
+
+                // Tentar encontrar um ID único
+                while (idExists && attempt < 10000) // Limite de segurança
+                {
+                    newId = $"chat{attempt}";
+                    
+                    var checkCommand = new SqliteCommand(
+                        "SELECT COUNT(*) FROM ChatSessions WHERE Id = @Id",
+                        connection);
+                    checkCommand.Parameters.AddWithValue("@Id", newId);
+                    
+                    var count = Convert.ToInt32(checkCommand.ExecuteScalar());
+                    idExists = count > 0;
+                    
+                    if (!idExists)
+                    {
+                        break;
+                    }
+                    
+                    attempt++;
+                }
+
+                // Se ainda não encontrou um ID único, usar GUID como fallback
+                if (idExists)
+                {
+                    newId = $"chat_{Guid.NewGuid().ToString("N")[..8]}";
+                }
 
                 // Inserir nova sessão
                 var insertCommand = new SqliteCommand(
@@ -232,6 +256,45 @@ namespace chatbot.Services
                     insertCommand.Parameters.AddWithValue("@Text", text);
                     insertCommand.ExecuteNonQuery();
                 }
+            });
+        }
+
+        // ✏️ Atualizar título de uma conversa
+        public static async Task UpdateChatTitleAsync(string chatId, string newTitle)
+        {
+            await Task.Run(() =>
+            {
+                using var connection = DatabaseHelper.GetConnection();
+
+                var updateCommand = new SqliteCommand(
+                    "UPDATE ChatSessions SET Title = @Title WHERE Id = @Id",
+                    connection);
+                updateCommand.Parameters.AddWithValue("@Id", chatId);
+                updateCommand.Parameters.AddWithValue("@Title", newTitle);
+                updateCommand.ExecuteNonQuery();
+            });
+        }
+
+        // 🗑️ Deletar uma conversa e todas as suas mensagens
+        public static async Task DeleteChatAsync(string chatId)
+        {
+            await Task.Run(() =>
+            {
+                using var connection = DatabaseHelper.GetConnection();
+
+                // Deletar mensagens primeiro (devido à foreign key)
+                var deleteMessagesCommand = new SqliteCommand(
+                    "DELETE FROM ChatMessages WHERE ChatId = @ChatId",
+                    connection);
+                deleteMessagesCommand.Parameters.AddWithValue("@ChatId", chatId);
+                deleteMessagesCommand.ExecuteNonQuery();
+
+                // Deletar a sessão
+                var deleteSessionCommand = new SqliteCommand(
+                    "DELETE FROM ChatSessions WHERE Id = @Id",
+                    connection);
+                deleteSessionCommand.Parameters.AddWithValue("@Id", chatId);
+                deleteSessionCommand.ExecuteNonQuery();
             });
         }
     }
