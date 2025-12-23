@@ -92,7 +92,7 @@
 	    <CopyToOutputDirectory>Never</CopyToOutputDirectory>
 	  </None>
 	  <None Update="modelos de ai\llama-3.2-1b-instruct-q8_0.gguf">
-	    <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+	    <CopyToOutputDirectory>Always</CopyToOutputDirectory>
 	  </None>
 	  <None Update="Platforms\Android\lib\arm64-v8a\libmtmd.so">
 	    <CopyToOutputDirectory>Always</CopyToOutputDirectory>
