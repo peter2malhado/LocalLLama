@@ -31,7 +31,7 @@
 		<ApplicationVersion>1</ApplicationVersion>
 
 		<!-- To develop, package, and publish an app to the Microsoft Store, see: https://aka.ms/MauiTemplateUnpackaged -->
-		<WindowsPackageType>None</WindowsPackageType>
+		<WindowsPackageType>MSIX</WindowsPackageType>
 
 		<SupportedOSPlatformVersion Condition="$([MSBuild]::GetTargetPlatformIdentifier('$(TargetFramework)')) == 'ios'">15.0</SupportedOSPlatformVersion>
 		<SupportedOSPlatformVersion Condition="$([MSBuild]::GetTargetPlatformIdentifier('$(TargetFramework)')) == 'maccatalyst'">15.0</SupportedOSPlatformVersion>
@@ -65,17 +65,31 @@
 	  <Compile Remove="AndroidLlamaBackend.cs" />
 	</ItemGroup>
 
+	<PropertyGroup>
+		<ErrorOnDuplicatePublishOutputFiles>false</ErrorOnDuplicatePublishOutputFiles>
+	</PropertyGroup>
+
+
+
+
 	<ItemGroup>
 		<PackageReference Include="LLamaSharp" Version="0.25.0" />
-		<PackageReference Include="LLamaSharp.Backend.Cpu" Version="0.25.0" />
+		<PackageReference Include="LLamaSharp.Backend.Cpu.Avx2" Version="0.25.0" />
 		<PackageReference Include="Microsoft.Extensions.Logging.Debug" Version="10.0.1" />
 		<PackageReference Include="Microsoft.Data.Sqlite" Version="10.0.1" />
 	</ItemGroup>
+	
+	<PropertyGroup>
+		<ErrorOnDuplicatePublishOutputFiles>false</ErrorOnDuplicatePublishOutputFiles>
+	</PropertyGroup>
 
 
 
 
-  <ItemGroup>
+
+
+
+	<ItemGroup>
 	  <Compile Update="FrontPage.xaml.cs">
 	    <DependentUpon>FrontPage.xaml</DependentUpon>
 	  </Compile>
@@ -91,9 +105,6 @@
 	  <None Update="chats2.json">
 	    <CopyToOutputDirectory>Never</CopyToOutputDirectory>
 	  </None>
-	  <None Update="modelos de ai\llama-3.2-1b-instruct-q8_0.gguf">
-	    <CopyToOutputDirectory>Always</CopyToOutputDirectory>
-	  </None>
 	  <None Update="Platforms\Android\lib\arm64-v8a\libmtmd.so">
 	    <CopyToOutputDirectory>Always</CopyToOutputDirectory>
 	  </None>
@@ -105,12 +116,27 @@
 
   <PropertyGroup>
     <ErrorOnDuplicatePublishOutputFiles>false</ErrorOnDuplicatePublishOutputFiles>
+    <GenerateAppInstallerFile>True</GenerateAppInstallerFile>
+    <AppxPackageSigningEnabled>True</AppxPackageSigningEnabled>
+    <PackageCertificateThumbprint>B796554541CF007A2F7AA710509B064B341E8EC1</PackageCertificateThumbprint>
+    <AppxPackageSigningTimestampDigestAlgorithm>SHA256</AppxPackageSigningTimestampDigestAlgorithm>
+    <AppxAutoIncrementPackageRevision>True</AppxAutoIncrementPackageRevision>
+    <AppxSymbolPackageEnabled>False</AppxSymbolPackageEnabled>
+    <GenerateTestArtifacts>True</GenerateTestArtifacts>
+    <AppInstallerUri>https://github.com/peter2malhado/chatbot</AppInstallerUri>
+    <HoursBetweenUpdateChecks>0</HoursBetweenUpdateChecks>
   </PropertyGroup>
 
   <ItemGroup>
     <AndroidNativeLibrary Include="Platforms/Android/lib/arm64-v8a/libllama.so">
       <CopyToOutputDirectory>Always</CopyToOutputDirectory>
     </AndroidNativeLibrary>
+  </ItemGroup>
+
+  <ItemGroup>
+    <Content Include="modelos de ai\llama-3.2-1b-instruct-q8_0.gguf">
+      <CopyToOutputDirectory>Always</CopyToOutputDirectory>
+    </Content>
   </ItemGroup>
 
 

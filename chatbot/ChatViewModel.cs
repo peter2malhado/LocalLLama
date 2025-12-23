@@ -31,7 +31,7 @@ public class ChatViewModel : BindableObject
 
     public ChatViewModel(string chatId)
     {
-        NativeLibraryConfig.Instance.WithLibrary("<libllama.so>", "odd");
+        
         _chatId = chatId;
         SendMessageCommand = new Command(async () => await SendMessage());
 
