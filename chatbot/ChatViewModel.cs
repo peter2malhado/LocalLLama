@@ -2,7 +2,6 @@
 using chatbot.Services;
 using LLama;
 using LLama.Common;
-using LLama.Native;
 using System.Collections.ObjectModel;
 using System.Windows.Input;
 
@@ -31,7 +30,7 @@ public class ChatViewModel : BindableObject
 
     public ChatViewModel(string chatId)
     {
-        
+
         _chatId = chatId;
         SendMessageCommand = new Command(async () => await SendMessage());
 
