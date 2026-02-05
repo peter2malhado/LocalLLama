@@ -1,4 +1,4 @@
-﻿<Project Sdk="Microsoft.NET.Sdk">
+<Project Sdk="Microsoft.NET.Sdk">
 
 	<PropertyGroup>
 		<TargetFrameworks>net9.0-android;net9.0-ios;net9.0-maccatalyst</TargetFrameworks>
@@ -75,9 +75,7 @@
 	<ItemGroup>
 		<PackageReference Include="CommunityToolkit.HighPerformance" Version="8.4.0" />
 		<PackageReference Include="LLamaSharp" Version="0.25.0" />
-		<PackageReference Include="LLamaSharp.Backend.Cpu" Version="0.25.0">
-			<ExcludeAssets>runtime;native</ExcludeAssets>
-		</PackageReference>
+		<PackageReference Include="LLamaSharp.Backend.Cpu" Version="0.25.0" />
 		<PackageReference Include="Microsoft.Extensions.Logging.Debug" Version="10.0.1" />
 		<PackageReference Include="Microsoft.Data.Sqlite" Version="10.0.1" />
 	</ItemGroup>
@@ -108,9 +106,6 @@
 	  <None Update="chats2.json">
 	    <CopyToOutputDirectory>Never</CopyToOutputDirectory>
 	  </None>
-	  <None Update="Platforms\Android\lib\arm64-v8a\libmtmd.so">
-	    <CopyToOutputDirectory>Always</CopyToOutputDirectory>
-	  </None>
 	</ItemGroup>
 
 	<ItemGroup>
@@ -136,13 +131,7 @@
     </AndroidNativeLibrary>
   </ItemGroup>
 
-  <ItemGroup>
-    <Content Include="modelos de ai\llama-3.2-1b-instruct-q8_0.gguf">
-      <CopyToOutputDirectory>Always</CopyToOutputDirectory>
-    </Content>
-  </ItemGroup>
-
-	<ItemGroup>
+	<ItemGroup Condition="$([MSBuild]::GetTargetPlatformIdentifier('$(TargetFramework)')) == 'windows'">
 		<!-- Only include the non-AVX native variant to avoid multiple files with the same
 		     filename (ggml-cpu.dll) being added to the package payload. Excluding the
 		     avx/avx2/avx512 folders prevents duplicate destination paths during MSIX
@@ -167,6 +156,33 @@
 			<CopyToPublishDirectory>PreserveNewest</CopyToPublishDirectory>
 			<Visible>false</Visible>
 		</Content>
+	</ItemGroup>
+
+	<ItemGroup Condition="$([MSBuild]::GetTargetPlatformIdentifier('$(TargetFramework)')) == 'maccatalyst'">
+		<!-- Include macOS native libraries for MacCatalyst - include both x64 and arm64 -->
+		<Content Include="$(NuGetPackageRoot)llamasharp.backend.cpu\0.25.0\runtimes\osx-x64\native\**\*.*">
+			<Link>runtimes\osx-x64\native\%(RecursiveDir)%(Filename)%(Extension)</Link>
+			<CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+			<CopyToPublishDirectory>PreserveNewest</CopyToPublishDirectory>
+			<Visible>false</Visible>
+		</Content>
+		<Content Include="$(NuGetPackageRoot)llamasharp.backend.cpu\0.25.0\runtimes\osx-arm64\native\**\*.*">
+			<Link>runtimes\osx-arm64\native\%(RecursiveDir)%(Filename)%(Extension)</Link>
+			<CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+			<CopyToPublishDirectory>PreserveNewest</CopyToPublishDirectory>
+			<Visible>false</Visible>
+		</Content>
+	</ItemGroup>
+
+	<ItemGroup>
+	  <Folder Include="modelos de ai\" />
+	</ItemGroup>
+
+	<ItemGroup>
+	  <Content Include="modelos de ai\**\*.*">
+	    <CopyToOutputDirectory>Always</CopyToOutputDirectory>
+	    <CopyToPublishDirectory>Always</CopyToPublishDirectory>
+	  </Content>
 	</ItemGroup>
 
 </Project>

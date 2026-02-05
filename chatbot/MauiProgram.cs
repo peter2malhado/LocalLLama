@@ -1,4 +1,4 @@
-﻿using Microsoft.Extensions.Logging;
+using Microsoft.Extensions.Logging;
 
 namespace chatbot
 {
@@ -6,6 +6,11 @@ namespace chatbot
     {
         public static MauiApp CreateMauiApp()
         {
+#if MACCATALYST || IOS
+            // Configure native library BEFORE any LLamaSharp types are used
+            NativeLibraryHelper.ConfigureNativeLibrary();
+#endif
+
             var builder = MauiApp.CreateBuilder();
             builder
                 .UseMauiApp<App>()

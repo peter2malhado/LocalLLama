@@ -1,9 +1,11 @@
-﻿using chatbot.Models;
+using chatbot.Models;
 using chatbot.Services;
 using LLama;
 using LLama.Common;
 using System.Collections.ObjectModel;
 using System.Windows.Input;
+using chatbot;
+using LLama.Native;
 
 public class ChatViewModel : BindableObject
 {
@@ -40,8 +42,12 @@ public class ChatViewModel : BindableObject
 
     private void InitLLama()
     {
-
-        string modelPath = @"llama-3.2-1b-instruct-q8_0.gguf";
+#if MACCATALYST || IOS
+        // Configure native library path before touching LLamaSharp types.
+        NativeLibraryHelper.ConfigureNativeLibrary();
+#endif
+        string modelFile = "Jan-v3-4b-base-instruct-Q8_0.gguf";
+        string modelPath = ResolveModelPath(modelFile);
 
         var parameters = new ModelParams(modelPath)
         {
@@ -63,6 +69,30 @@ public class ChatViewModel : BindableObject
             MaxTokens = 256,
             AntiPrompts = new List<string> { "User:" }
         };
+    }
+
+    private static string ResolveModelPath(string modelFile)
+    {
+        var baseDir = AppContext.BaseDirectory;
+        var candidates = new List<string>
+        {
+            Path.Combine(baseDir, "modelos de ai", modelFile),
+            Path.Combine(baseDir, modelFile),
+            // MacCatalyst bundles resources under Contents/Resources
+            Path.GetFullPath(Path.Combine(baseDir, "..", "Resources", "modelos de ai", modelFile)),
+            Path.GetFullPath(Path.Combine(baseDir, "..", "Resources", modelFile)),
+        };
+
+        foreach (var path in candidates.Distinct())
+        {
+            if (File.Exists(path))
+            {
+                return path;
+            }
+        }
+
+        // Last resort: keep original file name for clearer exception message
+        return modelFile;
     }
 
     private async Task SendMessage()
