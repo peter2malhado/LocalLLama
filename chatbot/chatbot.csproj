@@ -21,10 +21,10 @@
 		<Nullable>enable</Nullable>
 
 		<!-- Display name -->
-		<ApplicationTitle>chatbot</ApplicationTitle>
+		<ApplicationTitle>Localllama</ApplicationTitle>
 
 		<!-- App Identifier -->
-		<ApplicationId>com.companyname.chatbot</ApplicationId>
+		<ApplicationId>com.joaopedro.Localllama</ApplicationId>
 
 		<!-- Versions -->
 		<ApplicationDisplayVersion>1.0</ApplicationDisplayVersion>

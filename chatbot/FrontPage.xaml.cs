@@ -61,6 +61,12 @@ namespace chatbot
             await Navigation.PushAsync(new chatpage(newChat.Id));
         }
 
+        // 📥 Abrir Gerenciador de Modelos
+        private async void OnOpenModelManagerClicked(object sender, EventArgs e)
+        {
+            await Navigation.PushAsync(new ModelManagerPage());
+        }
+
         // 👉 Quando o utilizador seleciona uma conversa existente
         private async void OnChatSelected(object sender, SelectionChangedEventArgs e)
         {
