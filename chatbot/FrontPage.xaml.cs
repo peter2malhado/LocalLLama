@@ -1,10 +1,12 @@
 ﻿using chatbot.Models;
 using chatbot.Services;
+using Microsoft.Maui.Storage;
 using System.Collections.ObjectModel;
+using System.IO;
 
 namespace chatbot
 {
-    public partial class FrontPage : ContentPage
+    public partial class FrontPage 
     {
         public ObservableCollection<ChatSession> Conversations { get; set; } = new();
 
@@ -132,6 +134,65 @@ namespace chatbot
                     }
                 }
             }
+        }
+
+        // 📂 Selecionar modelo .gguf
+        private async void OnSelectModelClicked(object sender, EventArgs e)
+        {
+  
+
+            try
+            {
+
+                var result = await FilePicker.Default.PickAsync(new PickOptions
+                {
+                    
+                    PickerTitle = "Selecionar modelo .gguf",
+                    FileTypes = new FilePickerFileType(new Dictionary<DevicePlatform, IEnumerable<string>>
+                    {
+                        { DevicePlatform.MacCatalyst, new[] { "gguf" } },
+                        { DevicePlatform.iOS, new[] { "gguf" } },
+                        { DevicePlatform.Android, new[] { "application/octet-stream" } },
+                        { DevicePlatform.WinUI, new[] { ".gguf" } },
+                   
+                    })
+                });
+      
+                if (result == null)
+                {
+              
+                    return;
+                }
+              
+                if (!result.FileName.EndsWith(".gguf", StringComparison.OrdinalIgnoreCase))
+                {
+                    await DisplayAlert("Formato inválido", "Escolhe um ficheiro .gguf.", "OK");
+                    return;
+                }
+
+                var localPath = await SaveModelToAppDataAsync(result);
+                ModelConfig.SelectedModelPath = localPath;
+                await DisplayAlert("Modelo selecionado", Path.GetFileName(localPath), "OK");
+            }
+            catch (Exception ex)
+            {
+                await DisplayAlert("Erro", $"Não foi possível selecionar o modelo: {ex.Message}", "OK");
+            }
+        }
+
+        private static async Task<string> SaveModelToAppDataAsync(FileResult result)
+        {
+            var appDataDir = FileSystem.AppDataDirectory;
+            var modelsDir = Path.Combine(appDataDir, "models");
+            Directory.CreateDirectory(modelsDir);
+
+            var destPath = Path.Combine(modelsDir, result.FileName);
+
+            await using var src = await result.OpenReadAsync();
+            await using var dest = File.Open(destPath, FileMode.Create, FileAccess.Write, FileShare.None);
+            await src.CopyToAsync(dest);
+
+            return destPath;
         }
     }
 }

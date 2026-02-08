@@ -46,8 +46,9 @@ public class ChatViewModel : BindableObject
         // Configure native library path before touching LLamaSharp types.
         NativeLibraryHelper.ConfigureNativeLibrary();
 #endif
+        var selectedModel = ModelConfig.SelectedModelPath;
         string modelFile = "Jan-v3-4b-base-instruct-Q8_0.gguf";
-        string modelPath = ResolveModelPath(modelFile);
+        string modelPath = ResolveModelPath(selectedModel, modelFile);
 
         var parameters = new ModelParams(modelPath)
         {
@@ -71,16 +72,21 @@ public class ChatViewModel : BindableObject
         };
     }
 
-    private static string ResolveModelPath(string modelFile)
+    private static string ResolveModelPath(string? selectedModelPath, string defaultModelFile)
     {
+        if (!string.IsNullOrWhiteSpace(selectedModelPath) && File.Exists(selectedModelPath))
+        {
+            return selectedModelPath;
+        }
+
         var baseDir = AppContext.BaseDirectory;
         var candidates = new List<string>
         {
-            Path.Combine(baseDir, "modelos de ai", modelFile),
-            Path.Combine(baseDir, modelFile),
+            Path.Combine(baseDir, "modelos de ai", defaultModelFile),
+            Path.Combine(baseDir, defaultModelFile),
             // MacCatalyst bundles resources under Contents/Resources
-            Path.GetFullPath(Path.Combine(baseDir, "..", "Resources", "modelos de ai", modelFile)),
-            Path.GetFullPath(Path.Combine(baseDir, "..", "Resources", modelFile)),
+            Path.GetFullPath(Path.Combine(baseDir, "..", "Resources", "modelos de ai", defaultModelFile)),
+            Path.GetFullPath(Path.Combine(baseDir, "..", "Resources", defaultModelFile)),
         };
 
         foreach (var path in candidates.Distinct())
@@ -92,7 +98,7 @@ public class ChatViewModel : BindableObject
         }
 
         // Last resort: keep original file name for clearer exception message
-        return modelFile;
+        return defaultModelFile;
     }
 
     private async Task SendMessage()
