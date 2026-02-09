@@ -51,15 +51,7 @@
                     Clicked="OnLoadChatsClicked"
                     Grid.Column="1" />
 
-            <Button Text="📂 Modelo"
-                    BackgroundColor="#9C27B0"
-                    TextColor="White"
-                    FontSize="16"
-                    FontAttributes="Bold"
-                    Padding="15,12"
-                    CornerRadius="15"
-                    Clicked="OnSelectModelClicked"
-                    Grid.Column="2" />
+           
 
             <Button Text="📥 Gerenciar"
                     BackgroundColor="#FF5722"
@@ -69,6 +61,16 @@
                     Padding="15,12"
                     CornerRadius="15"
                     Clicked="OnOpenModelManagerClicked"
+                    Grid.Column="2" />
+
+            <Button Text="📁 Locais"
+                    BackgroundColor="#607D8B"
+                    TextColor="White"
+                    FontSize="16"
+                    FontAttributes="Bold"
+                    Padding="15,12"
+                    CornerRadius="15"
+                    Clicked="OnOpenLocalModelsClicked"
                     Grid.Column="3" />
         </Grid>
 

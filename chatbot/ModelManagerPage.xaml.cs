@@ -7,6 +7,10 @@ namespace chatbot
         public ModelManagerPage()
         {
             InitializeComponent();
+            if (BindingContext is ModelManagerViewModel vm)
+            {
+                vm.LoadModelsCommand.Execute(null);
+            }
         }
 
         private void OnLoadClicked(object sender, EventArgs e)

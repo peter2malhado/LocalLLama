@@ -34,7 +34,7 @@ namespace chatbot.Services
             var total = response.Content.Headers.ContentLength ?? -1;
             var canReport = total > 0;
 
-            var modelsDir = /*Path.Combine(FileSystem.AppDataDirectory, "models");*/ "/Users/peter/Downloads";
+            var modelsDir = Path.Combine(FileSystem.AppDataDirectory, "models");
             Directory.CreateDirectory(modelsDir);
 
             var filePath = Path.Combine(modelsDir, model.FileName);

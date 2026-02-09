@@ -67,6 +67,12 @@ namespace chatbot
             await Navigation.PushAsync(new ModelManagerPage());
         }
 
+        // 📁 Abrir Modelos Locais
+        private async void OnOpenLocalModelsClicked(object sender, EventArgs e)
+        {
+            await Navigation.PushAsync(new LocalModelsPage());
+        }
+
         // 👉 Quando o utilizador seleciona uma conversa existente
         private async void OnChatSelected(object sender, SelectionChangedEventArgs e)
         {

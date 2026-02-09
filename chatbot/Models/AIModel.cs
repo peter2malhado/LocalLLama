@@ -10,6 +10,9 @@ namespace chatbot.Models
         public string Url { get; set; } = string.Empty;
         public string FileName { get; set; } = string.Empty;
         public string Description { get; set; } = string.Empty;
+        public string SizeText { get; set; } = string.Empty;
+        public string DateText { get; set; } = string.Empty;
+        public bool IsSelected { get; set; }
 
         // Progresso do download (0..1)
         private double _progress;
