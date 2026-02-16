@@ -1,44 +1,43 @@
 ﻿using System.ComponentModel;
 using System.Runtime.CompilerServices;
 
-namespace chatbot.Models
+namespace chatbot.Models;
+
+public class Message : INotifyPropertyChanged
 {
-    public class Message : INotifyPropertyChanged
+    private bool _isUser;
+    private string _text;
+
+    public string Text
     {
-        private string _text;
-        private bool _isUser;
-
-        public string Text
+        get => _text;
+        set
         {
-            get => _text;
-            set
+            if (_text != value)
             {
-                if (_text != value)
-                {
-                    _text = value;
-                    OnPropertyChanged();
-                }
+                _text = value;
+                OnPropertyChanged();
             }
         }
+    }
 
-        public bool IsUser
+    public bool IsUser
+    {
+        get => _isUser;
+        set
         {
-            get => _isUser;
-            set
+            if (_isUser != value)
             {
-                if (_isUser != value)
-                {
-                    _isUser = value;
-                    OnPropertyChanged();
-                }
+                _isUser = value;
+                OnPropertyChanged();
             }
         }
+    }
 
-        public event PropertyChangedEventHandler PropertyChanged;
+    public event PropertyChangedEventHandler PropertyChanged;
 
-        protected virtual void OnPropertyChanged([CallerMemberName] string propertyName = null)
-        {
-            PropertyChanged?.Invoke(this, new PropertyChangedEventArgs(propertyName));
-        }
+    protected virtual void OnPropertyChanged([CallerMemberName] string propertyName = null)
+    {
+        PropertyChanged?.Invoke(this, new PropertyChangedEventArgs(propertyName));
     }
 }

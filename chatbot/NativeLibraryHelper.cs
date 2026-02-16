@@ -61,7 +61,8 @@ namespace chatbot
                     {
                         try
                         {
-                            var foundRuntimes = Directory.GetDirectories(appPath, "runtimes", SearchOption.AllDirectories);
+                            var foundRuntimes =
+ Directory.GetDirectories(appPath, "runtimes", SearchOption.AllDirectories);
                             foreach (var runtimeDir in foundRuntimes)
                             {
                                 var osxArm64 = Path.Combine(runtimeDir, "osx-arm64", "native");
@@ -161,16 +162,19 @@ namespace chatbot
 
                         if (llamasharpAssembly != null)
                         {
-                            var nativeLibraryConfigType = llamasharpAssembly.GetType("LLama.Native.NativeLibraryConfig");
+                            var nativeLibraryConfigType =
+ llamasharpAssembly.GetType("LLama.Native.NativeLibraryConfig");
                             if (nativeLibraryConfigType != null)
                             {
                                 var llamaProperty = nativeLibraryConfigType.GetProperty("LLama");
                                 if (llamaProperty != null)
                                 {
                                     var llamaConfig = llamaProperty.GetValue(null);
-                                    var withSearchDirectoryMethod = llamaConfig?.GetType().GetMethod("WithSearchDirectory", new[] { typeof(string) });
+                                    var withSearchDirectoryMethod =
+ llamaConfig?.GetType().GetMethod("WithSearchDirectory", new[] { typeof(string) });
                                     withSearchDirectoryMethod?.Invoke(llamaConfig, new object[] { nativeLibDir });
-                                    var withLibraryMethod = llamaConfig?.GetType().GetMethod("WithLibrary", new[] { typeof(string) });
+                                    var withLibraryMethod =
+ llamaConfig?.GetType().GetMethod("WithLibrary", new[] { typeof(string) });
                                     withLibraryMethod?.Invoke(llamaConfig, new object[] { libllamaPath });
                                     System.Diagnostics.Debug.WriteLine($"Configured LLama native library: {libllamaPath}");
                                 }

@@ -14,7 +14,7 @@
                         BackgroundColor="Transparent"
                         Margin="0,0,0,10">
             <CollectionView.ItemsLayout>
-                <LinearItemsLayout Orientation="Vertical" ItemSpacing="10"/>
+                <LinearItemsLayout Orientation="Vertical" ItemSpacing="10" />
             </CollectionView.ItemsLayout>
             <CollectionView.ItemTemplate>
                 <DataTemplate>
@@ -28,7 +28,7 @@
                             <Label Text="{Binding Text}"
                                    TextColor="White"
                                    FontSize="16"
-                                   LineBreakMode="WordWrap"/>
+                                   LineBreakMode="WordWrap" />
                         </Frame>
                     </Grid>
                 </DataTemplate>
@@ -39,8 +39,7 @@
         <Grid Grid.Row="1"
               ColumnDefinitions="*,Auto"
               Padding="10"
-              BackgroundColor="#2C2C2C"
-            >
+              BackgroundColor="#2C2C2C">
 
             <Entry x:Name="MessageEntry"
                    Placeholder="Escreve a tua mensagem..."
@@ -51,7 +50,7 @@
                    BackgroundColor="Transparent"
                    VerticalOptions="Center"
                    Margin="10,0"
-                   Completed="MessageEntry_Completed"/>
+                   Completed="MessageEntry_Completed" />
 
             <Button Grid.Column="1"
                     Text="➤"
@@ -62,7 +61,7 @@
                     HeightRequest="50"
                     CornerRadius="25"
                     Command="{Binding SendMessageCommand}"
-                    VerticalOptions="Center"/>
+                    VerticalOptions="Center" />
         </Grid>
     </Grid>
 </ContentPage>

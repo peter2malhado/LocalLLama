@@ -1,21 +1,17 @@
 using chatbot.ViewModels;
 
-namespace chatbot
-{
-    public partial class DatabaseManagerPage : ContentPage
-    {
-        public DatabaseManagerPage()
-        {
-            InitializeComponent();
-        }
+namespace chatbot;
 
-        protected override void OnAppearing()
-        {
-            base.OnAppearing();
-            if (BindingContext is DatabaseManagerViewModel vm)
-            {
-                vm.LoadCommand.Execute(null);
-            }
-        }
+public partial class DatabaseManagerPage : ContentPage
+{
+    public DatabaseManagerPage()
+    {
+        InitializeComponent();
+    }
+
+    protected override void OnAppearing()
+    {
+        base.OnAppearing();
+        if (BindingContext is DatabaseManagerViewModel vm) vm.LoadCommand.Execute(null);
     }
 }
