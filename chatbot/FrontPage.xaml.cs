@@ -44,11 +44,10 @@ namespace chatbot
             }
         }
 
-        // 🔄 Botão para recarregar chats da base de dados
-        private async void OnLoadChatsClicked(object sender, EventArgs e)
+        // 🗄️ Abrir ferramentas da base de dados
+        private async void OnOpenDatabaseToolsClicked(object sender, EventArgs e)
         {
-            LoadChats();
-            await DisplayAlert("Sucesso", $"Carregados {Conversations.Count} chat(s) da base de dados.", "OK");
+            await Navigation.PushAsync(new DatabaseManagerPage());
         }
 
         // 👉 Botão "Nova Conversa"

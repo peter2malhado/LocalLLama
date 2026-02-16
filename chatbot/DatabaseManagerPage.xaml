@@ -1,0 +1,147 @@
+<ContentPage xmlns="http://schemas.microsoft.com/dotnet/2021/maui"
+             xmlns:x="http://schemas.microsoft.com/winfx/2009/xaml"
+             xmlns:vm="clr-namespace:chatbot.ViewModels"
+             x:Class="chatbot.DatabaseManagerPage"
+             Title="Bases de Dados">
+
+    <ContentPage.BindingContext>
+        <vm:DatabaseManagerViewModel />
+    </ContentPage.BindingContext>
+
+    <ContentPage.Background>
+        <LinearGradientBrush StartPoint="0,0" EndPoint="0,1">
+            <GradientStop Color="{StaticResource AppBg1}" Offset="0.0" />
+            <GradientStop Color="{StaticResource AppBg2}" Offset="1.0" />
+        </LinearGradientBrush>
+    </ContentPage.Background>
+
+    <Grid RowDefinitions="Auto,Auto,*" Padding="16">
+        <Frame Grid.Row="0"
+               BackgroundColor="{StaticResource AppSurface}"
+               BorderColor="{StaticResource AppBorder}"
+               CornerRadius="16"
+               Padding="16"
+               HasShadow="False">
+            <VerticalStackLayout Spacing="6">
+                <Label Text="Bases de Dados"
+                       FontSize="22"
+                       TextColor="{StaticResource TextPrimary}"
+                       FontFamily="OpenSansSemibold" />
+                <Label Text="Criar, renomear, selecionar, importar e exportar"
+                       FontSize="13"
+                       TextColor="{StaticResource TextSecondary}" />
+            </VerticalStackLayout>
+        </Frame>
+
+        <ScrollView Grid.Row="1"
+                    Orientation="Horizontal"
+                    HorizontalScrollBarVisibility="Never"
+                    Padding="0,12,0,12">
+            <HorizontalStackLayout Spacing="10">
+                <Button Text="➕ Nova"
+                        BackgroundColor="{StaticResource AppSuccess}"
+                        TextColor="White"
+                        FontFamily="OpenSansSemibold"
+                        CornerRadius="12"
+                        Command="{Binding CreateCommand}" />
+
+                <Button Text="⬆️ Importar"
+                        BackgroundColor="{StaticResource AppAccentAlt}"
+                        TextColor="White"
+                        FontFamily="OpenSansSemibold"
+                        CornerRadius="12"
+                        Command="{Binding ImportCommand}" />
+
+                <Button Text="⬇️ Exportar"
+                        BackgroundColor="{StaticResource AppAccent}"
+                        TextColor="White"
+                        FontFamily="OpenSansSemibold"
+                        CornerRadius="12"
+                        Command="{Binding ExportCommand}" />
+            </HorizontalStackLayout>
+        </ScrollView>
+
+        <CollectionView Grid.Row="2"
+                        ItemsSource="{Binding Databases}"
+                        SelectionMode="None">
+            <CollectionView.ItemTemplate>
+                <DataTemplate>
+                    <Frame BackgroundColor="{StaticResource AppSurface}"
+                           BorderColor="{StaticResource AppBorder}"
+                           CornerRadius="16"
+                           Padding="14"
+                           Margin="0,8">
+                        <Grid RowDefinitions="Auto,Auto,Auto"
+                              ColumnDefinitions="*,Auto,Auto,Auto"
+                              RowSpacing="6"
+                              ColumnSpacing="8">
+                            <Label Grid.Row="0"
+                                   Grid.Column="0"
+                                   Text="{Binding Name}"
+                                   TextColor="{StaticResource TextPrimary}"
+                                   FontSize="18"
+                                   FontFamily="OpenSansSemibold" />
+
+                            <Label Grid.Row="1"
+                                   Grid.Column="0"
+                                   Text="{Binding SizeText}"
+                                   TextColor="{StaticResource TextMuted}"
+                                   FontSize="12" />
+
+                            <Label Grid.Row="2"
+                                   Grid.Column="0"
+                                   Text="{Binding DateText}"
+                                   TextColor="{StaticResource TextMuted}"
+                                   FontSize="12" />
+
+                            <Button Grid.Row="0"
+                                    Grid.RowSpan="2"
+                                    Grid.Column="1"
+                                    Text="Usar"
+                                    BackgroundColor="{StaticResource AppAccent}"
+                                    TextColor="White"
+                                    FontFamily="OpenSansSemibold"
+                                    CornerRadius="12"
+                                    Command="{Binding Source={RelativeSource AncestorType={x:Type vm:DatabaseManagerViewModel}}, Path=UseCommand}"
+                                    CommandParameter="{Binding .}" />
+
+                            <Button Grid.Row="0"
+                                    Grid.RowSpan="2"
+                                    Grid.Column="2"
+                                    Text="Renomear"
+                                    BackgroundColor="{StaticResource AppAccentAlt}"
+                                    TextColor="White"
+                                    FontFamily="OpenSansSemibold"
+                                    CornerRadius="12"
+                                    Command="{Binding Source={RelativeSource AncestorType={x:Type vm:DatabaseManagerViewModel}}, Path=RenameCommand}"
+                                    CommandParameter="{Binding .}" />
+
+                            <Button Grid.Row="0"
+                                    Grid.RowSpan="2"
+                                    Grid.Column="3"
+                                    Text="Apagar"
+                                    BackgroundColor="{StaticResource AppDanger}"
+                                    TextColor="White"
+                                    FontFamily="OpenSansSemibold"
+                                    CornerRadius="12"
+                                    Command="{Binding Source={RelativeSource AncestorType={x:Type vm:DatabaseManagerViewModel}}, Path=DeleteCommand}"
+                                    CommandParameter="{Binding .}" />
+
+                            <Frame Grid.Row="1"
+                                   Grid.Column="0"
+                                   Padding="6,2"
+                                   BackgroundColor="{StaticResource AppAccent}"
+                                   CornerRadius="10"
+                                   IsVisible="{Binding IsSelected}"
+                                   HorizontalOptions="Start">
+                                <Label Text="Selecionada"
+                                       TextColor="White"
+                                       FontSize="11" />
+                            </Frame>
+                        </Grid>
+                    </Frame>
+                </DataTemplate>
+            </CollectionView.ItemTemplate>
+        </CollectionView>
+    </Grid>
+</ContentPage>

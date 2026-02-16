@@ -1,0 +1,58 @@
+<ContentPage xmlns="http://schemas.microsoft.com/dotnet/2021/maui"
+             xmlns:x="http://schemas.microsoft.com/winfx/2009/xaml"
+             x:Class="chatbot.DatabaseToolsPage"
+             Title="Base de Dados">
+
+    <ContentPage.Background>
+        <LinearGradientBrush StartPoint="0,0" EndPoint="0,1">
+            <GradientStop Color="{StaticResource AppBg1}" Offset="0.0" />
+            <GradientStop Color="{StaticResource AppBg2}" Offset="1.0" />
+        </LinearGradientBrush>
+    </ContentPage.Background>
+
+    <Grid RowDefinitions="Auto,*" Padding="16">
+        <Frame Grid.Row="0"
+               BackgroundColor="{StaticResource AppSurface}"
+               BorderColor="{StaticResource AppBorder}"
+               CornerRadius="16"
+               Padding="16"
+               HasShadow="False">
+            <VerticalStackLayout Spacing="6">
+                <Label Text="Ferramentas da Base de Dados"
+                       FontSize="22"
+                       TextColor="{StaticResource TextPrimary}"
+                       FontFamily="OpenSansSemibold" />
+                <Label Text="Exporta ou importa a base de dados de conversas"
+                       FontSize="13"
+                       TextColor="{StaticResource TextSecondary}" />
+            </VerticalStackLayout>
+        </Frame>
+
+        <VerticalStackLayout Grid.Row="1" Spacing="12" Padding="0,16,0,0">
+            <Button Text="⬇️ Exportar base de dados"
+                    BackgroundColor="{StaticResource AppAccent}"
+                    TextColor="White"
+                    FontFamily="OpenSansSemibold"
+                    CornerRadius="12"
+                    Clicked="OnExportClicked" />
+
+            <Button Text="⬆️ Importar base de dados"
+                    BackgroundColor="{StaticResource AppAccentAlt}"
+                    TextColor="White"
+                    FontFamily="OpenSansSemibold"
+                    CornerRadius="12"
+                    Clicked="OnImportClicked" />
+
+            <Frame BackgroundColor="{StaticResource AppSurface}"
+                   BorderColor="{StaticResource AppBorder}"
+                   CornerRadius="12"
+                   Padding="12"
+                   HasShadow="False">
+                <Label x:Name="DbPathLabel"
+                       Text="Local da BD: "
+                       TextColor="{StaticResource TextSecondary}"
+                       FontSize="12" />
+            </Frame>
+        </VerticalStackLayout>
+    </Grid>
+</ContentPage>

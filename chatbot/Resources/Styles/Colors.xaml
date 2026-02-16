@@ -28,6 +28,20 @@
     <Color x:Key="Gray900">#212121</Color>
     <Color x:Key="Gray950">#141414</Color>
 
+    <!-- Modern app palette -->
+    <Color x:Key="AppBg1">#0B0F17</Color>
+    <Color x:Key="AppBg2">#111827</Color>
+    <Color x:Key="AppSurface">#111827</Color>
+    <Color x:Key="AppSurface2">#151C2B</Color>
+    <Color x:Key="AppBorder">#1F2937</Color>
+    <Color x:Key="AppAccent">#2DD4BF</Color>
+    <Color x:Key="AppAccentAlt">#F59E0B</Color>
+    <Color x:Key="TextPrimary">#E5E7EB</Color>
+    <Color x:Key="TextSecondary">#94A3B8</Color>
+    <Color x:Key="TextMuted">#64748B</Color>
+    <Color x:Key="AppSuccess">#22C55E</Color>
+    <Color x:Key="AppDanger">#EF4444</Color>
+
     <SolidColorBrush x:Key="PrimaryBrush" Color="{StaticResource Primary}"/>
     <SolidColorBrush x:Key="SecondaryBrush" Color="{StaticResource Secondary}"/>
     <SolidColorBrush x:Key="TertiaryBrush" Color="{StaticResource Tertiary}"/>

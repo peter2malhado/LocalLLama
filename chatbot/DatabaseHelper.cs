@@ -4,8 +4,16 @@ namespace chatbot.Services
 {
     public static class DatabaseHelper
     {
-        private static string DatabasePath =>
-            Path.Combine(FileSystem.AppDataDirectory, "chats.db");
+        private static string DatabasePath
+        {
+            get
+            {
+                DatabaseConfig.EnsureDatabaseLayout();
+                return DatabaseConfig.GetSelectedDatabasePath();
+            }
+        }
+
+        public static string GetDatabasePath() => DatabasePath;
 
         public static SqliteConnection GetConnection()
         {
@@ -52,4 +60,3 @@ namespace chatbot.Services
         }
     }
 }
-
