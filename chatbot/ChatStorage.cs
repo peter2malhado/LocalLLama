@@ -33,7 +33,7 @@ public static class ChatStorage
                     var chat = new ChatSession
                     {
                         Id = reader.GetString(0),
-                        Title = reader.GetString(1),
+                        Title = ChatCrypto.DecryptText(reader.GetString(1)),
                         Messages = new List<ChatMessage>()
                     };
                     chats.Add(chat);
@@ -63,7 +63,7 @@ public static class ChatStorage
                     messagesByChatId[chatId].Add(new ChatMessage
                     {
                         Role = messagesReader.GetString(1),
-                        Text = messagesReader.GetString(2)
+                        Text = ChatCrypto.DecryptText(messagesReader.GetString(2))
                     });
                 }
 
@@ -92,7 +92,7 @@ public static class ChatStorage
                           VALUES (@Id, @Title)",
                     connection);
                 upsertSessionCommand.Parameters.AddWithValue("@Id", chat.Id);
-                upsertSessionCommand.Parameters.AddWithValue("@Title", chat.Title);
+                upsertSessionCommand.Parameters.AddWithValue("@Title", ChatCrypto.EncryptText(chat.Title));
                 upsertSessionCommand.ExecuteNonQuery();
 
                 // Limpar mensagens antigas e inserir novas
@@ -110,7 +110,7 @@ public static class ChatStorage
                         connection);
                     insertMessageCommand.Parameters.AddWithValue("@ChatId", chat.Id);
                     insertMessageCommand.Parameters.AddWithValue("@Role", message.Role);
-                    insertMessageCommand.Parameters.AddWithValue("@Text", message.Text);
+                    insertMessageCommand.Parameters.AddWithValue("@Text", ChatCrypto.EncryptText(message.Text));
                     insertMessageCommand.ExecuteNonQuery();
                 }
             }
@@ -155,7 +155,7 @@ public static class ChatStorage
                 "INSERT INTO ChatSessions (Id, Title) VALUES (@Id, @Title)",
                 connection);
             insertCommand.Parameters.AddWithValue("@Id", newId);
-            insertCommand.Parameters.AddWithValue("@Title", title);
+            insertCommand.Parameters.AddWithValue("@Title", ChatCrypto.EncryptText(title));
             insertCommand.ExecuteNonQuery();
 
             return new ChatSession
@@ -186,7 +186,7 @@ public static class ChatStorage
             var chat = new ChatSession
             {
                 Id = reader.GetString(0),
-                Title = reader.GetString(1),
+                Title = ChatCrypto.DecryptText(reader.GetString(1)),
                 Messages = new List<ChatMessage>()
             };
 
@@ -201,7 +201,7 @@ public static class ChatStorage
                 chat.Messages.Add(new ChatMessage
                 {
                     Role = messagesReader.GetString(0),
-                    Text = messagesReader.GetString(1)
+                    Text = ChatCrypto.DecryptText(messagesReader.GetString(1))
                 });
 
             return chat;
@@ -229,7 +229,7 @@ public static class ChatStorage
                     connection);
                 insertCommand.Parameters.AddWithValue("@ChatId", chatId);
                 insertCommand.Parameters.AddWithValue("@Role", role);
-                insertCommand.Parameters.AddWithValue("@Text", text);
+                insertCommand.Parameters.AddWithValue("@Text", ChatCrypto.EncryptText(text));
                 insertCommand.ExecuteNonQuery();
             }
         });
@@ -246,7 +246,7 @@ public static class ChatStorage
                 "UPDATE ChatSessions SET Title = @Title WHERE Id = @Id",
                 connection);
             updateCommand.Parameters.AddWithValue("@Id", chatId);
-            updateCommand.Parameters.AddWithValue("@Title", newTitle);
+            updateCommand.Parameters.AddWithValue("@Title", ChatCrypto.EncryptText(newTitle));
             updateCommand.ExecuteNonQuery();
         });
     }
