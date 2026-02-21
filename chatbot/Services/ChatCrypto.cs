@@ -5,21 +5,22 @@ namespace chatbot.Services;
 
 public static class ChatCrypto
 {
-    // TODO: mover esta senha para configuração segura no futuro.
-    private const string Password = "trocar-esta-senha";
     private const string Prefix = "enc:v1:";
-    private static readonly byte[] Salt = "chatbot_salt_v1"u8.ToArray();
 
     public static string EncryptText(string plainText)
     {
         if (string.IsNullOrEmpty(plainText)) return plainText;
         if (IsEncrypted(plainText)) return plainText;
 
+        var key = UserContext.EncryptionKey;
+        if (key == null || key.Length != 32)
+            return plainText;
+
         using var aes = Aes.Create();
         aes.KeySize = 256;
         aes.Mode = CipherMode.CBC;
         aes.Padding = PaddingMode.PKCS7;
-        aes.Key = DeriveKey(Password, Salt, 32);
+        aes.Key = key;
         aes.GenerateIV();
 
         using var encryptor = aes.CreateEncryptor();
@@ -38,6 +39,10 @@ public static class ChatCrypto
         if (string.IsNullOrEmpty(value)) return value;
         if (!IsEncrypted(value)) return value;
 
+        var key = UserContext.EncryptionKey;
+        if (key == null || key.Length != 32)
+            return value;
+
         try
         {
             var payload = Convert.FromBase64String(value[Prefix.Length..]);
@@ -46,7 +51,7 @@ public static class ChatCrypto
             aes.KeySize = 256;
             aes.Mode = CipherMode.CBC;
             aes.Padding = PaddingMode.PKCS7;
-            aes.Key = DeriveKey(Password, Salt, 32);
+            aes.Key = key;
 
             var ivLength = aes.BlockSize / 8;
             if (payload.Length <= ivLength) return value;
@@ -70,7 +75,4 @@ public static class ChatCrypto
 
     private static bool IsEncrypted(string value) =>
         value.StartsWith(Prefix, StringComparison.Ordinal);
-
-    private static byte[] DeriveKey(string password, byte[] salt, int bytes) =>
-        new Rfc2898DeriveBytes(password, salt, 100_000, HashAlgorithmName.SHA256).GetBytes(bytes);
 }

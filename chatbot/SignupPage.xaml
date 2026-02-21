@@ -1,0 +1,81 @@
+<?xml version="1.0" encoding="utf-8" ?>
+<ContentPage xmlns="http://schemas.microsoft.com/dotnet/2021/maui"
+             xmlns:x="http://schemas.microsoft.com/winfx/2009/xaml"
+             x:Class="chatbot.SignupPage"
+             BackgroundColor="#0E1116"
+             Title="Registar">
+
+    <Grid>
+        <Image Source="dotnet_bot.png"
+               Aspect="AspectFill"
+               Opacity="0.1" />
+
+        <ScrollView>
+            <Grid Padding="32"
+                  RowDefinitions="Auto,*"
+                  VerticalOptions="Center">
+
+                <VerticalStackLayout Spacing="6"
+                                     HorizontalOptions="Center">
+                    <Label Text="Criar Conta"
+                           FontSize="26"
+                           TextColor="White"
+                           FontAttributes="Bold"
+                           HorizontalOptions="Center" />
+                    <Label Text="Cria o teu acesso em segundos"
+                           FontSize="13"
+                           TextColor="#AAB1BF"
+                           HorizontalOptions="Center" />
+                </VerticalStackLayout>
+
+                <Frame Grid.Row="1"
+                       Margin="0,28,0,0"
+                       Padding="24"
+                       CornerRadius="18"
+                       HasShadow="True"
+                       BackgroundColor="#171B23"
+                       VerticalOptions="Center"
+                       HorizontalOptions="Center"
+                       WidthRequest="360">
+
+                    <VerticalStackLayout Spacing="16">
+                        <Entry x:Name="UsernameEntry"
+                               Placeholder="Username"
+                               TextColor="White"
+                               PlaceholderColor="#7C8494"
+                               BackgroundColor="#1E2330" />
+
+                        <Entry x:Name="PasswordEntry"
+                               Placeholder="Password"
+                               IsPassword="True"
+                               TextColor="White"
+                               PlaceholderColor="#7C8494"
+                               BackgroundColor="#1E2330" />
+
+                        <Entry x:Name="ConfirmPasswordEntry"
+                               Placeholder="Confirmar password"
+                               IsPassword="True"
+                               TextColor="White"
+                               PlaceholderColor="#7C8494"
+                               BackgroundColor="#1E2330" />
+
+                        <Button Text="Registar"
+                                Clicked="OnSignupClicked"
+                                BackgroundColor="#2F6FED"
+                                TextColor="White" />
+
+                        <HorizontalStackLayout Spacing="6"
+                                               HorizontalOptions="Center">
+                            <Label Text="Já tens conta?"
+                                   TextColor="#AAB1BF" />
+                            <Button Text="Login"
+                                    Clicked="OnLoginClicked"
+                                    BackgroundColor="Transparent"
+                                    TextColor="#77A0FF" />
+                        </HorizontalStackLayout>
+                    </VerticalStackLayout>
+                </Frame>
+            </Grid>
+        </ScrollView>
+    </Grid>
+</ContentPage>

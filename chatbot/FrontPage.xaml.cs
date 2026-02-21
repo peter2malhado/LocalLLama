@@ -188,4 +188,10 @@ public partial class FrontPage
 
         return destPath;
     }
+
+    private void OnLogoutClicked(object sender, EventArgs e)
+    {
+        UserContext.Clear();
+        Application.Current!.MainPage = new NavigationPage(new LoginPage());
+    }
 }

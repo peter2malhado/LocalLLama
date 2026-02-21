@@ -1,4 +1,6 @@
-﻿namespace chatbot;
+﻿using chatbot.Services;
+
+namespace chatbot;
 
 public partial class App : Application
 {
@@ -6,7 +8,9 @@ public partial class App : Application
     {
         InitializeComponent();
 
+        DatabaseHelper.InitializeDatabase();
+
         // Usar NavigationPage para permitir navegação
-        MainPage = new NavigationPage(new FrontPage());
+        MainPage = new NavigationPage(new LoginPage());
     }
 }

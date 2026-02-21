@@ -11,16 +11,34 @@
                HasShadow="False"
                Padding="20,40,20,20"
                Margin="0">
-            <VerticalStackLayout Spacing="10">
-                <Label Text="💬 Minhas Conversas"
+            <Grid ColumnDefinitions="*,Auto"
+                  RowDefinitions="Auto,Auto"
+                  ColumnSpacing="12">
+                <Label Grid.Row="0"
+                       Grid.Column="0"
+                       Text="💬 Minhas Conversas"
                        FontSize="32"
                        FontAttributes="Bold"
                        TextColor="White" />
 
-                <Label Text="Selecione uma conversa para continuar"
+                <Button Grid.Row="0"
+                        Grid.Column="1"
+                        Text="Logout"
+                        Clicked="OnLogoutClicked"
+                        BackgroundColor="#C33935"
+                        TextColor="#FF8A80"
+                        Padding="8,4" 
+                        CornerRadius="20"
+                
+                        
+                        />
+
+                <Label Grid.Row="1"
+                       Grid.Column="0"
+                       Text="Selecione uma conversa para continuar"
                        FontSize="14"
                        TextColor="#B0B0B0" />
-            </VerticalStackLayout>
+            </Grid>
         </Frame>
 
         <!-- Botões de Ação -->
