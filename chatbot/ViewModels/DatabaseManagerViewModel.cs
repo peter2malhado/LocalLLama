@@ -34,7 +34,7 @@ public class DatabaseManagerViewModel : BindableObject
         Databases.Clear();
         DatabaseConfig.EnsureDatabaseLayout();
 
-        var dir = DatabaseConfig.DatabasesDirectory;
+        var dir = DatabaseConfig.CurrentUserDirectory;
         var files = Directory.GetFiles(dir, "*.db", SearchOption.TopDirectoryOnly);
 
         foreach (var file in files)
@@ -65,7 +65,7 @@ public class DatabaseManagerViewModel : BindableObject
             return;
 
         var fileName = $"{name}.db";
-        var path = Path.Combine(DatabaseConfig.DatabasesDirectory, fileName);
+        var path = Path.Combine(DatabaseConfig.CurrentUserDirectory, fileName);
 
         if (File.Exists(path))
         {
@@ -76,7 +76,7 @@ public class DatabaseManagerViewModel : BindableObject
         File.WriteAllBytes(path, Array.Empty<byte>());
 
         DatabaseConfig.SelectedDatabaseName = fileName;
-        DatabaseHelper.InitializeDatabase();
+        DatabaseHelper.InitializeUserDatabase();
         await LoadAsync();
     }
 
@@ -86,7 +86,7 @@ public class DatabaseManagerViewModel : BindableObject
             return;
 
         DatabaseConfig.SelectedDatabaseName = entry.FileName;
-        DatabaseHelper.InitializeDatabase();
+        DatabaseHelper.InitializeUserDatabase();
         await LoadAsync();
     }
 
@@ -99,7 +99,7 @@ public class DatabaseManagerViewModel : BindableObject
         if (string.IsNullOrWhiteSpace(newName))
             return;
 
-        var dir = DatabaseConfig.DatabasesDirectory;
+        var dir = DatabaseConfig.CurrentUserDirectory;
         var oldPath = Path.Combine(dir, entry.FileName);
         var newFileName = $"{newName}.db";
         var newPath = Path.Combine(dir, newFileName);
@@ -126,13 +126,13 @@ public class DatabaseManagerViewModel : BindableObject
         if (!confirm)
             return;
 
-        var path = Path.Combine(DatabaseConfig.DatabasesDirectory, entry.FileName);
+        var path = Path.Combine(DatabaseConfig.CurrentUserDirectory, entry.FileName);
         if (File.Exists(path)) File.Delete(path);
 
         if (entry.IsSelected)
         {
             DatabaseConfig.SelectedDatabaseName = "chats.db";
-            DatabaseHelper.InitializeDatabase();
+            DatabaseHelper.InitializeUserDatabase();
         }
 
         await LoadAsync();
@@ -191,7 +191,7 @@ public class DatabaseManagerViewModel : BindableObject
             }
 
             DatabaseConfig.EnsureDatabaseLayout();
-            var destPath = Path.Combine(DatabaseConfig.DatabasesDirectory, name);
+            var destPath = Path.Combine(DatabaseConfig.CurrentUserDirectory, name);
 
             // Evitar lock
             SqliteConnection.ClearAllPools();
@@ -209,7 +209,7 @@ public class DatabaseManagerViewModel : BindableObject
             File.Move(tempPath, destPath);
 
             DatabaseConfig.SelectedDatabaseName = name;
-            DatabaseHelper.InitializeDatabase();
+            DatabaseHelper.InitializeUserDatabase();
             await LoadAsync();
         }
         catch (Exception ex)

@@ -10,7 +10,7 @@ public static class ChatStorage
     static ChatStorage()
     {
         // Inicializar o banco de dados na primeira vez
-        DatabaseHelper.InitializeDatabase();
+        DatabaseHelper.InitializeUserDatabase();
     }
 
     // 🚀 Carrega todos os chats
@@ -20,7 +20,7 @@ public static class ChatStorage
         {
             var chats = new List<ChatSession>();
 
-            using var connection = DatabaseHelper.GetConnection();
+            using var connection = DatabaseHelper.GetUserConnection();
 
             // Carregar todas as sessões primeiro
             var selectSessionsCommand = new SqliteCommand(
@@ -86,7 +86,7 @@ public static class ChatStorage
     {
         await Task.Run(() =>
         {
-            using var connection = DatabaseHelper.GetConnection();
+            using var connection = DatabaseHelper.GetUserConnection();
 
             foreach (var chat in chats)
             {
@@ -129,7 +129,7 @@ public static class ChatStorage
     {
         return await Task.Run(() =>
         {
-            using var connection = DatabaseHelper.GetConnection();
+            using var connection = DatabaseHelper.GetUserConnection();
 
             // Encontrar o próximo ID disponível verificando IDs existentes
             var newId = string.Empty; // Inicialização necessária
@@ -180,7 +180,7 @@ public static class ChatStorage
     {
         return await Task.Run(() =>
         {
-            using var connection = DatabaseHelper.GetConnection();
+            using var connection = DatabaseHelper.GetUserConnection();
 
             // Buscar sessão
             var selectSessionCommand = new SqliteCommand(
@@ -223,7 +223,7 @@ public static class ChatStorage
     {
         await Task.Run(() =>
         {
-            using var connection = DatabaseHelper.GetConnection();
+            using var connection = DatabaseHelper.GetUserConnection();
 
             // Verificar se a sessão existe
             var checkCommand = new SqliteCommand(
@@ -252,7 +252,7 @@ public static class ChatStorage
     {
         await Task.Run(() =>
         {
-            using var connection = DatabaseHelper.GetConnection();
+            using var connection = DatabaseHelper.GetUserConnection();
 
             var updateCommand = new SqliteCommand(
                 "UPDATE ChatSessions SET Title = @Title WHERE Id = @Id AND UserId = @UserId",
@@ -269,7 +269,7 @@ public static class ChatStorage
     {
         await Task.Run(() =>
         {
-            using var connection = DatabaseHelper.GetConnection();
+            using var connection = DatabaseHelper.GetUserConnection();
 
             // Deletar mensagens primeiro (devido à foreign key)
             var deleteMessagesCommand = new SqliteCommand(

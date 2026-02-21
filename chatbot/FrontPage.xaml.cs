@@ -192,6 +192,7 @@ public partial class FrontPage
     private void OnLogoutClicked(object sender, EventArgs e)
     {
         UserContext.Clear();
+        DatabaseConfig.SelectedDatabaseName = "chats.db";
         Application.Current!.MainPage = new NavigationPage(new LoginPage());
     }
 }

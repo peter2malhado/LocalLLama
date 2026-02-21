@@ -4,7 +4,9 @@ namespace chatbot.Services;
 
 public static class DatabaseHelper
 {
-    private static string DatabasePath
+    private const string AuthDbName = "auth.db";
+
+    private static string UserDatabasePath
     {
         get
         {
@@ -13,21 +15,54 @@ public static class DatabaseHelper
         }
     }
 
-    public static string GetDatabasePath()
+    private static string AuthDatabasePath
     {
-        return DatabasePath;
+        get
+        {
+            Directory.CreateDirectory(DatabaseConfig.DatabasesDirectory);
+            return Path.Combine(DatabaseConfig.DatabasesDirectory, AuthDbName);
+        }
     }
 
-    public static SqliteConnection GetConnection()
+    public static string GetDatabasePath()
     {
-        var connection = new SqliteConnection($"Data Source={DatabasePath}");
+        return UserDatabasePath;
+    }
+
+    public static SqliteConnection GetUserConnection()
+    {
+        var connection = new SqliteConnection($"Data Source={UserDatabasePath}");
         connection.Open();
         return connection;
     }
 
-    public static void InitializeDatabase()
+    public static SqliteConnection GetAuthConnection()
     {
-        using var connection = GetConnection();
+        var connection = new SqliteConnection($"Data Source={AuthDatabasePath}");
+        connection.Open();
+        return connection;
+    }
+
+    public static void InitializeAuthDatabase()
+    {
+        using var connection = GetAuthConnection();
+
+        // Criar tabela de utilizadores
+        var createUsersTable = @"
+                CREATE TABLE IF NOT EXISTS Users (
+                    Username TEXT PRIMARY KEY,
+                    PasswordHash TEXT NOT NULL,
+                    Salt TEXT,
+                    CreatedAt DATETIME DEFAULT CURRENT_TIMESTAMP
+                );";
+
+        using var command = new SqliteCommand(createUsersTable, connection);
+        command.ExecuteNonQuery();
+    }
+
+    public static void InitializeUserDatabase()
+    {
+        using var connection = GetUserConnection();
 
         // Criar tabela de sessões de chat
         var createSessionsTable = @"
@@ -54,15 +89,6 @@ public static class DatabaseHelper
                 CREATE INDEX IF NOT EXISTS idx_ChatMessages_ChatId 
                 ON ChatMessages(ChatId);";
 
-        // Criar tabela de utilizadores
-        var createUsersTable = @"
-                CREATE TABLE IF NOT EXISTS Users (
-                    Username TEXT PRIMARY KEY,
-                    PasswordHash TEXT NOT NULL,
-                    Salt TEXT,
-                    CreatedAt DATETIME DEFAULT CURRENT_TIMESTAMP
-                );";
-
         using var command1 = new SqliteCommand(createSessionsTable, connection);
         command1.ExecuteNonQuery();
 
@@ -71,30 +97,5 @@ public static class DatabaseHelper
 
         using var command3 = new SqliteCommand(createIndex, connection);
         command3.ExecuteNonQuery();
-
-        using var command4 = new SqliteCommand(createUsersTable, connection);
-        command4.ExecuteNonQuery();
-
-        // Migrações leves (best-effort)
-        TryExec(connection, "ALTER TABLE ChatSessions ADD COLUMN UserId TEXT;");
-        TryExec(connection, "ALTER TABLE ChatMessages ADD COLUMN UserId TEXT;");
-        TryExec(connection, "ALTER TABLE Users ADD COLUMN Salt TEXT;");
-        TryExec(connection, "CREATE INDEX IF NOT EXISTS idx_ChatSessions_UserId ON ChatSessions(UserId);");
-        TryExec(connection, "CREATE INDEX IF NOT EXISTS idx_ChatMessages_UserId ON ChatMessages(UserId);");
-        TryExec(connection, "UPDATE ChatSessions SET UserId = 'default' WHERE UserId IS NULL;");
-        TryExec(connection, "UPDATE ChatMessages SET UserId = 'default' WHERE UserId IS NULL;");
-    }
-
-    private static void TryExec(SqliteConnection connection, string sql)
-    {
-        try
-        {
-            using var command = new SqliteCommand(sql, connection);
-            command.ExecuteNonQuery();
-        }
-        catch
-        {
-            // Ignorar erros de migração (coluna já existe, etc.)
-        }
     }
 }

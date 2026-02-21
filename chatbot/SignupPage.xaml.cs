@@ -38,7 +38,7 @@ public partial class SignupPage : ContentPage
         {
             var signupResult = await Task.Run(() =>
             {
-                using var connection = DatabaseHelper.GetConnection();
+            using var connection = DatabaseHelper.GetAuthConnection();
                 var checkCommand = new SqliteCommand("SELECT COUNT(*) FROM Users WHERE Username = @Username", connection);
                 checkCommand.Parameters.AddWithValue("@Username", username);
 
@@ -67,6 +67,8 @@ public partial class SignupPage : ContentPage
             }
 
             UserContext.Set(username, signupResult.key!);
+            DatabaseConfig.SelectedDatabaseName = $"{username}.db";
+            DatabaseHelper.InitializeUserDatabase();
             Application.Current!.MainPage = new NavigationPage(new FrontPage());
         }
         catch (Exception ex)

@@ -8,7 +8,8 @@ public partial class App : Application
     {
         InitializeComponent();
 
-        DatabaseHelper.InitializeDatabase();
+        DatabaseHelper.InitializeAuthDatabase();
+        
 
         // Usar NavigationPage para permitir navegação
         MainPage = new NavigationPage(new LoginPage());

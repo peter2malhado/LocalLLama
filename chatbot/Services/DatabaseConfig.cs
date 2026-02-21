@@ -8,30 +8,48 @@ public static class DatabaseConfig
     public static string DatabasesDirectory =>
         Path.Combine(FileSystem.AppDataDirectory, "databases");
 
+    public static string? CurrentUserName => UserContext.Username;
+
+    public static string CurrentUserDirectory
+    {
+        get
+        {
+            var user = CurrentUserName;
+            if (string.IsNullOrWhiteSpace(user))
+                return DatabasesDirectory;
+
+            return Path.Combine(DatabasesDirectory, user);
+        }
+    }
+
+    private static string SelectedDbKeyForUser =>
+        string.IsNullOrWhiteSpace(CurrentUserName) ? SelectedDbKey : $"{SelectedDbKey}_{CurrentUserName}";
+
     public static string SelectedDatabaseName
     {
-        get => Preferences.Get(SelectedDbKey, DefaultDbName);
+        get => Preferences.Get(SelectedDbKeyForUser, DefaultDbName);
         set
         {
             if (string.IsNullOrWhiteSpace(value))
             {
-                Preferences.Remove(SelectedDbKey);
+                Preferences.Remove(SelectedDbKeyForUser);
                 return;
             }
 
-            Preferences.Set(SelectedDbKey, value);
+            Preferences.Set(SelectedDbKeyForUser, value);
         }
     }
 
     public static string GetSelectedDatabasePath()
     {
-        Directory.CreateDirectory(DatabasesDirectory);
-        return Path.Combine(DatabasesDirectory, SelectedDatabaseName);
+        Directory.CreateDirectory(CurrentUserDirectory);
+        return Path.Combine(CurrentUserDirectory, SelectedDatabaseName);
     }
 
     public static void EnsureDatabaseLayout()
     {
         Directory.CreateDirectory(DatabasesDirectory);
+        Directory.CreateDirectory(CurrentUserDirectory);
 
         var selectedPath = GetSelectedDatabasePath();
         if (File.Exists(selectedPath))

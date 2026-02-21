@@ -73,7 +73,7 @@ public partial class DatabaseToolsPage : ContentPage
             if (File.Exists(dbPath)) File.Delete(dbPath);
             File.Move(tempPath, dbPath);
 
-            DatabaseHelper.InitializeDatabase();
+            DatabaseHelper.InitializeUserDatabase();
 
             await DisplayAlert("Importado", "Base de dados carregada com sucesso. Volta atrás e atualiza a lista.",
                 "OK");

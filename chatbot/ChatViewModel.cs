@@ -15,13 +15,27 @@ public class ChatViewModel : BindableObject
     private string _currentMessage;
     private InferenceParams _inferenceParams;
     private LLama.ChatSession _session;
+    private bool _llamaReady;
 
     public ChatViewModel(string chatId)
     {
         _chatId = chatId;
         SendMessageCommand = new Command(async () => await SendMessage());
 
-        InitLLama();
+        try
+        {
+            InitLLama();
+            _llamaReady = true;
+        }
+        catch (Exception ex)
+        {
+            _llamaReady = false;
+            Messages.Add(new Message
+            {
+                IsUser = false,
+                Text = $"Erro ao carregar o modelo. {ex.Message}"
+            });
+        }
         LoadSession();
     }
 
@@ -49,6 +63,9 @@ public class ChatViewModel : BindableObject
         var selectedModel = ModelConfig.SelectedModelPath;
         var modelFile = "Jan-v3-4b-base-instruct-Q8_0.gguf";
         var modelPath = ResolveModelPath(selectedModel, modelFile);
+
+        if (!File.Exists(modelPath))
+            throw new FileNotFoundException("Modelo .gguf não encontrado. Seleciona um modelo nas definições.");
 
         var parameters = new ModelParams(modelPath)
         {
@@ -96,6 +113,16 @@ public class ChatViewModel : BindableObject
 
     private async Task SendMessage()
     {
+        if (!_llamaReady)
+        {
+            Messages.Add(new Message
+            {
+                IsUser = false,
+                Text = "Modelo não está carregado. Seleciona um modelo .gguf válido."
+            });
+            return;
+        }
+
         if (string.IsNullOrWhiteSpace(CurrentMessage))
             return;
 

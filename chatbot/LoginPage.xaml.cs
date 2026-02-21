@@ -3,7 +3,7 @@ using Microsoft.Data.Sqlite;
 
 namespace chatbot;
 
-public partial class LoginPage : ContentPage
+public partial class  LoginPage : ContentPage
 {
     public LoginPage()
     {
@@ -31,7 +31,7 @@ public partial class LoginPage : ContentPage
         {
             var loginResult = await Task.Run(() =>
             {
-                using var connection = DatabaseHelper.GetConnection();
+                using var connection = DatabaseHelper.GetAuthConnection();
                 var command = new SqliteCommand(
                     "SELECT PasswordHash, Salt FROM Users WHERE Username = @Username",
                     connection);
@@ -60,6 +60,8 @@ public partial class LoginPage : ContentPage
             }
 
             UserContext.Set(username, loginResult.key!);
+            DatabaseConfig.SelectedDatabaseName = $"{username}.db";
+            DatabaseHelper.InitializeUserDatabase();
             Application.Current!.MainPage = new NavigationPage(new FrontPage());
         }
         catch (Exception ex)
