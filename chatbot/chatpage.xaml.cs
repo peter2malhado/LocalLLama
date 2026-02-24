@@ -1,4 +1,5 @@
 ﻿using chatbot.Models;
+using chatbot.Services;
 
 namespace chatbot;
 
@@ -59,5 +60,33 @@ public partial class chatpage : ContentPage
         base.OnAppearing();
         // Scroll para a última mensagem quando a página aparece
         ScrollToLastMessage();
+    }
+
+    private async void OnImportDocClicked(object sender, EventArgs e)
+    {
+        try
+        {
+            var result = await FilePicker.Default.PickAsync(new PickOptions
+            {
+                PickerTitle = "Importar documento (PDF/DOCX)",
+                FileTypes = new FilePickerFileType(new Dictionary<DevicePlatform, IEnumerable<string>>
+                {
+                    { DevicePlatform.MacCatalyst, new[] { "pdf", "docx" } },
+                    { DevicePlatform.iOS, new[] { "com.adobe.pdf", "org.openxmlformats.wordprocessingml.document" } },
+                    { DevicePlatform.Android, new[] { "application/pdf", "application/vnd.openxmlformats-officedocument.wordprocessingml.document" } },
+                    { DevicePlatform.WinUI, new[] { ".pdf", ".docx" } }
+                })
+            });
+
+            if (result == null)
+                return;
+
+            var chunks = await RagService.ImportDocumentAsync(result.FullPath);
+            await DisplayAlert("RAG", $"Documento importado. {chunks} blocos indexados.", "OK");
+        }
+        catch (Exception ex)
+        {
+            await DisplayAlert("Erro", $"Falha ao importar documento: {ex.Message}", "OK");
+        }
     }
 }

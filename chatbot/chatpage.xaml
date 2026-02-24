@@ -4,6 +4,11 @@
              BackgroundColor="#1E1E1E"
              Padding="10">
 
+    <ContentPage.ToolbarItems>
+        <ToolbarItem Text="Importar Doc"
+                     Clicked="OnImportDocClicked" />
+    </ContentPage.ToolbarItems>
+
     <Grid RowDefinitions="*,Auto">
 
         <!-- Lista de mensagens -->
@@ -39,7 +44,7 @@
         <Grid Grid.Row="1"
               ColumnDefinitions="*,Auto"
               Padding="10"
-              BackgroundColor="#2C2C2C">
+              BackgroundColor="Transparent">
 
             <Entry x:Name="MessageEntry"
                    Placeholder="Escreve a tua mensagem..."
@@ -49,8 +54,9 @@
                    PlaceholderColor="#888"
                    BackgroundColor="Transparent"
                    VerticalOptions="Center"
-                   Margin="10,0"
-                   Completed="MessageEntry_Completed" />
+                   Margin="5,0"
+                   Completed="MessageEntry_Completed" 
+                   />
 
             <Button Grid.Column="1"
                     Text="➤"
@@ -62,6 +68,7 @@
                     CornerRadius="25"
                     Command="{Binding SendMessageCommand}"
                     VerticalOptions="Center" />
+         
         </Grid>
     </Grid>
 </ContentPage>

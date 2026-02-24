@@ -70,7 +70,7 @@ public class ChatViewModel : BindableObject
         var parameters = new ModelParams(modelPath)
         {
             ContextSize = 1024,
-            GpuLayerCount = 5
+            GpuLayerCount = 10
         };
 
         var model = LLamaWeights.LoadFromFile(parameters);
@@ -79,7 +79,7 @@ public class ChatViewModel : BindableObject
 
         var chatHistory = new ChatHistory();
         chatHistory.AddMessage(AuthorRole.System,
-            "Transcrição de uma caixa de diálogo, onde o Usuário interage com um Assistente chamado Bob. Bob é prestativo, gentil, honesto, bom em escrever e responde com clareza.");
+            "És um assistente de IA prestável e simpático. Seja conciso e claro.");
         _session = new LLama.ChatSession(executor, chatHistory);
 
         _inferenceParams = new InferenceParams
@@ -140,6 +140,20 @@ public class ChatViewModel : BindableObject
 
         // Atualizar a mensagem em tempo real conforme os chunks chegam
         var updateCount = 0;
+        try
+        {
+            var ragContext = await RagService.GetContextAsync(userInput);
+            if (!string.IsNullOrWhiteSpace(ragContext))
+            {
+                userInput =
+                    $"Responde usando apenas o contexto abaixo. Se não estiver no contexto, diz que não sabe.\n\nContexto:\n{ragContext}\n\nPergunta:\n{userInput}";
+            }
+        }
+        catch
+        {
+            // Se RAG falhar, continua sem contexto.
+        }
+
         await foreach (var text in _session.ChatAsync(
                            new ChatHistory.Message(AuthorRole.User, userInput),
                            _inferenceParams))

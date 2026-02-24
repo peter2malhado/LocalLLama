@@ -69,6 +69,7 @@ public partial class SignupPage : ContentPage
             UserContext.Set(username, signupResult.key!);
             DatabaseConfig.SelectedDatabaseName = $"{username}.db";
             DatabaseHelper.InitializeUserDatabase();
+            DatabaseHelper.InitializeRagDatabase();
             Application.Current!.MainPage = new NavigationPage(new FrontPage());
         }
         catch (Exception ex)
