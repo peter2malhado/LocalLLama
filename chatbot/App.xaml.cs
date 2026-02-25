@@ -1,14 +1,17 @@
-﻿namespace chatbot
-{
-    public partial class App : Application
-    {
-        public App()
-        {
-            InitializeComponent();
+﻿using chatbot.Services;
 
-            // Usar NavigationPage para permitir navegação
-            MainPage = new NavigationPage(new FrontPage());
-        }
+namespace chatbot;
+
+public partial class App : Application
+{
+    public App()
+    {
+        InitializeComponent();
+
+        DatabaseHelper.InitializeAuthDatabase();
         
+
+        // Usar NavigationPage para permitir navegação
+        MainPage = new NavigationPage(new LoginPage());
     }
 }

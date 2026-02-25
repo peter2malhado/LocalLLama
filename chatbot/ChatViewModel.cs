@@ -1,16 +1,43 @@
-﻿using System.Collections.ObjectModel;
+using System.Collections.ObjectModel;
 using System.Windows.Input;
-using LLama;
-using LLama.Common;
+using chatbot;
 using chatbot.Models;
 using chatbot.Services;
+using LLama;
+using LLama.Common;
+using ChatSession = chatbot.Models.ChatSession;
+
 
 public class ChatViewModel : BindableObject
 {
+    private readonly string _chatId;
+    private ChatSession _currentChat;
     private string _currentMessage;
-    private LLama.ChatSession _session;
     private InferenceParams _inferenceParams;
-    private chatbot.Models.ChatSession _currentChat;
+    private LLama.ChatSession _session;
+    private bool _llamaReady;
+
+    public ChatViewModel(string chatId)
+    {
+        _chatId = chatId;
+        SendMessageCommand = new Command(async () => await SendMessage());
+
+        try
+        {
+            InitLLama();
+            _llamaReady = true;
+        }
+        catch (Exception ex)
+        {
+            _llamaReady = false;
+            Messages.Add(new Message
+            {
+                IsUser = false,
+                Text = $"Erro ao carregar o modelo. {ex.Message}"
+            });
+        }
+        LoadSession();
+    }
 
     public ObservableCollection<Message> Messages { get; set; } = new();
 
@@ -26,19 +53,19 @@ public class ChatViewModel : BindableObject
 
     public ICommand SendMessageCommand { get; }
 
-    private readonly string _chatId;
-
-    public ChatViewModel(string chatId)
-    {
-        _chatId = chatId;
-        SendMessageCommand = new Command(async () => await SendMessage());
-        InitLLama();
-        LoadSession();
-    }
-
     private void InitLLama()
     {
-        string modelPath = @"llama-3.2-1b-instruct-q8_0.gguf";
+#if MACCATALYST || IOS
+        // Configure native library path before touching LLamaSharp types.
+        
+        NativeLibraryHelper.ConfigureNativeLibrary();
+#endif
+        var selectedModel = ModelConfig.SelectedModelPath;
+        var modelFile = "Jan-v3-4b-base-instruct-Q8_0.gguf";
+        var modelPath = ResolveModelPath(selectedModel, modelFile);
+
+        if (!File.Exists(modelPath))
+            throw new FileNotFoundException("Modelo .gguf não encontrado. Seleciona um modelo nas definições.");
 
         var parameters = new ModelParams(modelPath)
         {
@@ -55,39 +82,90 @@ public class ChatViewModel : BindableObject
             "Transcrição de uma caixa de diálogo, onde o Usuário interage com um Assistente chamado Bob. Bob é prestativo, gentil, honesto, bom em escrever e responde com clareza.");
         _session = new LLama.ChatSession(executor, chatHistory);
 
-        _inferenceParams = new InferenceParams()
+        _inferenceParams = new InferenceParams
         {
             MaxTokens = 256,
             AntiPrompts = new List<string> { "User:" }
         };
     }
 
+    private static string ResolveModelPath(string? selectedModelPath, string defaultModelFile)
+    {
+        if (!string.IsNullOrWhiteSpace(selectedModelPath) && File.Exists(selectedModelPath)) return selectedModelPath;
+
+        var baseDir = AppContext.BaseDirectory;
+        var candidates = new List<string>
+        {
+            Path.Combine(baseDir, "modelos de ai", defaultModelFile),
+            Path.Combine(baseDir, defaultModelFile),
+            // MacCatalyst bundles resources under Contents/Resources
+            Path.GetFullPath(Path.Combine(baseDir, "..", "Resources", "modelos de ai", defaultModelFile)),
+            Path.GetFullPath(Path.Combine(baseDir, "..", "Resources", defaultModelFile))
+        };
+
+        foreach (var path in candidates.Distinct())
+            if (File.Exists(path))
+                return path;
+
+        // Last resort: keep original file name for clearer exception message
+        return defaultModelFile;
+    }
+
     private async Task SendMessage()
     {
+        if (!_llamaReady)
+        {
+            Messages.Add(new Message
+            {
+                IsUser = false,
+                Text = "Modelo não está carregado. Seleciona um modelo .gguf válido."
+            });
+            return;
+        }
+
         if (string.IsNullOrWhiteSpace(CurrentMessage))
             return;
 
         // Adicionar mensagem do utilizador
         Messages.Add(new Message { Text = CurrentMessage, IsUser = true });
 
-        string userInput = CurrentMessage;
+        var userInput = CurrentMessage;
         CurrentMessage = string.Empty;
 
-        string botReply = "";
+        // Criar mensagem do bot imediatamente (vazia) para mostrar em tempo real
+        var botMessage = new Message { Text = "", IsUser = false };
+        Messages.Add(botMessage);
 
+        var botReply = "";
+
+        // Atualizar a mensagem em tempo real conforme os chunks chegam
+        var updateCount = 0;
         await foreach (var text in _session.ChatAsync(
-            new ChatHistory.Message(AuthorRole.User, userInput),
-            _inferenceParams))
+                           new ChatHistory.Message(AuthorRole.User, userInput),
+                           _inferenceParams))
         {
             botReply += text;
+            updateCount++;
+
+            // Limpar prefixos indesejados enquanto está escrevendo
+            var cleanedReply = botReply.Replace("bob:", "", StringComparison.OrdinalIgnoreCase)
+                .Replace("User:", "", StringComparison.OrdinalIgnoreCase)
+                .Trim();
+
+            // Atualizar o texto da mensagem em tempo real
+            // A propriedade Text já notifica a UI automaticamente via INotifyPropertyChanged
+            botMessage.Text = cleanedReply;
+
+            // Fazer scroll a cada 3 chunks para não sobrecarregar a UI
+            if (updateCount % 3 == 0) await Task.Delay(1); // Pequeno delay para permitir que a UI atualize
         }
 
+        // Limpeza final
         botReply = botReply.Replace("bob:", "", StringComparison.OrdinalIgnoreCase)
-                           .Replace("User:", "", StringComparison.OrdinalIgnoreCase)
-                           .Trim();
+            .Replace("User:", "", StringComparison.OrdinalIgnoreCase)
+            .Trim();
 
-        // Adicionar resposta do bot
-        Messages.Add(new Message { Text = botReply, IsUser = false });
+        botMessage.Text = botReply;
 
         // Guardar conversa atualizada
         await SaveSessionAsync();
@@ -101,7 +179,7 @@ public class ChatViewModel : BindableObject
         if (_currentChat == null)
         {
             // Caso não exista (backup)
-            _currentChat = new chatbot.Models.ChatSession
+            _currentChat = new ChatSession
             {
                 Id = _chatId,
                 Title = "Nova Conversa"
@@ -113,13 +191,11 @@ public class ChatViewModel : BindableObject
         // Carregar mensagens salvas na UI
         Messages.Clear();
         foreach (var msg in _currentChat.Messages)
-        {
             Messages.Add(new Message
             {
                 Text = msg.Text,
                 IsUser = msg.Role == "user"
             });
-        }
     }
 
     private async Task SaveSessionAsync()
@@ -128,16 +204,13 @@ public class ChatViewModel : BindableObject
         var existing = allChats.FirstOrDefault(c => c.Id == _chatId);
 
         if (existing != null)
-        {
             existing.Messages = Messages.Select(m => new ChatMessage
             {
                 Role = m.IsUser ? "user" : "bot",
                 Text = m.Text
             }).ToList();
-        }
         else
-        {
-            allChats.Add(new chatbot.Models.ChatSession
+            allChats.Add(new ChatSession
             {
                 Id = _chatId,
                 Title = "Nova Conversa",
@@ -147,7 +220,6 @@ public class ChatViewModel : BindableObject
                     Text = m.Text
                 }).ToList()
             });
-        }
 
         await ChatStorage.SaveChatsAsync(allChats);
     }

@@ -1,0 +1,117 @@
+<ContentPage xmlns="http://schemas.microsoft.com/dotnet/2021/maui"
+             xmlns:x="http://schemas.microsoft.com/winfx/2009/xaml"
+             xmlns:vm="clr-namespace:chatbot.ViewModels"
+             x:Class="chatbot.LocalModelsPage"
+             BackgroundColor="#0C111B"
+             Title="Modelos Locais">
+
+    <ContentPage.BindingContext>
+        <vm:LocalModelsViewModel />
+    </ContentPage.BindingContext>
+
+    <Grid RowDefinitions="Auto,*">
+        <!-- Header -->
+        <Grid Grid.Row="0" Padding="20,22" ColumnDefinitions="*,Auto">
+            <VerticalStackLayout Spacing="6">
+                <Label Text="Modelos locais"
+                       FontSize="26"
+                       TextColor="#E8EDF4"
+                       FontAttributes="Bold" />
+                <Label Text="Importa e escolhe o modelo GGUF ativo"
+                       FontSize="13"
+                       TextColor="#9AA4B2" />
+            </VerticalStackLayout>
+            <Button Text="Importar"
+                    Grid.Column="1"
+                    BackgroundColor="#16A34A"
+                    TextColor="White"
+                    FontAttributes="Bold"
+                    Padding="16,10"
+                    CornerRadius="12"
+                    Command="{Binding ImportModelCommand}" />
+        </Grid>
+
+        <!-- Lista -->
+        <CollectionView Grid.Row="1"
+                        ItemsSource="{Binding LocalModels}"
+                        Margin="16,0,16,16"
+                        SelectionMode="None">
+            <CollectionView.ItemTemplate>
+                <DataTemplate>
+                    <Frame BackgroundColor="#121826"
+                           BorderColor="#1F2937"
+                           CornerRadius="16"
+                           Padding="14"
+                           Margin="0,8">
+                        <Grid RowDefinitions="Auto,Auto,Auto"
+                              ColumnDefinitions="*,Auto,Auto"
+                              RowSpacing="6"
+                              ColumnSpacing="8">
+                            <Label Grid.Row="0"
+                                   Grid.Column="0"
+                                   Text="{Binding Name}"
+                                   TextColor="#F1F5F9"
+                                   FontSize="18"
+                                   FontAttributes="Bold" />
+
+                            <Label Grid.Row="1"
+                                   Grid.Column="0"
+                                   Text="{Binding Description}"
+                                   TextColor="#94A3B8"
+                                   FontSize="12" />
+
+                            <Label Grid.Row="2"
+                                   Grid.Column="0"
+                                   Text="{Binding SizeText}"
+                                   TextColor="#64748B"
+                                   FontSize="12" />
+
+                            <Label Grid.Row="2"
+                                   Grid.Column="1"
+                                   Text="{Binding DateText}"
+                                   TextColor="#64748B"
+                                   FontSize="12"
+                                   HorizontalOptions="End" />
+
+                            <Button Grid.Row="0"
+                                    Grid.RowSpan="2"
+                                    Grid.Column="1"
+                                    Text="Usar"
+                                    BackgroundColor="#2563EB"
+                                    TextColor="White"
+                                    FontAttributes="Bold"
+                                    Padding="14,10"
+                                    CornerRadius="12"
+                                    Command="{Binding Source={RelativeSource AncestorType={x:Type vm:LocalModelsViewModel}}, Path=UseModelCommand}"
+                                    CommandParameter="{Binding .}" />
+
+                            <Button Grid.Row="0"
+                                    Grid.RowSpan="2"
+                                    Grid.Column="2"
+                                    Text="Remover"
+                                    BackgroundColor="#EF4444"
+                                    TextColor="White"
+                                    FontAttributes="Bold"
+                                    Padding="14,10"
+                                    CornerRadius="12"
+                                    Command="{Binding Source={RelativeSource AncestorType={x:Type vm:LocalModelsViewModel}}, Path=RemoveModelCommand}"
+                                    CommandParameter="{Binding .}" />
+
+                            <Frame Grid.Row="1"
+                                   Grid.Column="0"
+                                   Padding="6,2"
+                                   BackgroundColor="#0EA5E9"
+                                   CornerRadius="10"
+                                   IsVisible="{Binding IsSelected}"
+                                   HorizontalOptions="Start">
+                                <Label Text="Selecionado"
+                                       TextColor="White"
+                                       FontSize="11" />
+                            </Frame>
+                        </Grid>
+                    </Frame>
+                </DataTemplate>
+            </CollectionView.ItemTemplate>
+        </CollectionView>
+    </Grid>
+</ContentPage>
