@@ -69,7 +69,7 @@ Local GGUF Model
 <img width="1512" height="952" alt="Captura de ecrã 2026-02-25, às 12 29 05" src="https://github.com/user-attachments/assets/079f5727-b98c-4bc3-afe0-f2ab643dc9a9" />
 <img width="1512" height="952" alt="Captura de ecrã 2026-02-25, às 12 32 03" src="https://github.com/user-attachments/assets/4e06e9bc-4bdf-4ecc-9ad1-c6e9077f58ca" />
 <img width="1512" height="952" alt="Captura de ecrã 2026-02-25, às 12 32 44" src="https://github.com/user-attachments/assets/b62a1b93-ca03-432a-82e2-96d8fc8ea9ac" />
-<img width="1512" height="952" alt="Captura de ecrã 2026-02-25, às 12 36 30" src="https://github.com/user-attachments/assets/a1ff9133-c9f1-4c6c-a7da-54cb08d70062" />
+
 <img width="1512" height="952" alt="Captura de ecrã 2026-02-25, às 12 36 42" src="https://github.com/user-attachments/assets/30e645e5-43af-43f0-8427-16a2d9030d52" />
 <img width="1512" height="952" alt="Captura de ecrã 2026-02-25, às 12 39 14" src="https://github.com/user-attachments/assets/f7067d8a-7c70-49f1-8127-6c238444e628" />
 
@@ -152,7 +152,7 @@ Open an issue for suggestions or improvements 🚀
 
 ## 📜 License
 
-MIT License
+ Apache-2.0 license
 
 ---
 
