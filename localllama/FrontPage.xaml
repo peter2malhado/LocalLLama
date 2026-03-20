@@ -1,0 +1,221 @@
+<ContentPage xmlns="http://schemas.microsoft.com/dotnet/2021/maui"
+             xmlns:x="http://schemas.microsoft.com/winfx/2009/xaml"
+             x:Class="localllama.FrontPage"
+             BackgroundColor="#0F0F1E">
+
+    <Grid RowDefinitions="Auto,Auto,*">
+
+        <!-- Cabeçalho com Gradiente -->
+        <Frame Grid.Row="0"
+               BackgroundColor="#1A1A2E"
+               HasShadow="False"
+               Padding="20,40,20,20"
+               Margin="0">
+            <Grid ColumnDefinitions="*,Auto"
+                  RowDefinitions="Auto,Auto"
+                  ColumnSpacing="12">
+                <Label Grid.Row="0"
+                       Grid.Column="0"
+                       Text="💬 Minhas Conversas"
+                       FontSize="32"
+                       FontAttributes="Bold"
+                       TextColor="White" />
+
+                <Button Grid.Row="0"
+                        Grid.Column="1"
+                        Text="Logout"
+                        Clicked="OnLogoutClicked"
+                        BackgroundColor="#C33935"
+                        TextColor="#FF8A80"
+                        Padding="8,4" 
+                        CornerRadius="20"
+                
+                        
+                        />
+
+                <Label Grid.Row="1"
+                       Grid.Column="0"
+                       Text="Selecione uma conversa para continuar"
+                       FontSize="14"
+                       TextColor="#B0B0B0" />
+            </Grid>
+        </Frame>
+
+        <!-- Botões de Ação -->
+        <Grid Grid.Row="1"
+              ColumnDefinitions="*,*,*,*"
+              ColumnSpacing="12"
+              Padding="20,15,20,15"
+              BackgroundColor="#0F0F1E">
+
+
+            <Button Text="🗄️ Base de Dados"
+                    BackgroundColor="#2196F3"
+                    TextColor="White"
+                    FontSize="16"
+                    FontAttributes="Bold"
+                    Padding="15,12"
+                    CornerRadius="15"
+                    Clicked="OnOpenDatabaseToolsClicked"
+                    Grid.Column="0" />
+
+            <Button Text="➕ Nova Conversa"
+                    BackgroundColor="#4CAF50"
+                    TextColor="White"
+                    FontSize="16"
+                    FontAttributes="Bold"
+                    Padding="15,12"
+                    CornerRadius="15"
+                    Clicked="OnStartChatClicked"
+                    Grid.Column="1" />
+
+
+            <Button Text="📥 Gerenciar"
+                    BackgroundColor="#FF5722"
+                    TextColor="White"
+                    FontSize="16"
+                    FontAttributes="Bold"
+                    Padding="15,12"
+                    CornerRadius="15"
+                    Clicked="OnOpenModelManagerClicked"
+                    Grid.Column="2" />
+
+            <Button Text="📁 modelos"
+                    BackgroundColor="#607D8B"
+                    TextColor="White"
+                    FontSize="16"
+                    FontAttributes="Bold"
+                    Padding="15,12"
+                    CornerRadius="15"
+                    Clicked="OnOpenLocalModelsClicked"
+                    Grid.Column="3" />
+        </Grid>
+
+        <!-- Lista de Conversas com Scroll -->
+        <ScrollView Grid.Row="2">
+            <CollectionView ItemsSource="{Binding Conversations}"
+                            SelectionChanged="OnChatSelected"
+                            SelectionMode="Single"
+                            BackgroundColor="Transparent">
+
+                <CollectionView.ItemTemplate>
+                    <DataTemplate>
+                        <Grid Padding="20,8"
+                              ColumnDefinitions="Auto,*,Auto"
+                              ColumnSpacing="15">
+
+                            <!-- Ícone do Chat -->
+                            <Frame Grid.Column="0"
+                                   WidthRequest="50"
+                                   HeightRequest="50"
+                                   CornerRadius="25"
+                                   BackgroundColor="#2A2A3D"
+                                   HasShadow="False"
+                                   Padding="0">
+                                <Label Text="💬"
+                                       FontSize="24"
+                                       HorizontalOptions="Center"
+                                       VerticalOptions="Center" />
+                            </Frame>
+
+                            <!-- Conteúdo do Chat -->
+                            <Frame Grid.Column="1"
+                                   CornerRadius="15"
+                                   Padding="15"
+                                   Margin="0,0,0,10"
+                                   BackgroundColor="#1E1E2E"
+                                   HasShadow="True"
+                                   BorderColor="#2A2A3D">
+
+                                <VerticalStackLayout Spacing="8">
+                                    <!-- Título -->
+                                    <Label Text="{Binding Title}"
+                                           TextColor="White"
+                                           FontSize="18"
+                                           FontAttributes="Bold" />
+
+                                    <!-- Preview da última mensagem -->
+                                    <Label Text="{Binding LastMessagePreview}"
+                                           TextColor="#B0B0B0"
+                                           FontSize="14"
+                                           LineBreakMode="TailTruncation"
+                                           MaxLines="2" />
+
+                                    <!-- Informações adicionais -->
+                                    <Grid ColumnDefinitions="*,Auto">
+                                        <Label Grid.Column="0"
+                                               Text="{Binding MessageCount, StringFormat='{0} mensagens'}"
+                                               TextColor="#808080"
+                                               FontSize="12" />
+
+                                        <Label Grid.Column="1"
+                                               Text="▶"
+                                               TextColor="#4CAF50"
+                                               FontSize="16"
+                                               VerticalOptions="Center" />
+                                    </Grid>
+                                </VerticalStackLayout>
+                            </Frame>
+
+                            <!-- Botões de Ação -->
+                            <Grid Grid.Column="2"
+                                  RowDefinitions="Auto,Auto"
+                                  RowSpacing="8"
+                                  VerticalOptions="Center">
+
+                                <!-- Botão Editar -->
+                                <Button Text="✏️"
+                                        BackgroundColor="#FF9800"
+                                        TextColor="White"
+                                        FontSize="16"
+                                        WidthRequest="45"
+                                        HeightRequest="45"
+                                        CornerRadius="22"
+                                        Padding="0"
+                                        Clicked="OnEditChatClicked"
+                                        CommandParameter="{Binding .}"
+                                        Grid.Row="0" />
+
+                                <!-- Botão Deletar -->
+                                <Button Text="🗑️"
+                                        BackgroundColor="#F44336"
+                                        TextColor="White"
+                                        FontSize="16"
+                                        WidthRequest="45"
+                                        HeightRequest="45"
+                                        CornerRadius="22"
+                                        Padding="0"
+                                        Clicked="OnDeleteChatClicked"
+                                        CommandParameter="{Binding .}"
+                                        Grid.Row="1" />
+                            </Grid>
+                        </Grid>
+                    </DataTemplate>
+                </CollectionView.ItemTemplate>
+
+                <!-- Mensagem quando não há chats -->
+                <CollectionView.EmptyView>
+                    <VerticalStackLayout HorizontalOptions="Center"
+                                         VerticalOptions="Center"
+                                         Spacing="20"
+                                         Padding="40">
+                        <Label Text="💭"
+                               FontSize="64"
+                               HorizontalOptions="Center" />
+                        <Label Text="Ainda não tens conversas"
+                               FontSize="18"
+                               TextColor="#808080"
+                               HorizontalOptions="Center" />
+                        <Label Text="Cria uma nova conversa para começar!"
+                               FontSize="14"
+                               TextColor="#606060"
+                               HorizontalOptions="Center" />
+                    </VerticalStackLayout>
+                </CollectionView.EmptyView>
+
+            </CollectionView>
+        </ScrollView>
+
+    </Grid>
+
+</ContentPage>
