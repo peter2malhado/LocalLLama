@@ -7,7 +7,8 @@ public class ModelCatalogService
 {
     // Substitui pelo URL real do teu JSON no GitHub
     private const string CatalogUrl =
-        "https://raw.githubusercontent.com/peter2malhado/o-json-para-o-localllama/refs/heads/main/modelos.json";
+        "https://raw.githubusercontent.com/peter2malhado/o-json-para-o-chatbot/refs/heads/main/modelos.json"
+        ;
 
     private readonly HttpClient _httpClient;
 
