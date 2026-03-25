@@ -1,8 +1,8 @@
 <component name="libraryTable">
   <library name="androidx.lifecycle.lifecycle-livedata">
     <CLASSES>
-      <root url="file://$USER_HOME$/AppData/Local/Temp/JetBrains/xamarinAarPackages/androidx.lifecycle.lifecycle-livedata/classes.jar" />
-      <root url="file://$USER_HOME$/AppData/Local/Temp/JetBrains/xamarinAarPackages/androidx.lifecycle.lifecycle-livedata/res" />
+      <root url="file:///var/folders/tj/0c7pzkkn1nv968g5k4mw8hvm0000gn/T/JetBrains/xamarinAarPackages/androidx.lifecycle.lifecycle-livedata/classes.jar" />
+      <root url="file:///var/folders/tj/0c7pzkkn1nv968g5k4mw8hvm0000gn/T/JetBrains/xamarinAarPackages/androidx.lifecycle.lifecycle-livedata/res" />
     </CLASSES>
     <JAVADOC />
     <SOURCES />

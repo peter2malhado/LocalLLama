@@ -1,8 +1,8 @@
 <component name="libraryTable">
   <library name="glide">
     <CLASSES>
-      <root url="file://$USER_HOME$/AppData/Local/Temp/JetBrains/xamarinAarPackages/glide/classes.jar" />
-      <root url="file://$USER_HOME$/AppData/Local/Temp/JetBrains/xamarinAarPackages/glide/res" />
+      <root url="file:///var/folders/tj/0c7pzkkn1nv968g5k4mw8hvm0000gn/T/JetBrains/xamarinAarPackages/glide/classes.jar" />
+      <root url="file:///var/folders/tj/0c7pzkkn1nv968g5k4mw8hvm0000gn/T/JetBrains/xamarinAarPackages/glide/res" />
     </CLASSES>
     <JAVADOC />
     <SOURCES />
