@@ -16,6 +16,7 @@ public class ChatViewModel : BindableObject
     private InferenceParams _inferenceParams;
     private LLama.ChatSession _session;
     private bool _llamaReady;
+    private string? _initErrorMessage;
 
     public ChatViewModel(string chatId)
     {
@@ -30,6 +31,7 @@ public class ChatViewModel : BindableObject
         catch (Exception ex)
         {
             _llamaReady = false;
+            _initErrorMessage = ex.Message;
             Messages.Add(new Message
             {
                 IsUser = false,
@@ -61,7 +63,7 @@ public class ChatViewModel : BindableObject
         NativeLibraryHelper.ConfigureNativeLibrary();
 #endif
         var selectedModel = ModelConfig.SelectedModelPath;
-        var modelFile = "Jan-v3-4b-base-instruct-Q8_0.gguf";
+        var modelFile = "llama-3.2-1b-instruct-q8_0.gguf";
         var modelPath = ResolveModelPath(selectedModel, modelFile);
 
         if (!File.Exists(modelPath))
@@ -70,7 +72,7 @@ public class ChatViewModel : BindableObject
         var parameters = new ModelParams(modelPath)
         {
             ContextSize = 1024,
-            GpuLayerCount = 5
+            GpuLayerCount = (DeviceInfo.Platform == DevicePlatform.iOS) ? 0 : 5
         };
 
         var model = LLamaWeights.LoadFromFile(parameters);
@@ -93,22 +95,85 @@ public class ChatViewModel : BindableObject
     {
         if (!string.IsNullOrWhiteSpace(selectedModelPath) && File.Exists(selectedModelPath)) return selectedModelPath;
 
+        var appDataModelsDir = Path.Combine(FileSystem.AppDataDirectory, "models");
+        Directory.CreateDirectory(appDataModelsDir);
+        var appDataModelPath = Path.Combine(appDataModelsDir, defaultModelFile);
+        if (File.Exists(appDataModelPath))
+            return appDataModelPath;
+
+        if (TryCopyFromAppPackage($"AI model/{defaultModelFile}", appDataModelPath) ||
+            TryCopyFromAppPackage(defaultModelFile, appDataModelPath))
+        {
+            return appDataModelPath;
+        }
+
         var baseDir = AppContext.BaseDirectory;
         var candidates = new List<string>
         {
+            Path.Combine(baseDir, "AI model", defaultModelFile),
+            Path.Combine(baseDir, "gguf models", defaultModelFile),
             Path.Combine(baseDir, "modelos de ai", defaultModelFile),
             Path.Combine(baseDir, defaultModelFile),
             // MacCatalyst bundles resources under Contents/Resources
+            Path.GetFullPath(Path.Combine(baseDir, "..", "Resources", "AI model", defaultModelFile)),
+            Path.GetFullPath(Path.Combine(baseDir, "..", "Resources", "gguf models", defaultModelFile)),
             Path.GetFullPath(Path.Combine(baseDir, "..", "Resources", "modelos de ai", defaultModelFile)),
             Path.GetFullPath(Path.Combine(baseDir, "..", "Resources", defaultModelFile))
         };
 
+        var ancestorMatch = FindInAncestorFolders(baseDir, "AI model", defaultModelFile);
+        if (!string.IsNullOrWhiteSpace(ancestorMatch))
+            candidates.Insert(0, ancestorMatch);
+
         foreach (var path in candidates.Distinct())
             if (File.Exists(path))
-                return path;
+                return TryCopyToAppData(path, appDataModelPath) ?? path;
 
         // Last resort: keep original file name for clearer exception message
         return defaultModelFile;
+    }
+
+    private static string? TryCopyToAppData(string sourcePath, string destPath)
+    {
+        try
+        {
+            File.Copy(sourcePath, destPath, overwrite: true);
+            return destPath;
+        }
+        catch
+        {
+            return null;
+        }
+    }
+
+    private static bool TryCopyFromAppPackage(string assetPath, string destPath)
+    {
+        try
+        {
+            using var src = FileSystem.OpenAppPackageFileAsync(assetPath).GetAwaiter().GetResult();
+            using var dest = File.Open(destPath, FileMode.Create, FileAccess.Write, FileShare.None);
+            src.CopyTo(dest);
+            return true;
+        }
+        catch
+        {
+            return false;
+        }
+    }
+
+    private static string? FindInAncestorFolders(string startDir, string folderName, string fileName)
+    {
+        var dir = new DirectoryInfo(startDir);
+        while (dir != null)
+        {
+            var candidate = Path.Combine(dir.FullName, folderName, fileName);
+            if (File.Exists(candidate))
+                return candidate;
+
+            dir = dir.Parent;
+        }
+
+        return null;
     }
 
     private async Task SendMessage()
@@ -118,7 +183,9 @@ public class ChatViewModel : BindableObject
             Messages.Add(new Message
             {
                 IsUser = false,
-                Text = "Modelo não está carregado. Seleciona um modelo .gguf válido."
+                Text = string.IsNullOrWhiteSpace(_initErrorMessage)
+                    ? "Modelo não está carregado. Seleciona um modelo .gguf válido."
+                    : $"Modelo não está carregado. {_initErrorMessage}"
             });
             return;
         }
