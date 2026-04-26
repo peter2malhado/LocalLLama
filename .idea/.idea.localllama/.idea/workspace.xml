@@ -16,11 +16,17 @@
   <component name="AutoImportSettings">
     <option name="autoReloadType" value="SELECTIVE" />
   </component>
+  <component name="CMakeProjectFlavorService">
+    <option name="flavorId" value="CMakePlainProjectFlavor" />
+  </component>
+  <component name="CMakeSettings">
+    <configurations />
+  </component>
   <component name="ChangeListManager">
     <list default="true" id="3d9c196b-eab1-473a-a7fa-71a922d2b3a8" name="Changes" comment="">
       <change beforePath="$PROJECT_DIR$/.idea/.idea.localllama/.idea/AndroidProjectSystem.xml" beforeDir="false" />
       <change beforePath="$PROJECT_DIR$/.idea/.idea.localllama/.idea/workspace.xml" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/.idea.localllama/.idea/workspace.xml" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/localllama/ChatViewModel.cs" beforeDir="false" afterPath="$PROJECT_DIR$/localllama/ChatViewModel.cs" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/global.json" beforeDir="false" afterPath="$PROJECT_DIR$/global.json" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/localllama/localllama.csproj" beforeDir="false" afterPath="$PROJECT_DIR$/localllama/localllama.csproj" afterDir="false" />
     </list>
     <option name="SHOW_DIALOG" value="false" />
@@ -30,6 +36,9 @@
   </component>
   <component name="DpaMonitoringSettings">
     <option name="firstShow" value="false" />
+  </component>
+  <component name="EmbeddingIndexingInfo">
+    <option name="cachedIndexableFilesCount" value="11" />
   </component>
   <component name="Git.Settings">
     <favorite-branches>
@@ -72,8 +81,9 @@
   }
 }</component>
   <component name="HighlightingSettingsPerFile">
-    <setting file="file://$APPLICATION_CONFIG_DIR$/resharper-host/DecompilerCache/decompiler/ad18499be15447e3ba197f39127c285e498d38/6d/4b5e543b/TypeInitializationException.cs" root0="FORCE_HIGHLIGHTING" />
     <setting file="file://$PROJECT_DIR$/global.json" root0="FORCE_HIGHLIGHTING" />
+    <setting file="file://$PROJECT_DIR$/localllama/Platforms/MacCatalyst/Program.cs" root0="FORCE_HIGHLIGHTING" />
+    <setting file="file://$PROJECT_DIR$/localllama/Platforms/iOS/Program.cs" root0="SKIP_HIGHLIGHTING" />
   </component>
   <component name="InvalidFacetManager">
     <ignored-facets>
@@ -91,7 +101,7 @@
   </component>
   <component name="MetaFilesCheckinStateConfiguration" checkMetaFiles="true" />
   <component name="ProblemsViewState">
-    <option name="selectedTabId" value="QODANA_PROBLEMS_VIEW_TAB" />
+    <option name="selectedTabId" value="SWEA" />
   </component>
   <component name="ProjectColorInfo">{
   &quot;associatedIndex&quot;: 4
@@ -248,6 +258,8 @@
       <workItem from="1774613601313" duration="8993000" />
       <workItem from="1774959995014" duration="29000" />
       <workItem from="1774960119057" duration="144000" />
+      <workItem from="1777203423604" duration="302000" />
+      <workItem from="1777203759612" duration="1430000" />
     </task>
     <task id="LOCAL-00001" summary="fix para o mac os &#10;tive de fazer que o mac os puxe os dll manualmente no nativelibraryhelper uma classe so para o macos">
       <option name="closed" value="true" />
