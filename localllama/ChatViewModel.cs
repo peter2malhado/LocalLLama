@@ -11,6 +11,8 @@ using ChatSession = localllama.Models.ChatSession;
 public class ChatViewModel : BindableObject
 {
     private readonly string _chatId;
+    private readonly List<string> _modelResolutionDiagnostics = new();
+    private readonly List<string> _modelLoadDiagnostics = new();
     private ChatSession _currentChat;
     private string _currentMessage;
     private InferenceParams _inferenceParams;
@@ -31,11 +33,15 @@ public class ChatViewModel : BindableObject
         catch (Exception ex)
         {
             _llamaReady = false;
-            _initErrorMessage = ex.Message;
+            _initErrorMessage = BuildDetailedError(ex);
+#if MACCATALYST || IOS
+            if (!string.IsNullOrWhiteSpace(NativeLibraryHelper.LastDiagnostics))
+                _initErrorMessage += $" | NativeDiag: {NativeLibraryHelper.LastDiagnostics}";
+#endif
             Messages.Add(new Message
             {
                 IsUser = false,
-                Text = $"Erro ao carregar o modelo. {ex.Message}"
+                Text = $"Erro ao carregar o modelo. {_initErrorMessage}"
             });
         }
         LoadSession();
@@ -59,24 +65,60 @@ public class ChatViewModel : BindableObject
     {
 #if MACCATALYST || IOS
         // Configure native library path before touching LLamaSharp types.
-        
         NativeLibraryHelper.ConfigureNativeLibrary();
 #endif
         var selectedModel = ModelConfig.SelectedModelPath;
         var modelFile = "llama-3.2-1b-instruct-q8_0.gguf";
-        var modelPath = ResolveModelPath(selectedModel, modelFile);
+        var modelPath = ResolveModelPath(selectedModel, modelFile, _modelResolutionDiagnostics);
+        _modelLoadDiagnostics.Add($"ModelPath={modelPath}");
+        _modelLoadDiagnostics.Add($"SelectedModel={selectedModel ?? "<null>"}");
 
         if (!File.Exists(modelPath))
-            throw new FileNotFoundException("Modelo .gguf não encontrado. Seleciona um modelo nas definições.");
+        {
+            var detail = _modelResolutionDiagnostics.Count == 0
+                ? string.Empty
+                : $" Caminhos verificados: {string.Join(" | ", _modelResolutionDiagnostics)}";
+            throw new FileNotFoundException($"Modelo .gguf não encontrado. Seleciona ou importa um modelo nas definições.{detail}");
+        }
+
+        var modelInfo = new FileInfo(modelPath);
+        _modelLoadDiagnostics.Add("Exists=true");
+        _modelLoadDiagnostics.Add($"FileSize={modelInfo.Length}");
+        _modelLoadDiagnostics.Add($"LastWriteUtc={modelInfo.LastWriteTimeUtc:O}");
 
         var parameters = new ModelParams(modelPath)
         {
             ContextSize = 1024,
             GpuLayerCount = (DeviceInfo.Platform == DevicePlatform.iOS) ? 0 : 5
         };
+        _modelLoadDiagnostics.Add($"ContextSize={parameters.ContextSize}");
+        _modelLoadDiagnostics.Add($"GpuLayerCount={parameters.GpuLayerCount}");
 
-        var model = LLamaWeights.LoadFromFile(parameters);
-        var context = model.CreateContext(parameters);
+        LLamaWeights model;
+        try
+        {
+            model = LLamaWeights.LoadFromFile(parameters);
+            _modelLoadDiagnostics.Add("LoadFromFile=ok");
+        }
+        catch (Exception ex)
+        {
+            throw new InvalidOperationException(
+                $"Falha em LLamaWeights.LoadFromFile. Diagnóstico: {string.Join(" | ", _modelLoadDiagnostics)}",
+                ex);
+        }
+
+        LLamaContext context;
+        try
+        {
+            context = model.CreateContext(parameters);
+            _modelLoadDiagnostics.Add("CreateContext=ok");
+        }
+        catch (Exception ex)
+        {
+            throw new InvalidOperationException(
+                $"Falha em model.CreateContext. Diagnóstico: {string.Join(" | ", _modelLoadDiagnostics)}",
+                ex);
+        }
         var executor = new InteractiveExecutor(context);
 
         var chatHistory = new ChatHistory();
@@ -91,13 +133,19 @@ public class ChatViewModel : BindableObject
         };
     }
 
-    private static string ResolveModelPath(string? selectedModelPath, string defaultModelFile)
+    private static string ResolveModelPath(string? selectedModelPath, string defaultModelFile, List<string>? diagnostics = null)
     {
-        if (!string.IsNullOrWhiteSpace(selectedModelPath) && File.Exists(selectedModelPath)) return selectedModelPath;
+        if (!string.IsNullOrWhiteSpace(selectedModelPath))
+        {
+            diagnostics?.Add($"Selected={selectedModelPath}");
+            if (File.Exists(selectedModelPath))
+                return selectedModelPath;
+        }
 
         var appDataModelsDir = Path.Combine(FileSystem.AppDataDirectory, "models");
         Directory.CreateDirectory(appDataModelsDir);
         var appDataModelPath = Path.Combine(appDataModelsDir, defaultModelFile);
+        diagnostics?.Add($"AppData={appDataModelPath}");
         if (File.Exists(appDataModelPath))
             return appDataModelPath;
 
@@ -126,10 +174,14 @@ public class ChatViewModel : BindableObject
             candidates.Insert(0, ancestorMatch);
 
         foreach (var path in candidates.Distinct())
+        {
+            diagnostics?.Add($"Candidate={path}");
             if (File.Exists(path))
                 return TryCopyToAppData(path, appDataModelPath) ?? path;
+        }
 
         // Last resort: keep original file name for clearer exception message
+        diagnostics?.Add($"Fallback={defaultModelFile}");
         return defaultModelFile;
     }
 
@@ -174,6 +226,19 @@ public class ChatViewModel : BindableObject
         }
 
         return null;
+    }
+
+    private static string BuildDetailedError(Exception ex)
+    {
+        var parts = new List<string>();
+        Exception? current = ex;
+        while (current != null)
+        {
+            parts.Add($"{current.GetType().Name}: {current.Message}");
+            current = current.InnerException;
+        }
+
+        return string.Join(" | ", parts);
     }
 
     private async Task SendMessage()

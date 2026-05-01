@@ -24,9 +24,10 @@
   </component>
   <component name="ChangeListManager">
     <list default="true" id="3d9c196b-eab1-473a-a7fa-71a922d2b3a8" name="Changes" comment="">
-      <change beforePath="$PROJECT_DIR$/.idea/.idea.localllama/.idea/AndroidProjectSystem.xml" beforeDir="false" />
       <change beforePath="$PROJECT_DIR$/.idea/.idea.localllama/.idea/workspace.xml" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/.idea.localllama/.idea/workspace.xml" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/global.json" beforeDir="false" afterPath="$PROJECT_DIR$/global.json" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/localllama/App.xaml.cs" beforeDir="false" afterPath="$PROJECT_DIR$/localllama/App.xaml.cs" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/localllama/ChatViewModel.cs" beforeDir="false" afterPath="$PROJECT_DIR$/localllama/ChatViewModel.cs" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/localllama/NativeLibraryHelper.cs" beforeDir="false" afterPath="$PROJECT_DIR$/localllama/NativeLibraryHelper.cs" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/localllama/localllama.csproj" beforeDir="false" afterPath="$PROJECT_DIR$/localllama/localllama.csproj" afterDir="false" />
     </list>
     <option name="SHOW_DIALOG" value="false" />
@@ -38,7 +39,7 @@
     <option name="firstShow" value="false" />
   </component>
   <component name="EmbeddingIndexingInfo">
-    <option name="cachedIndexableFilesCount" value="11" />
+    <option name="cachedIndexableFilesCount" value="22" />
   </component>
   <component name="Git.Settings">
     <favorite-branches>
@@ -61,7 +62,7 @@
     </option>
     <option name="RECENT_BRANCH_BY_REPOSITORY">
       <map>
-        <entry key="$PROJECT_DIR$" value="mac-os-v2" />
+        <entry key="$PROJECT_DIR$" value="test-for-fix-" />
       </map>
     </option>
     <option name="RECENT_GIT_ROOT_PATH" value="$PROJECT_DIR$" />
@@ -139,7 +140,7 @@
     &quot;iOS.localllama.executor&quot;: &quot;Debug&quot;,
     &quot;junie.onboarding.icon.badge.shown&quot;: &quot;true&quot;,
     &quot;macOS.chatbot.executor&quot;: &quot;Run&quot;,
-    &quot;macOS.localllama.executor&quot;: &quot;Run&quot;,
+    &quot;macOS.localllama.executor&quot;: &quot;Debug&quot;,
     &quot;node.js.detected.package.eslint&quot;: &quot;true&quot;,
     &quot;node.js.detected.package.tslint&quot;: &quot;true&quot;,
     &quot;node.js.selected.package.eslint&quot;: &quot;(autodetect)&quot;,
@@ -260,6 +261,8 @@
       <workItem from="1774960119057" duration="144000" />
       <workItem from="1777203423604" duration="302000" />
       <workItem from="1777203759612" duration="1430000" />
+      <workItem from="1777624672240" duration="259000" />
+      <workItem from="1777652839269" duration="2687000" />
     </task>
     <task id="LOCAL-00001" summary="fix para o mac os &#10;tive de fazer que o mac os puxe os dll manualmente no nativelibraryhelper uma classe so para o macos">
       <option name="closed" value="true" />

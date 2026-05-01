@@ -1,5 +1,6 @@
 #if MACCATALYST || IOS
 using System.Runtime.InteropServices;
+using LLama.Native;
 
 namespace localllama
 {
@@ -8,6 +9,7 @@ namespace localllama
         private static bool _configured = false;
         private static readonly object _lock = new object();
         private static readonly List<nint> _loadedHandles = new List<nint>();
+        public static string LastDiagnostics { get; private set; } = string.Empty;
 
         private const int RTLD_NOW = 0x2;
         private const int RTLD_GLOBAL = 0x8;
@@ -30,8 +32,11 @@ namespace localllama
 
                 try
                 {
+                    var diagnostics = new List<string>();
                     // No MacCatalyst, os recursos ficam em Contents/Resources dentro do bundle
                     var appPath = AppContext.BaseDirectory;
+                    diagnostics.Add($"BaseDirectory={appPath}");
+                    diagnostics.Add($"Arch={RuntimeInformation.ProcessArchitecture}");
                     
                     // Se estamos dentro de um bundle, o BaseDirectory pode estar em Contents/MacOS/
                     // Precisamos subir para o bundle root
@@ -78,6 +83,7 @@ namespace localllama
                     var arch = RuntimeInformation.ProcessArchitecture;
                     string? libllamaPath = null;
                     string? nativeLibDir = null;
+                    string? libmtmdPath = null;
 
                     IEnumerable<string> orderedPaths = possiblePaths.Distinct();
                     if (arch == Architecture.Arm64)
@@ -97,11 +103,15 @@ namespace localllama
                     {
                         if (Directory.Exists(nativeLibPath))
                         {
+                            diagnostics.Add($"FoundNativeDir={nativeLibPath}");
                             var libllama = Path.Combine(nativeLibPath, "libllama.dylib");
                             if (File.Exists(libllama))
                             {
                                 libllamaPath = libllama;
                                 nativeLibDir = nativeLibPath;
+                                var libmtmd = Path.Combine(nativeLibPath, "libmtmd.dylib");
+                                if (File.Exists(libmtmd))
+                                    libmtmdPath = libmtmd;
                                 break;
                             }
                         }
@@ -109,6 +119,9 @@ namespace localllama
 
                     if (libllamaPath != null && nativeLibDir != null)
                     {
+                    diagnostics.Add($"UsingNativeDir={nativeLibDir}");
+                    EnsureVersionedLibraryAliases(nativeLibDir);
+
                     // Preload dependencies from the same directory so @rpath can resolve.
                     // Order matters: libggml.dylib depends on libggml-cpu.dylib.
                     var deps = new[]
@@ -135,9 +148,11 @@ namespace localllama
                                 {
                                     var errPtr = dlerror();
                                     var err = errPtr == IntPtr.Zero ? "unknown" : Marshal.PtrToStringAnsi(errPtr);
+                                    diagnostics.Add($"dlopen_fail:{dep}:{err}");
                                     throw new Exception(err ?? "unknown");
                                 }
                                 _loadedHandles.Add(handle);
+                                diagnostics.Add($"dlopen_ok:{dep}");
                             }
                             catch (Exception ex)
                             {
@@ -146,58 +161,75 @@ namespace localllama
                         }
                     }
 
-                        // Usar o nome completo do tipo para evitar importar o namespace antes da configuração
-                        // Primeiro tentar carregar o assembly se ainda não foi carregado
-                        System.Reflection.Assembly? llamasharpAssembly = null;
                         try
                         {
-                            llamasharpAssembly = System.Reflection.Assembly.Load("LLamaSharp");
-                        }
-                        catch
-                        {
-                            // Tentar encontrar o assembly já carregado
-                            llamasharpAssembly = System.AppDomain.CurrentDomain.GetAssemblies()
-                                .FirstOrDefault(a => a.GetName().Name == "LLamaSharp");
-                        }
-
-                        if (llamasharpAssembly != null)
-                        {
-                            var nativeLibraryConfigType =
- llamasharpAssembly.GetType("LLama.Native.NativeLibraryConfig");
-                            if (nativeLibraryConfigType != null)
+                            NativeLibraryConfig.All.WithSearchDirectory(nativeLibDir);
+                            if (!string.IsNullOrWhiteSpace(libmtmdPath))
                             {
-                                var llamaProperty = nativeLibraryConfigType.GetProperty("LLama");
-                                if (llamaProperty != null)
-                                {
-                                    var llamaConfig = llamaProperty.GetValue(null);
-                                    var withSearchDirectoryMethod =
- llamaConfig?.GetType().GetMethod("WithSearchDirectory", new[] { typeof(string) });
-                                    withSearchDirectoryMethod?.Invoke(llamaConfig, new object[] { nativeLibDir });
-                                    var withLibraryMethod =
- llamaConfig?.GetType().GetMethod("WithLibrary", new[] { typeof(string) });
-                                    withLibraryMethod?.Invoke(llamaConfig, new object[] { libllamaPath });
-                                    System.Diagnostics.Debug.WriteLine($"Configured LLama native library: {libllamaPath}");
-                                }
+                                NativeLibraryConfig.All.WithLibrary(libllamaPath, libmtmdPath);
+                                diagnostics.Add("NativeLibraryConfig=All.WithLibrary(llama,mtmd)");
+                            }
+                            else
+                            {
+                                NativeLibraryConfig.LLama.WithLibrary(libllamaPath);
+                                diagnostics.Add("NativeLibraryConfig=LLama.WithLibrary(llama)");
                             }
                         }
-                        else
+                        catch (Exception ex)
                         {
-                            System.Diagnostics.Debug.WriteLine($"Warning: Could not load LLamaSharp assembly for configuration");
+                            diagnostics.Add($"NativeLibraryConfigFail={ex.GetType().Name}:{ex.Message}");
                         }
+                        System.Diagnostics.Debug.WriteLine($"Configured LLama native library: {libllamaPath}");
                     }
                     else
                     {
+                        diagnostics.Add("libllama_not_found=true");
                         System.Diagnostics.Debug.WriteLine($"Warning: Could not find libllama.dylib. Searched in: {string.Join(", ", possiblePaths)}");
                         System.Diagnostics.Debug.WriteLine($"AppContext.BaseDirectory: {appPath}");
                     }
+
+                    LastDiagnostics = string.Join(" | ", diagnostics);
                 }
                 catch (Exception ex)
                 {
+                    LastDiagnostics = $"ConfigureException={ex.GetType().Name}:{ex.Message}";
                     System.Diagnostics.Debug.WriteLine($"Warning: Could not configure native library path: {ex.Message}");
                     System.Diagnostics.Debug.WriteLine($"Stack trace: {ex.StackTrace}");
                 }
 
                 _configured = true;
+            }
+        }
+
+        private static void EnsureVersionedLibraryAliases(string nativeLibDir)
+        {
+            var baseNames = new[]
+            {
+                "libggml-base",
+                "libggml-cpu",
+                "libggml-blas",
+                "libggml-metal",
+                "libggml",
+                "libllama",
+                "libmtmd"
+            };
+
+            foreach (var baseName in baseNames)
+            {
+                try
+                {
+                    var plainPath = Path.Combine(nativeLibDir, $"{baseName}.dylib");
+                    var versionedPath = Path.Combine(nativeLibDir, $"{baseName}.0.dylib");
+                    if (!File.Exists(plainPath) || File.Exists(versionedPath))
+                        continue;
+
+                    // Symlink keeps disk usage low and matches expected dylib names.
+                    File.CreateSymbolicLink(versionedPath, $"{baseName}.dylib");
+                }
+                catch (Exception ex)
+                {
+                    System.Diagnostics.Debug.WriteLine($"Warning: Could not create dylib alias for {baseName}: {ex.Message}");
+                }
             }
         }
     }
