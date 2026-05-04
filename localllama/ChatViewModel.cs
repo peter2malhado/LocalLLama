@@ -1,4 +1,5 @@
 using System.Collections.ObjectModel;
+using System.Diagnostics;
 using System.Windows.Input;
 using localllama;
 using localllama.Models;
@@ -10,15 +11,37 @@ using ChatSession = localllama.Models.ChatSession;
 
 public class ChatViewModel : BindableObject
 {
+    private const string DefaultChatTitle = "Nova Conversa";
+    private const string SystemPrompt =
+        """
+        És Bob, um assistente de IA útil, calmo e inteligente.
+        Responde em português de Portugal por defeito, a menos que o utilizador peça outra língua.
+        Mantém um tom natural, amigável e profissional.
+        Dá respostas claras, diretas e bem organizadas.
+        Se a pergunta for simples, responde de forma curta.
+        Se a pergunta for técnica ou complexa, explica passo a passo.
+        Se não souberes algo com confiança, diz isso de forma honesta e sugere o próximo passo.
+        Não inventes factos, fontes, resultados ou capacidades.
+        Não escrevas raciocínio interno, análises de benchmark, avaliações, notas, nem blocos com etiquetas como "Query:", "Avaliação:", "Score:", "Analysis:" ou semelhantes.
+        Responde apenas com a resposta final para o utilizador.
+        Se o utilizador pedir ajuda com código, programação ou configuração, sê prático e focado na solução.
+        """;
     private readonly string _chatId;
     private readonly List<string> _modelResolutionDiagnostics = new();
     private readonly List<string> _modelLoadDiagnostics = new();
     private ChatSession _currentChat;
     private string _currentMessage;
+    private EffectiveInferenceSettings? _effectiveSettings;
+    private InteractiveExecutor? _executor;
     private InferenceParams _inferenceParams;
-    private LLama.ChatSession _session;
+    private LLama.ChatSession? _session;
     private bool _llamaReady;
     private string? _initErrorMessage;
+    private bool _isDeveloperStatsVisible;
+    private string _responseTimeText = "Aguardando";
+    private string _tokenStatsText = "0";
+    private string _contextStatsText = "0 / 0";
+    private string _memoryUsageText = "0 MB";
 
     public ChatViewModel(string chatId)
     {
@@ -49,12 +72,77 @@ public class ChatViewModel : BindableObject
 
     public ObservableCollection<Message> Messages { get; set; } = new();
 
+    public bool IsDeveloperStatsVisible
+    {
+        get => _isDeveloperStatsVisible;
+        set
+        {
+            if (_isDeveloperStatsVisible == value)
+                return;
+
+            _isDeveloperStatsVisible = value;
+            OnPropertyChanged();
+        }
+    }
+
     public string CurrentMessage
     {
         get => _currentMessage;
         set
         {
             _currentMessage = value;
+            OnPropertyChanged();
+        }
+    }
+
+    public string ResponseTimeText
+    {
+        get => _responseTimeText;
+        set
+        {
+            if (_responseTimeText == value)
+                return;
+
+            _responseTimeText = value;
+            OnPropertyChanged();
+        }
+    }
+
+    public string TokenStatsText
+    {
+        get => _tokenStatsText;
+        set
+        {
+            if (_tokenStatsText == value)
+                return;
+
+            _tokenStatsText = value;
+            OnPropertyChanged();
+        }
+    }
+
+    public string ContextStatsText
+    {
+        get => _contextStatsText;
+        set
+        {
+            if (_contextStatsText == value)
+                return;
+
+            _contextStatsText = value;
+            OnPropertyChanged();
+        }
+    }
+
+    public string MemoryUsageText
+    {
+        get => _memoryUsageText;
+        set
+        {
+            if (_memoryUsageText == value)
+                return;
+
+            _memoryUsageText = value;
             OnPropertyChanged();
         }
     }
@@ -72,6 +160,7 @@ public class ChatViewModel : BindableObject
         var modelPath = ResolveModelPath(selectedModel, modelFile, _modelResolutionDiagnostics);
         _modelLoadDiagnostics.Add($"ModelPath={modelPath}");
         _modelLoadDiagnostics.Add($"SelectedModel={selectedModel ?? "<null>"}");
+        IsDeveloperStatsVisible = InferenceSettingsService.IsDeveloperStatsEnabled;
 
         if (!File.Exists(modelPath))
         {
@@ -86,10 +175,14 @@ public class ChatViewModel : BindableObject
         _modelLoadDiagnostics.Add($"FileSize={modelInfo.Length}");
         _modelLoadDiagnostics.Add($"LastWriteUtc={modelInfo.LastWriteTimeUtc:O}");
 
+        _effectiveSettings = InferenceSettingsService.GetEffectiveSettings(modelPath);
+        _modelLoadDiagnostics.Add($"Profile={_effectiveSettings.ProfileName}");
+        _modelLoadDiagnostics.Add($"AutoMode={_effectiveSettings.IsAutomatic}");
+
         var parameters = new ModelParams(modelPath)
         {
-            ContextSize = 1024,
-            GpuLayerCount = (DeviceInfo.Platform == DevicePlatform.iOS) ? 0 : 5
+            ContextSize = _effectiveSettings.ContextSize,
+            GpuLayerCount = _effectiveSettings.GpuLayerCount
         };
         _modelLoadDiagnostics.Add($"ContextSize={parameters.ContextSize}");
         _modelLoadDiagnostics.Add($"GpuLayerCount={parameters.GpuLayerCount}");
@@ -119,17 +212,12 @@ public class ChatViewModel : BindableObject
                 $"Falha em model.CreateContext. Diagnóstico: {string.Join(" | ", _modelLoadDiagnostics)}",
                 ex);
         }
-        var executor = new InteractiveExecutor(context);
-
-        var chatHistory = new ChatHistory();
-        chatHistory.AddMessage(AuthorRole.System,
-            "Transcrição de uma caixa de diálogo, onde o Usuário interage com um Assistente chamado Bob. Bob é prestativo, gentil, honesto, bom em escrever e responde com clareza.");
-        _session = new LLama.ChatSession(executor, chatHistory);
+        _executor = new InteractiveExecutor(context);
 
         _inferenceParams = new InferenceParams
         {
-            MaxTokens = 256,
-            AntiPrompts = new List<string> { "User:" }
+            MaxTokens = _effectiveSettings.MaxTokens,
+            AntiPrompts = new List<string> { "User:","Query:" }
         };
     }
 
@@ -255,24 +343,37 @@ public class ChatViewModel : BindableObject
             return;
         }
 
+        if (_session == null)
+        {
+            Messages.Add(new Message
+            {
+                IsUser = false,
+                Text = "A conversa ainda está a ser preparada. Tenta novamente dentro de um instante."
+            });
+            return;
+        }
+
         if (string.IsNullOrWhiteSpace(CurrentMessage))
             return;
 
-        // Adicionar mensagem do utilizador
-        Messages.Add(new Message { Text = CurrentMessage, IsUser = true });
+        var userInput = CurrentMessage.Trim();
 
-        var userInput = CurrentMessage;
+        // Adicionar mensagem do utilizador
+        Messages.Add(new Message { Text = userInput, IsUser = true });
         CurrentMessage = string.Empty;
+
+        await UpdateChatTitleIfNeededAsync(userInput);
 
         // Criar mensagem do bot imediatamente (vazia) para mostrar em tempo real
         var botMessage = new Message { Text = "", IsUser = false };
         Messages.Add(botMessage);
 
         var botReply = "";
+        var timer = Stopwatch.StartNew();
 
         // Atualizar a mensagem em tempo real conforme os chunks chegam
         var updateCount = 0;
-        await foreach (var text in _session.ChatAsync(
+        await foreach (var text in _session!.ChatAsync(
                            new ChatHistory.Message(AuthorRole.User, userInput),
                            _inferenceParams))
         {
@@ -298,15 +399,16 @@ public class ChatViewModel : BindableObject
             .Trim();
 
         botMessage.Text = botReply;
+        timer.Stop();
 
         // Guardar conversa atualizada
         await SaveSessionAsync();
+        UpdateDeveloperStats(botReply, timer.Elapsed);
     }
 
     private async void LoadSession()
     {
-        var allChats = await ChatStorage.LoadChatsAsync();
-        _currentChat = allChats.FirstOrDefault(c => c.Id == _chatId);
+        _currentChat = await ChatStorage.GetChatByIdAsync(_chatId);
 
         if (_currentChat == null)
         {
@@ -314,8 +416,10 @@ public class ChatViewModel : BindableObject
             _currentChat = new ChatSession
             {
                 Id = _chatId,
-                Title = "Nova Conversa"
+                Title = DefaultChatTitle
             };
+
+            var allChats = await ChatStorage.LoadChatsAsync();
             allChats.Add(_currentChat);
             await ChatStorage.SaveChatsAsync(allChats);
         }
@@ -328,6 +432,9 @@ public class ChatViewModel : BindableObject
                 Text = msg.Text,
                 IsUser = msg.Role == "user"
             });
+
+        RebuildSessionFromCurrentChat();
+        RefreshDeveloperStats();
     }
 
     private async Task SaveSessionAsync()
@@ -354,5 +461,111 @@ public class ChatViewModel : BindableObject
             });
 
         await ChatStorage.SaveChatsAsync(allChats);
+    }
+
+    private void RefreshDeveloperStats()
+    {
+        if (_effectiveSettings == null)
+            return;
+
+        UpdateDeveloperStats(string.Empty, TimeSpan.Zero);
+    }
+
+    private void RebuildSessionFromCurrentChat()
+    {
+        if (_executor == null)
+            return;
+
+        var chatHistory = new ChatHistory();
+        chatHistory.AddMessage(AuthorRole.System, SystemPrompt);
+
+        if (_currentChat?.Messages != null)
+        {
+            foreach (var message in _currentChat.Messages)
+            {
+                var role = string.Equals(message.Role, "user", StringComparison.OrdinalIgnoreCase)
+                    ? AuthorRole.User
+                    : AuthorRole.Assistant;
+
+                chatHistory.AddMessage(role, message.Text);
+            }
+        }
+
+        _session = new LLama.ChatSession(_executor, chatHistory);
+    }
+
+    private void UpdateDeveloperStats(string botReply, TimeSpan elapsed)
+    {
+        if (_effectiveSettings == null)
+            return;
+
+        var responseTokens = EstimateTokenCount(botReply);
+        var historyTokens = EstimateTokenCount(SystemPrompt);
+
+        historyTokens += Messages.Sum(m => EstimateTokenCount(m.Text));
+
+        ResponseTimeText = elapsed == TimeSpan.Zero
+            ? "Aguardando"
+            : $"{elapsed.TotalSeconds:0.00}s";
+        TokenStatsText = responseTokens > 0 ? responseTokens.ToString() : "0";
+        ContextStatsText = $"{historyTokens} / {_effectiveSettings.ContextSize}";
+        MemoryUsageText = FormatBytes(Process.GetCurrentProcess().WorkingSet64);
+    }
+
+    private async Task UpdateChatTitleIfNeededAsync(string firstUserMessage)
+    {
+        if (_currentChat == null || !string.Equals(_currentChat.Title, DefaultChatTitle, StringComparison.Ordinal))
+            return;
+
+        var generatedTitle = GenerateTitleFromFirstMessage(firstUserMessage);
+        if (string.IsNullOrWhiteSpace(generatedTitle) ||
+            string.Equals(generatedTitle, DefaultChatTitle, StringComparison.Ordinal))
+        {
+            return;
+        }
+
+        _currentChat.Title = generatedTitle;
+        await ChatStorage.UpdateChatTitleAsync(_chatId, generatedTitle);
+    }
+
+    private static string GenerateTitleFromFirstMessage(string text)
+    {
+        if (string.IsNullOrWhiteSpace(text))
+            return DefaultChatTitle;
+
+        var cleaned = text.Trim();
+        cleaned = cleaned.Replace("\r", " ").Replace("\n", " ");
+
+        while (cleaned.Contains("  ", StringComparison.Ordinal))
+            cleaned = cleaned.Replace("  ", " ");
+
+        const int maxLength = 40;
+        if (cleaned.Length <= maxLength)
+            return cleaned;
+
+        return cleaned[..37].TrimEnd() + "...";
+    }
+
+    private static int EstimateTokenCount(string? text)
+    {
+        if (string.IsNullOrWhiteSpace(text))
+            return 0;
+
+        var normalized = text.Trim();
+        var byChars = (int)Math.Ceiling(normalized.Length / 4d);
+        var byWords = normalized.Split(new[] { ' ', '\r', '\n', '\t' }, StringSplitOptions.RemoveEmptyEntries).Length;
+
+        return Math.Max(1, Math.Max(byChars, byWords));
+    }
+
+    private static string FormatBytes(long bytes)
+    {
+        const double mb = 1024d * 1024d;
+        const double gb = mb * 1024d;
+
+        if (bytes >= gb)
+            return $"{bytes / gb:0.00} GB";
+
+        return $"{bytes / mb:0.0} MB";
     }
 }

@@ -71,6 +71,11 @@ public partial class FrontPage : ContentPage
         await Navigation.PushAsync(new LocalModelsPage());
     }
 
+    private async void OnOpenSettingsClicked(object sender, EventArgs e)
+    {
+        await Navigation.PushAsync(new InferenceSettingsPage());
+    }
+
     // 👉 Quando o utilizador seleciona uma conversa existente
     private async void OnChatSelected(object sender, SelectionChangedEventArgs e)
     {

@@ -11,7 +11,7 @@
                HasShadow="False"
                Padding="20,40,20,20"
                Margin="0">
-            <Grid ColumnDefinitions="*,Auto"
+            <Grid ColumnDefinitions="*,Auto,Auto"
                   RowDefinitions="Auto,Auto"
                   ColumnSpacing="12">
                 <Label Grid.Row="0"
@@ -23,18 +23,25 @@
 
                 <Button Grid.Row="0"
                         Grid.Column="1"
+                        Text="Settings"
+                        Clicked="OnOpenSettingsClicked"
+                        BackgroundColor="#2E7DFF"
+                        TextColor="White"
+                        Padding="8,4"
+                        CornerRadius="20" />
+
+                <Button Grid.Row="0"
+                        Grid.Column="2"
                         Text="Logout"
                         Clicked="OnLogoutClicked"
                         BackgroundColor="#C33935"
                         TextColor="#FF8A80"
                         Padding="8,4" 
-                        CornerRadius="20"
-                
-                        
-                        />
+                        CornerRadius="20" />
 
                 <Label Grid.Row="1"
                        Grid.Column="0"
+                       Grid.ColumnSpan="3"
                        Text="Selecione uma conversa para continuar"
                        FontSize="14"
                        TextColor="#B0B0B0" />
