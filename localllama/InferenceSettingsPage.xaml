@@ -1,0 +1,207 @@
+<?xml version="1.0" encoding="utf-8" ?>
+<ContentPage xmlns="http://schemas.microsoft.com/dotnet/2021/maui"
+             xmlns:x="http://schemas.microsoft.com/winfx/2009/xaml"
+             x:Class="localllama.InferenceSettingsPage"
+             Title="Settings"
+             BackgroundColor="#0F0F1E">
+
+    <ScrollView>
+        <VerticalStackLayout Padding="20,24"
+                             Spacing="18">
+            <Frame BackgroundColor="#1A1A2E"
+                   BorderColor="#2A2A3D"
+                   CornerRadius="18"
+                   HasShadow="False"
+                   Padding="18">
+                <VerticalStackLayout Spacing="10">
+                    <Label Text="Inferência"
+                           FontSize="28"
+                           FontAttributes="Bold"
+                           TextColor="White" />
+                    <Label Text="Escolhe entre modo automático e configuração manual para contexto, resposta e GPU."
+                           FontSize="14"
+                           TextColor="#B0B0B0" />
+                </VerticalStackLayout>
+            </Frame>
+
+            <Frame BackgroundColor="#1E1E2E"
+                   BorderColor="#2A2A3D"
+                   CornerRadius="18"
+                   HasShadow="False"
+                   Padding="18">
+                <VerticalStackLayout Spacing="16">
+                    <Grid ColumnDefinitions="*,Auto"
+                          ColumnSpacing="12">
+                        <VerticalStackLayout Grid.Column="0"
+                                             Spacing="4">
+                            <Label Text="Modo automático"
+                                   FontSize="18"
+                                   FontAttributes="Bold"
+                                   TextColor="White" />
+                            <Label Text="A app escolhe valores seguros com base no dispositivo e no tamanho do modelo."
+                                   FontSize="13"
+                                   TextColor="#B0B0B0" />
+                        </VerticalStackLayout>
+
+                        <Switch x:Name="AutoModeSwitch"
+                                Grid.Column="1"
+                                Toggled="OnAutoModeToggled"
+                                OnColor="#10A37F"
+                                ThumbColor="White"
+                                VerticalOptions="Center" />
+                    </Grid>
+
+                    <BoxView HeightRequest="1"
+                             Color="#2A2A3D" />
+
+                    <VerticalStackLayout Spacing="6">
+                        <Label Text="Perfil atual"
+                               FontSize="14"
+                               TextColor="#B0B0B0" />
+                        <Label x:Name="ProfileNameLabel"
+                               FontSize="20"
+                               FontAttributes="Bold"
+                               TextColor="White" />
+                    </VerticalStackLayout>
+
+                    <Grid ColumnDefinitions="*,*"
+                          ColumnSpacing="12">
+                        <Frame BackgroundColor="#232338"
+                               BorderColor="#343452"
+                               CornerRadius="14"
+                               HasShadow="False"
+                               Padding="14">
+                            <VerticalStackLayout Spacing="4">
+                                <Label Text="Contexto"
+                                       FontSize="13"
+                                       TextColor="#B0B0B0" />
+                                <Label x:Name="AppliedContextLabel"
+                                       FontSize="22"
+                                       FontAttributes="Bold"
+                                       TextColor="White" />
+                            </VerticalStackLayout>
+                        </Frame>
+
+                        <Frame Grid.Column="1"
+                               BackgroundColor="#232338"
+                               BorderColor="#343452"
+                               CornerRadius="14"
+                               HasShadow="False"
+                               Padding="14">
+                            <VerticalStackLayout Spacing="4">
+                                <Label Text="Resposta máx."
+                                       FontSize="13"
+                                       TextColor="#B0B0B0" />
+                                <Label x:Name="AppliedTokensLabel"
+                                       FontSize="22"
+                                       FontAttributes="Bold"
+                                       TextColor="White" />
+                            </VerticalStackLayout>
+                        </Frame>
+                    </Grid>
+
+                    <Frame BackgroundColor="#232338"
+                           BorderColor="#343452"
+                           CornerRadius="14"
+                           HasShadow="False"
+                           Padding="14">
+                        <VerticalStackLayout Spacing="4">
+                            <Label Text="Camadas na GPU"
+                                   FontSize="13"
+                                   TextColor="#B0B0B0" />
+                            <Label x:Name="AppliedGpuLabel"
+                                   FontSize="22"
+                                   FontAttributes="Bold"
+                                   TextColor="White" />
+                        </VerticalStackLayout>
+                    </Frame>
+                </VerticalStackLayout>
+            </Frame>
+
+            <Frame x:Name="ManualSettingsFrame"
+                   BackgroundColor="#1E1E2E"
+                   BorderColor="#2A2A3D"
+                   CornerRadius="18"
+                   HasShadow="False"
+                   Padding="18">
+                <VerticalStackLayout Spacing="16">
+                    <Label Text="Configuração manual"
+                           FontSize="18"
+                           FontAttributes="Bold"
+                           TextColor="White" />
+
+                    <VerticalStackLayout Spacing="6">
+                        <Label Text="Contexto da conversa"
+                               FontSize="14"
+                               TextColor="#B0B0B0" />
+                        <Picker x:Name="ContextSizePicker"
+                                BackgroundColor="#232338"
+                                TextColor="White"
+                                Title="Seleciona o contexto" />
+                    </VerticalStackLayout>
+
+                    <VerticalStackLayout Spacing="6">
+                        <Label Text="Tamanho máximo da resposta"
+                               FontSize="14"
+                               TextColor="#B0B0B0" />
+                        <Picker x:Name="MaxTokensPicker"
+                                BackgroundColor="#232338"
+                                TextColor="White"
+                                Title="Seleciona os tokens" />
+                    </VerticalStackLayout>
+
+                    <VerticalStackLayout Spacing="6">
+                        <Label Text="Camadas na GPU"
+                               FontSize="14"
+                               TextColor="#B0B0B0" />
+                        <Picker x:Name="GpuLayersPicker"
+                                BackgroundColor="#232338"
+                                TextColor="White"
+                                Title="Seleciona as camadas GPU" />
+                    </VerticalStackLayout>
+
+                    <Label Text="Valores altos usam mais memória. Se a app ficar lenta, ativa o modo automático."
+                           FontSize="13"
+                           TextColor="#B0B0B0" />
+                </VerticalStackLayout>
+            </Frame>
+
+            <Frame BackgroundColor="#1E1E2E"
+                   BorderColor="#2A2A3D"
+                   CornerRadius="18"
+                   HasShadow="False"
+                   Padding="18">
+                <VerticalStackLayout Spacing="16">
+                    <Grid ColumnDefinitions="*,Auto"
+                          ColumnSpacing="12">
+                        <VerticalStackLayout Grid.Column="0"
+                                             Spacing="4">
+                            <Label Text="Modo developer"
+                                   FontSize="18"
+                                   FontAttributes="Bold"
+                                   TextColor="White" />
+                            <Label Text="Mostra métricas técnicas no chat, como tempo, tokens, contexto e RAM."
+                                   FontSize="13"
+                                   TextColor="#B0B0B0" />
+                        </VerticalStackLayout>
+
+                        <Switch x:Name="DeveloperModeSwitch"
+                                Grid.Column="1"
+                                OnColor="#10A37F"
+                                ThumbColor="White"
+                                VerticalOptions="Center" />
+                    </Grid>
+                </VerticalStackLayout>
+            </Frame>
+
+            <Button Text="Guardar settings"
+                    Clicked="OnSaveClicked"
+                    BackgroundColor="#10A37F"
+                    TextColor="White"
+                    FontSize="16"
+                    FontAttributes="Bold"
+                    Padding="16,14"
+                    CornerRadius="16" />
+        </VerticalStackLayout>
+    </ScrollView>
+</ContentPage>
