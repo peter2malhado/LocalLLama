@@ -49,54 +49,57 @@
         </Frame>
 
         <!-- Botões de Ação -->
-        <Grid Grid.Row="1"
-              ColumnDefinitions="*,*,*,*"
-              ColumnSpacing="12"
-              Padding="20,15,20,15"
-              BackgroundColor="#0F0F1E">
+        <ScrollView Grid.Row="1"
+                    Orientation="Horizontal"
+                    HorizontalScrollBarVisibility="Never"
+                    Padding="20,15,20,15">
+            <HorizontalStackLayout Spacing="12">
+                <Button Text="🗄️ Base de Dados"
+                        BackgroundColor="#2196F3"
+                        TextColor="White"
+                        FontSize="16"
+                        FontAttributes="Bold"
+                        Padding="15,12"
+                        CornerRadius="15"
+                        Clicked="OnOpenDatabaseToolsClicked" />
 
+                <Button Text="➕ Nova Conversa"
+                        BackgroundColor="#4CAF50"
+                        TextColor="White"
+                        FontSize="16"
+                        FontAttributes="Bold"
+                        Padding="15,12"
+                        CornerRadius="15"
+                        Clicked="OnStartChatClicked" />
 
-            <Button Text="🗄️ Base de Dados"
-                    BackgroundColor="#2196F3"
-                    TextColor="White"
-                    FontSize="16"
-                    FontAttributes="Bold"
-                    Padding="15,12"
-                    CornerRadius="15"
-                    Clicked="OnOpenDatabaseToolsClicked"
-                    Grid.Column="0" />
+                <Button Text="📥 Gerenciar"
+                        BackgroundColor="#FF5722"
+                        TextColor="White"
+                        FontSize="16"
+                        FontAttributes="Bold"
+                        Padding="15,12"
+                        CornerRadius="15"
+                        Clicked="OnOpenModelManagerClicked" />
 
-            <Button Text="➕ Nova Conversa"
-                    BackgroundColor="#4CAF50"
-                    TextColor="White"
-                    FontSize="16"
-                    FontAttributes="Bold"
-                    Padding="15,12"
-                    CornerRadius="15"
-                    Clicked="OnStartChatClicked"
-                    Grid.Column="1" />
+                <Button Text="📁 modelos"
+                        BackgroundColor="#607D8B"
+                        TextColor="White"
+                        FontSize="16"
+                        FontAttributes="Bold"
+                        Padding="15,12"
+                        CornerRadius="15"
+                        Clicked="OnOpenLocalModelsClicked" />
 
-
-            <Button Text="📥 Gerenciar"
-                    BackgroundColor="#FF5722"
-                    TextColor="White"
-                    FontSize="16"
-                    FontAttributes="Bold"
-                    Padding="15,12"
-                    CornerRadius="15"
-                    Clicked="OnOpenModelManagerClicked"
-                    Grid.Column="2" />
-
-            <Button Text="📁 modelos"
-                    BackgroundColor="#607D8B"
-                    TextColor="White"
-                    FontSize="16"
-                    FontAttributes="Bold"
-                    Padding="15,12"
-                    CornerRadius="15"
-                    Clicked="OnOpenLocalModelsClicked"
-                    Grid.Column="3" />
-        </Grid>
+                <Button Text="📄 documentos"
+                        BackgroundColor="#7E57C2"
+                        TextColor="White"
+                        FontSize="16"
+                        FontAttributes="Bold"
+                        Padding="15,12"
+                        CornerRadius="15"
+                        Clicked="OnOpenDocumentManagerClicked" />
+            </HorizontalStackLayout>
+        </ScrollView>
 
         <!-- Lista de Conversas com Scroll -->
         <ScrollView Grid.Row="2">

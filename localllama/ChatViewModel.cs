@@ -1,40 +1,20 @@
 using System.Collections.ObjectModel;
-using System.Diagnostics;
 using System.Windows.Input;
 using localllama;
 using localllama.Models;
 using localllama.Services;
-using LLama;
-using LLama.Common;
-using ChatSession = localllama.Models.ChatSession;
-
+using ChatSessionModel = localllama.Models.ChatSession;
 
 public class ChatViewModel : BindableObject
 {
-    private const string DefaultChatTitle = "Nova Conversa";
-    private const string SystemPrompt =
-        """
-        És Bob, um assistente de IA útil, calmo e inteligente.
-        Responde em português de Portugal por defeito, a menos que o utilizador peça outra língua.
-        Mantém um tom natural, amigável e profissional.
-        Dá respostas claras, diretas e bem organizadas.
-        Se a pergunta for simples, responde de forma curta.
-        Se a pergunta for técnica ou complexa, explica passo a passo.
-        Se não souberes algo com confiança, diz isso de forma honesta e sugere o próximo passo.
-        Não inventes factos, fontes, resultados ou capacidades.
-        Não escrevas raciocínio interno, análises de benchmark, avaliações, notas, nem blocos com etiquetas como "Query:", "Avaliação:", "Score:", "Analysis:" ou semelhantes.
-        Responde apenas com a resposta final para o utilizador.
-        Se o utilizador pedir ajuda com código, programação ou configuração, sê prático e focado na solução.
-        """;
     private readonly string _chatId;
-    private readonly List<string> _modelResolutionDiagnostics = new();
-    private readonly List<string> _modelLoadDiagnostics = new();
-    private ChatSession _currentChat;
-    private string _currentMessage;
-    private EffectiveInferenceSettings? _effectiveSettings;
-    private InteractiveExecutor? _executor;
-    private InferenceParams _inferenceParams;
-    private LLama.ChatSession? _session;
+    private readonly ChatConversationService _conversationService = new();
+    private readonly RagDocumentService _ragDocumentService = new();
+    private readonly DeveloperStatsService _developerStatsService = new();
+    private readonly ChatInferenceService _inferenceService = new();
+    private readonly RagOrchestratorService _ragOrchestratorService;
+    private ChatSessionModel? _currentChat;
+    private string _currentMessage = string.Empty;
     private bool _llamaReady;
     private string? _initErrorMessage;
     private bool _isDeveloperStatsVisible;
@@ -46,31 +26,16 @@ public class ChatViewModel : BindableObject
     public ChatViewModel(string chatId)
     {
         _chatId = chatId;
-        SendMessageCommand = new Command(async () => await SendMessage());
+        _ragOrchestratorService = new RagOrchestratorService(_ragDocumentService);
 
-        try
-        {
-            InitLLama();
-            _llamaReady = true;
-        }
-        catch (Exception ex)
-        {
-            _llamaReady = false;
-            _initErrorMessage = BuildDetailedError(ex);
-#if MACCATALYST || IOS
-            if (!string.IsNullOrWhiteSpace(NativeLibraryHelper.LastDiagnostics))
-                _initErrorMessage += $" | NativeDiag: {NativeLibraryHelper.LastDiagnostics}";
-#endif
-            Messages.Add(new Message
-            {
-                IsUser = false,
-                Text = $"Erro ao carregar o modelo. {_initErrorMessage}"
-            });
-        }
+        SendMessageCommand = new Command(async () => await SendMessageAsync());
+        ImportDocumentCommand = new Command(async () => await ImportDocumentAsync());
+
+        InitializeInference();
         LoadSession();
     }
 
-    public ObservableCollection<Message> Messages { get; set; } = new();
+    public ObservableCollection<Message> Messages { get; } = new();
 
     public bool IsDeveloperStatsVisible
     {
@@ -90,6 +55,9 @@ public class ChatViewModel : BindableObject
         get => _currentMessage;
         set
         {
+            if (_currentMessage == value)
+                return;
+
             _currentMessage = value;
             OnPropertyChanged();
         }
@@ -148,188 +116,42 @@ public class ChatViewModel : BindableObject
     }
 
     public ICommand SendMessageCommand { get; }
+    public ICommand ImportDocumentCommand { get; }
 
-    private void InitLLama()
+    private void InitializeInference()
     {
-#if MACCATALYST || IOS
-        // Configure native library path before touching LLamaSharp types.
-        NativeLibraryHelper.ConfigureNativeLibrary();
-#endif
-        var selectedModel = ModelConfig.SelectedModelPath;
-        var modelFile = "llama-3.2-1b-instruct-q8_0.gguf";
-        var modelPath = ResolveModelPath(selectedModel, modelFile, _modelResolutionDiagnostics);
-        _modelLoadDiagnostics.Add($"ModelPath={modelPath}");
-        _modelLoadDiagnostics.Add($"SelectedModel={selectedModel ?? "<null>"}");
         IsDeveloperStatsVisible = InferenceSettingsService.IsDeveloperStatsEnabled;
 
-        if (!File.Exists(modelPath))
-        {
-            var detail = _modelResolutionDiagnostics.Count == 0
-                ? string.Empty
-                : $" Caminhos verificados: {string.Join(" | ", _modelResolutionDiagnostics)}";
-            throw new FileNotFoundException($"Modelo .gguf não encontrado. Seleciona ou importa um modelo nas definições.{detail}");
-        }
-
-        var modelInfo = new FileInfo(modelPath);
-        _modelLoadDiagnostics.Add("Exists=true");
-        _modelLoadDiagnostics.Add($"FileSize={modelInfo.Length}");
-        _modelLoadDiagnostics.Add($"LastWriteUtc={modelInfo.LastWriteTimeUtc:O}");
-
-        _effectiveSettings = InferenceSettingsService.GetEffectiveSettings(modelPath);
-        _modelLoadDiagnostics.Add($"Profile={_effectiveSettings.ProfileName}");
-        _modelLoadDiagnostics.Add($"AutoMode={_effectiveSettings.IsAutomatic}");
-
-        var parameters = new ModelParams(modelPath)
-        {
-            ContextSize = _effectiveSettings.ContextSize,
-            GpuLayerCount = _effectiveSettings.GpuLayerCount
-        };
-        _modelLoadDiagnostics.Add($"ContextSize={parameters.ContextSize}");
-        _modelLoadDiagnostics.Add($"GpuLayerCount={parameters.GpuLayerCount}");
-
-        LLamaWeights model;
         try
         {
-            model = LLamaWeights.LoadFromFile(parameters);
-            _modelLoadDiagnostics.Add("LoadFromFile=ok");
+            _inferenceService.Initialize();
+            _llamaReady = true;
         }
         catch (Exception ex)
         {
-            throw new InvalidOperationException(
-                $"Falha em LLamaWeights.LoadFromFile. Diagnóstico: {string.Join(" | ", _modelLoadDiagnostics)}",
-                ex);
+            _llamaReady = false;
+            _initErrorMessage = ChatInferenceService.BuildDetailedError(ex);
+#if MACCATALYST || IOS
+            if (!string.IsNullOrWhiteSpace(NativeLibraryHelper.LastDiagnostics))
+                _initErrorMessage += $" | NativeDiag: {NativeLibraryHelper.LastDiagnostics}";
+#endif
+            Messages.Add(new Message
+            {
+                IsUser = false,
+                Text = $"Erro ao carregar o modelo. {_initErrorMessage}"
+            });
         }
-
-        LLamaContext context;
-        try
-        {
-            context = model.CreateContext(parameters);
-            _modelLoadDiagnostics.Add("CreateContext=ok");
-        }
-        catch (Exception ex)
-        {
-            throw new InvalidOperationException(
-                $"Falha em model.CreateContext. Diagnóstico: {string.Join(" | ", _modelLoadDiagnostics)}",
-                ex);
-        }
-        _executor = new InteractiveExecutor(context);
-
-        _inferenceParams = new InferenceParams
-        {
-            MaxTokens = _effectiveSettings.MaxTokens,
-            AntiPrompts = new List<string> { "User:","Query:" }
-        };
     }
 
-    private static string ResolveModelPath(string? selectedModelPath, string defaultModelFile, List<string>? diagnostics = null)
+    private async void LoadSession()
     {
-        if (!string.IsNullOrWhiteSpace(selectedModelPath))
-        {
-            diagnostics?.Add($"Selected={selectedModelPath}");
-            if (File.Exists(selectedModelPath))
-                return selectedModelPath;
-        }
-
-        var appDataModelsDir = Path.Combine(FileSystem.AppDataDirectory, "models");
-        Directory.CreateDirectory(appDataModelsDir);
-        var appDataModelPath = Path.Combine(appDataModelsDir, defaultModelFile);
-        diagnostics?.Add($"AppData={appDataModelPath}");
-        if (File.Exists(appDataModelPath))
-            return appDataModelPath;
-
-        if (TryCopyFromAppPackage($"AI model/{defaultModelFile}", appDataModelPath) ||
-            TryCopyFromAppPackage(defaultModelFile, appDataModelPath))
-        {
-            return appDataModelPath;
-        }
-
-        var baseDir = AppContext.BaseDirectory;
-        var candidates = new List<string>
-        {
-            Path.Combine(baseDir, "AI model", defaultModelFile),
-            Path.Combine(baseDir, "gguf models", defaultModelFile),
-            Path.Combine(baseDir, "modelos de ai", defaultModelFile),
-            Path.Combine(baseDir, defaultModelFile),
-            // MacCatalyst bundles resources under Contents/Resources
-            Path.GetFullPath(Path.Combine(baseDir, "..", "Resources", "AI model", defaultModelFile)),
-            Path.GetFullPath(Path.Combine(baseDir, "..", "Resources", "gguf models", defaultModelFile)),
-            Path.GetFullPath(Path.Combine(baseDir, "..", "Resources", "modelos de ai", defaultModelFile)),
-            Path.GetFullPath(Path.Combine(baseDir, "..", "Resources", defaultModelFile))
-        };
-
-        var ancestorMatch = FindInAncestorFolders(baseDir, "AI model", defaultModelFile);
-        if (!string.IsNullOrWhiteSpace(ancestorMatch))
-            candidates.Insert(0, ancestorMatch);
-
-        foreach (var path in candidates.Distinct())
-        {
-            diagnostics?.Add($"Candidate={path}");
-            if (File.Exists(path))
-                return TryCopyToAppData(path, appDataModelPath) ?? path;
-        }
-
-        // Last resort: keep original file name for clearer exception message
-        diagnostics?.Add($"Fallback={defaultModelFile}");
-        return defaultModelFile;
+        _currentChat = await _conversationService.LoadOrCreateAsync(_chatId);
+        _conversationService.PopulateMessages(Messages, _currentChat.Messages);
+        RebuildInferenceSession();
+        RefreshDeveloperStats();
     }
 
-    private static string? TryCopyToAppData(string sourcePath, string destPath)
-    {
-        try
-        {
-            File.Copy(sourcePath, destPath, overwrite: true);
-            return destPath;
-        }
-        catch
-        {
-            return null;
-        }
-    }
-
-    private static bool TryCopyFromAppPackage(string assetPath, string destPath)
-    {
-        try
-        {
-            using var src = FileSystem.OpenAppPackageFileAsync(assetPath).GetAwaiter().GetResult();
-            using var dest = File.Open(destPath, FileMode.Create, FileAccess.Write, FileShare.None);
-            src.CopyTo(dest);
-            return true;
-        }
-        catch
-        {
-            return false;
-        }
-    }
-
-    private static string? FindInAncestorFolders(string startDir, string folderName, string fileName)
-    {
-        var dir = new DirectoryInfo(startDir);
-        while (dir != null)
-        {
-            var candidate = Path.Combine(dir.FullName, folderName, fileName);
-            if (File.Exists(candidate))
-                return candidate;
-
-            dir = dir.Parent;
-        }
-
-        return null;
-    }
-
-    private static string BuildDetailedError(Exception ex)
-    {
-        var parts = new List<string>();
-        Exception? current = ex;
-        while (current != null)
-        {
-            parts.Add($"{current.GetType().Name}: {current.Message}");
-            current = current.InnerException;
-        }
-
-        return string.Join(" | ", parts);
-    }
-
-    private async Task SendMessage()
+    private async Task SendMessageAsync()
     {
         if (!_llamaReady)
         {
@@ -343,7 +165,10 @@ public class ChatViewModel : BindableObject
             return;
         }
 
-        if (_session == null)
+        if (string.IsNullOrWhiteSpace(CurrentMessage))
+            return;
+
+        if (_currentChat == null)
         {
             Messages.Add(new Message
             {
@@ -353,219 +178,87 @@ public class ChatViewModel : BindableObject
             return;
         }
 
-        if (string.IsNullOrWhiteSpace(CurrentMessage))
-            return;
-
         var userInput = CurrentMessage.Trim();
-
-        // Adicionar mensagem do utilizador
         Messages.Add(new Message { Text = userInput, IsUser = true });
         CurrentMessage = string.Empty;
 
-        await UpdateChatTitleIfNeededAsync(userInput);
+        await _conversationService.UpdateTitleIfNeededAsync(_currentChat, _chatId, userInput);
 
-        // Criar mensagem do bot imediatamente (vazia) para mostrar em tempo real
-        var botMessage = new Message { Text = "", IsUser = false };
+        var botMessage = new Message { Text = string.Empty, IsUser = false };
         Messages.Add(botMessage);
 
-        var botReply = "";
-        var timer = Stopwatch.StartNew();
-
-        // Atualizar a mensagem em tempo real conforme os chunks chegam
-        var updateCount = 0;
-        await foreach (var text in _session!.ChatAsync(
-                           new ChatHistory.Message(AuthorRole.User, userInput),
-                           _inferenceParams))
+        try
         {
-            botReply += text;
-            updateCount++;
+            var prompt = await _ragOrchestratorService.BuildPromptAsync(userInput);
+            var result = await _inferenceService.GenerateReplyAsync(prompt, partial => botMessage.Text = partial);
 
-            // Limpar prefixos indesejados enquanto está escrevendo
-            var cleanedReply = botReply.Replace("bob:", "", StringComparison.OrdinalIgnoreCase)
-                .Replace("User:", "", StringComparison.OrdinalIgnoreCase)
-                .Trim();
+            botMessage.Text = result.FinalText;
 
-            // Atualizar o texto da mensagem em tempo real
-            // A propriedade Text já notifica a UI automaticamente via INotifyPropertyChanged
-            botMessage.Text = cleanedReply;
-
-            // Fazer scroll a cada 3 chunks para não sobrecarregar a UI
-            if (updateCount % 3 == 0) await Task.Delay(1); // Pequeno delay para permitir que a UI atualize
-        }
-
-        // Limpeza final
-        botReply = botReply.Replace("bob:", "", StringComparison.OrdinalIgnoreCase)
-            .Replace("User:", "", StringComparison.OrdinalIgnoreCase)
-            .Trim();
-
-        botMessage.Text = botReply;
-        timer.Stop();
-
-        // Guardar conversa atualizada
-        await SaveSessionAsync();
-        UpdateDeveloperStats(botReply, timer.Elapsed);
-    }
-
-    private async void LoadSession()
-    {
-        _currentChat = await ChatStorage.GetChatByIdAsync(_chatId);
-
-        if (_currentChat == null)
-        {
-            // Caso não exista (backup)
-            _currentChat = new ChatSession
-            {
-                Id = _chatId,
-                Title = DefaultChatTitle
-            };
-
-            var allChats = await ChatStorage.LoadChatsAsync();
-            allChats.Add(_currentChat);
-            await ChatStorage.SaveChatsAsync(allChats);
-        }
-
-        // Carregar mensagens salvas na UI
-        Messages.Clear();
-        foreach (var msg in _currentChat.Messages)
-            Messages.Add(new Message
-            {
-                Text = msg.Text,
-                IsUser = msg.Role == "user"
-            });
-
-        RebuildSessionFromCurrentChat();
-        RefreshDeveloperStats();
-    }
-
-    private async Task SaveSessionAsync()
-    {
-        var allChats = await ChatStorage.LoadChatsAsync();
-        var existing = allChats.FirstOrDefault(c => c.Id == _chatId);
-
-        if (existing != null)
-            existing.Messages = Messages.Select(m => new ChatMessage
+            await _conversationService.SaveAsync(_chatId, _currentChat.Title, Messages);
+            _currentChat.Messages = Messages.Select(m => new ChatMessage
             {
                 Role = m.IsUser ? "user" : "bot",
                 Text = m.Text
             }).ToList();
-        else
-            allChats.Add(new ChatSession
-            {
-                Id = _chatId,
-                Title = "Nova Conversa",
-                Messages = Messages.Select(m => new ChatMessage
-                {
-                    Role = m.IsUser ? "user" : "bot",
-                    Text = m.Text
-                }).ToList()
-            });
 
-        await ChatStorage.SaveChatsAsync(allChats);
+            RebuildInferenceSession();
+            ApplyDeveloperStats(_developerStatsService.Build(
+                Messages,
+                result.FinalText,
+                _inferenceService.EffectiveSettings?.ContextSize ?? 0,
+                result.Elapsed));
+        }
+        catch (Exception ex)
+        {
+            botMessage.Text = $"Erro ao gerar resposta: {ex.Message}";
+        }
+    }
+
+    private async Task ImportDocumentAsync()
+    {
+        try
+        {
+            var result = await FilePicker.Default.PickAsync(RagDocumentPickerOptions.Create("Adicionar documento ao RAG local"));
+            if (result == null)
+                return;
+
+            var entry = await _ragDocumentService.ImportDocumentAsync(result);
+            await ShowAlertAsync("Documento", $"{entry.DisplayName} foi adicionado ao RAG local.");
+        }
+        catch (Exception ex)
+        {
+            await ShowAlertAsync("Erro", $"Não foi possível adicionar o documento: {ex.Message}");
+        }
+    }
+
+    private void RebuildInferenceSession()
+    {
+        if (_currentChat == null)
+            return;
+
+        _inferenceService.RebuildSession(_currentChat.Messages);
     }
 
     private void RefreshDeveloperStats()
     {
-        if (_effectiveSettings == null)
-            return;
-
-        UpdateDeveloperStats(string.Empty, TimeSpan.Zero);
+        var contextSize = _inferenceService.EffectiveSettings?.ContextSize ?? 0;
+        ApplyDeveloperStats(_developerStatsService.Build(Messages, string.Empty, contextSize, TimeSpan.Zero));
     }
 
-    private void RebuildSessionFromCurrentChat()
+    private void ApplyDeveloperStats(ChatDeveloperStats stats)
     {
-        if (_executor == null)
-            return;
-
-        var chatHistory = new ChatHistory();
-        chatHistory.AddMessage(AuthorRole.System, SystemPrompt);
-
-        if (_currentChat?.Messages != null)
-        {
-            foreach (var message in _currentChat.Messages)
-            {
-                var role = string.Equals(message.Role, "user", StringComparison.OrdinalIgnoreCase)
-                    ? AuthorRole.User
-                    : AuthorRole.Assistant;
-
-                chatHistory.AddMessage(role, message.Text);
-            }
-        }
-
-        _session = new LLama.ChatSession(_executor, chatHistory);
+        ResponseTimeText = stats.ResponseTimeText;
+        TokenStatsText = stats.TokenStatsText;
+        ContextStatsText = stats.ContextStatsText;
+        MemoryUsageText = stats.MemoryUsageText;
     }
 
-    private void UpdateDeveloperStats(string botReply, TimeSpan elapsed)
+    private static Task ShowAlertAsync(string title, string message)
     {
-        if (_effectiveSettings == null)
-            return;
+        var page = Application.Current?.MainPage;
+        if (page == null)
+            return Task.CompletedTask;
 
-        var responseTokens = EstimateTokenCount(botReply);
-        var historyTokens = EstimateTokenCount(SystemPrompt);
-
-        historyTokens += Messages.Sum(m => EstimateTokenCount(m.Text));
-
-        ResponseTimeText = elapsed == TimeSpan.Zero
-            ? "Aguardando"
-            : $"{elapsed.TotalSeconds:0.00}s";
-        TokenStatsText = responseTokens > 0 ? responseTokens.ToString() : "0";
-        ContextStatsText = $"{historyTokens} / {_effectiveSettings.ContextSize}";
-        MemoryUsageText = FormatBytes(Process.GetCurrentProcess().WorkingSet64);
-    }
-
-    private async Task UpdateChatTitleIfNeededAsync(string firstUserMessage)
-    {
-        if (_currentChat == null || !string.Equals(_currentChat.Title, DefaultChatTitle, StringComparison.Ordinal))
-            return;
-
-        var generatedTitle = GenerateTitleFromFirstMessage(firstUserMessage);
-        if (string.IsNullOrWhiteSpace(generatedTitle) ||
-            string.Equals(generatedTitle, DefaultChatTitle, StringComparison.Ordinal))
-        {
-            return;
-        }
-
-        _currentChat.Title = generatedTitle;
-        await ChatStorage.UpdateChatTitleAsync(_chatId, generatedTitle);
-    }
-
-    private static string GenerateTitleFromFirstMessage(string text)
-    {
-        if (string.IsNullOrWhiteSpace(text))
-            return DefaultChatTitle;
-
-        var cleaned = text.Trim();
-        cleaned = cleaned.Replace("\r", " ").Replace("\n", " ");
-
-        while (cleaned.Contains("  ", StringComparison.Ordinal))
-            cleaned = cleaned.Replace("  ", " ");
-
-        const int maxLength = 40;
-        if (cleaned.Length <= maxLength)
-            return cleaned;
-
-        return cleaned[..37].TrimEnd() + "...";
-    }
-
-    private static int EstimateTokenCount(string? text)
-    {
-        if (string.IsNullOrWhiteSpace(text))
-            return 0;
-
-        var normalized = text.Trim();
-        var byChars = (int)Math.Ceiling(normalized.Length / 4d);
-        var byWords = normalized.Split(new[] { ' ', '\r', '\n', '\t' }, StringSplitOptions.RemoveEmptyEntries).Length;
-
-        return Math.Max(1, Math.Max(byChars, byWords));
-    }
-
-    private static string FormatBytes(long bytes)
-    {
-        const double mb = 1024d * 1024d;
-        const double gb = mb * 1024d;
-
-        if (bytes >= gb)
-            return $"{bytes / gb:0.00} GB";
-
-        return $"{bytes / mb:0.0} MB";
+        return page.DisplayAlert(title, message, "OK");
     }
 }
