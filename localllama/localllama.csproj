@@ -1,4 +1,4 @@
-﻿<Project Sdk="Microsoft.NET.Sdk">
+<Project Sdk="Microsoft.NET.Sdk">
 
     <PropertyGroup>
         <TargetFrameworks>net10.0-ios;net10.0-maccatalyst</TargetFrameworks>
@@ -70,18 +70,76 @@
         <ErrorOnDuplicatePublishOutputFiles>false</ErrorOnDuplicatePublishOutputFiles>
     </PropertyGroup>
 
+    <PropertyGroup>
+        <LLamaSharpPackageVersion>0.27.0</LLamaSharpPackageVersion>
+    </PropertyGroup>
+
     <PropertyGroup Condition="'$(TargetFramework)' == 'net10.0-maccatalyst' and '$(Configuration)' == 'Debug'">
         <MtouchLink>None</MtouchLink>
         <UseInterpreter>true</UseInterpreter>
     </PropertyGroup>
 
+    <PropertyGroup Condition="$([MSBuild]::GetTargetPlatformIdentifier('$(TargetFramework)')) == 'maccatalyst'">
+        <CollectBundleResourcesDependsOn>
+            $(CollectBundleResourcesDependsOn);
+            CreateLLamaSharpMacCatalystDylibAliases
+        </CollectBundleResourcesDependsOn>
+    </PropertyGroup>
+
+    <Target Name="CreateLLamaSharpMacCatalystDylibAliases"
+            Condition="$([MSBuild]::GetTargetPlatformIdentifier('$(TargetFramework)')) == 'maccatalyst'">
+        <ItemGroup>
+            <_LLamaSharpMacDylibAlias Include="$(NuGetPackageRoot)llamasharp.backend.cpu\$(LLamaSharpPackageVersion)\LLamaSharpRuntimes\osx-arm64\native\libggml-base.dylib">
+                <Destination>$(IntermediateOutputPath)LLamaSharpAliases\osx-arm64\libggml-base.0.dylib</Destination>
+            </_LLamaSharpMacDylibAlias>
+            <_LLamaSharpMacDylibAlias Include="$(NuGetPackageRoot)llamasharp.backend.cpu\$(LLamaSharpPackageVersion)\LLamaSharpRuntimes\osx-arm64\native\libggml-blas.dylib">
+                <Destination>$(IntermediateOutputPath)LLamaSharpAliases\osx-arm64\libggml-blas.0.dylib</Destination>
+            </_LLamaSharpMacDylibAlias>
+            <_LLamaSharpMacDylibAlias Include="$(NuGetPackageRoot)llamasharp.backend.cpu\$(LLamaSharpPackageVersion)\LLamaSharpRuntimes\osx-arm64\native\libggml-cpu.dylib">
+                <Destination>$(IntermediateOutputPath)LLamaSharpAliases\osx-arm64\libggml-cpu.0.dylib</Destination>
+            </_LLamaSharpMacDylibAlias>
+            <_LLamaSharpMacDylibAlias Include="$(NuGetPackageRoot)llamasharp.backend.cpu\$(LLamaSharpPackageVersion)\LLamaSharpRuntimes\osx-arm64\native\libggml-metal.dylib">
+                <Destination>$(IntermediateOutputPath)LLamaSharpAliases\osx-arm64\libggml-metal.0.dylib</Destination>
+            </_LLamaSharpMacDylibAlias>
+            <_LLamaSharpMacDylibAlias Include="$(NuGetPackageRoot)llamasharp.backend.cpu\$(LLamaSharpPackageVersion)\LLamaSharpRuntimes\osx-arm64\native\libggml.dylib">
+                <Destination>$(IntermediateOutputPath)LLamaSharpAliases\osx-arm64\libggml.0.dylib</Destination>
+            </_LLamaSharpMacDylibAlias>
+            <_LLamaSharpMacDylibAlias Include="$(NuGetPackageRoot)llamasharp.backend.cpu\$(LLamaSharpPackageVersion)\LLamaSharpRuntimes\osx-arm64\native\libllama.dylib">
+                <Destination>$(IntermediateOutputPath)LLamaSharpAliases\osx-arm64\libllama.0.dylib</Destination>
+            </_LLamaSharpMacDylibAlias>
+            <_LLamaSharpMacDylibAlias Include="$(NuGetPackageRoot)llamasharp.backend.cpu\$(LLamaSharpPackageVersion)\LLamaSharpRuntimes\osx-arm64\native\libmtmd.dylib">
+                <Destination>$(IntermediateOutputPath)LLamaSharpAliases\osx-arm64\libmtmd.0.dylib</Destination>
+            </_LLamaSharpMacDylibAlias>
+            <_LLamaSharpMacDylibAlias Include="$(NuGetPackageRoot)llamasharp.backend.cpu\$(LLamaSharpPackageVersion)\LLamaSharpRuntimes\osx-x64\native\libggml-base.dylib">
+                <Destination>$(IntermediateOutputPath)LLamaSharpAliases\osx-x64\libggml-base.0.dylib</Destination>
+            </_LLamaSharpMacDylibAlias>
+            <_LLamaSharpMacDylibAlias Include="$(NuGetPackageRoot)llamasharp.backend.cpu\$(LLamaSharpPackageVersion)\LLamaSharpRuntimes\osx-x64\native\libggml-blas.dylib">
+                <Destination>$(IntermediateOutputPath)LLamaSharpAliases\osx-x64\libggml-blas.0.dylib</Destination>
+            </_LLamaSharpMacDylibAlias>
+            <_LLamaSharpMacDylibAlias Include="$(NuGetPackageRoot)llamasharp.backend.cpu\$(LLamaSharpPackageVersion)\LLamaSharpRuntimes\osx-x64\native\libggml-cpu.dylib">
+                <Destination>$(IntermediateOutputPath)LLamaSharpAliases\osx-x64\libggml-cpu.0.dylib</Destination>
+            </_LLamaSharpMacDylibAlias>
+            <_LLamaSharpMacDylibAlias Include="$(NuGetPackageRoot)llamasharp.backend.cpu\$(LLamaSharpPackageVersion)\LLamaSharpRuntimes\osx-x64\native\libggml.dylib">
+                <Destination>$(IntermediateOutputPath)LLamaSharpAliases\osx-x64\libggml.0.dylib</Destination>
+            </_LLamaSharpMacDylibAlias>
+            <_LLamaSharpMacDylibAlias Include="$(NuGetPackageRoot)llamasharp.backend.cpu\$(LLamaSharpPackageVersion)\LLamaSharpRuntimes\osx-x64\native\libllama.dylib">
+                <Destination>$(IntermediateOutputPath)LLamaSharpAliases\osx-x64\libllama.0.dylib</Destination>
+            </_LLamaSharpMacDylibAlias>
+            <_LLamaSharpMacDylibAlias Include="$(NuGetPackageRoot)llamasharp.backend.cpu\$(LLamaSharpPackageVersion)\LLamaSharpRuntimes\osx-x64\native\libmtmd.dylib">
+                <Destination>$(IntermediateOutputPath)LLamaSharpAliases\osx-x64\libmtmd.0.dylib</Destination>
+            </_LLamaSharpMacDylibAlias>
+        </ItemGroup>
+        <Copy SourceFiles="@(_LLamaSharpMacDylibAlias)"
+              DestinationFiles="@(_LLamaSharpMacDylibAlias->'%(Destination)')"
+              SkipUnchangedFiles="true" />
+    </Target>
 
     <ItemGroup>
-        <PackageReference Include="CommunityToolkit.HighPerformance" Version="8.4.0" />
+        <PackageReference Include="CommunityToolkit.HighPerformance" Version="8.4.2" />
         <PackageReference Include="CommunityToolkit.Maui" Version="12.3.0" />
-        <PackageReference Include="LLamaSharp" Version="0.25.0" />
-        <PackageReference Include="LLamaSharp.Backend.Cpu" Version="0.25.0" />
-        <PackageReference Include="LLamaSharp.semantic-kernel" Version="0.25.0" />
+        <PackageReference Include="LLamaSharp" Version="$(LLamaSharpPackageVersion)" />
+        <PackageReference Include="LLamaSharp.Backend.Cpu" Version="$(LLamaSharpPackageVersion)" />
+        <PackageReference Include="LLamaSharp.semantic-kernel" Version="$(LLamaSharpPackageVersion)" />
         <PackageReference Include="Microsoft.Extensions.Logging.Debug" Version="10.0.1" />
         <PackageReference Include="Microsoft.Data.Sqlite" Version="10.0.1" />
         <PackageReference Include="Microsoft.SemanticKernel.Abstractions" Version="1.74.0" />
@@ -106,7 +164,7 @@
     </ItemGroup>
 
     <ItemGroup>
-        <PackageReference Update="Microsoft.Maui.Controls" Version="10.0.20" />
+        <PackageReference Include="Microsoft.Maui.Controls" Version="10.0.20" />
     </ItemGroup>
 
     <PropertyGroup>
@@ -131,11 +189,11 @@
              filename (ggml-cpu.dll) being added to the package payload. Excluding the
              avx/avx2/avx512 folders prevents duplicate destination paths during MSIX
              packaging. -->
-        <Content Remove="$(NuGetPackageRoot)llamasharp.backend.cpu\0.25.0\runtimes\win-x64\native\avx\**\*.*" />
-        <Content Remove="$(NuGetPackageRoot)llamasharp.backend.cpu\0.25.0\runtimes\win-x64\native\avx2\**\*.*" />
-        <Content Remove="$(NuGetPackageRoot)llamasharp.backend.cpu\0.25.0\runtimes\win-x64\native\avx512\**\*.*" />
+        <Content Remove="$(NuGetPackageRoot)llamasharp.backend.cpu\$(LLamaSharpPackageVersion)\LLamaSharpRuntimes\win-x64\native\avx\**\*.*" />
+        <Content Remove="$(NuGetPackageRoot)llamasharp.backend.cpu\$(LLamaSharpPackageVersion)\LLamaSharpRuntimes\win-x64\native\avx2\**\*.*" />
+        <Content Remove="$(NuGetPackageRoot)llamasharp.backend.cpu\$(LLamaSharpPackageVersion)\LLamaSharpRuntimes\win-x64\native\avx512\**\*.*" />
         
-        <Content Include="$(NuGetPackageRoot)llamasharp.backend.cpu\0.25.0\runtimes\win-x64\native\noavx\**\*.*">
+        <Content Include="$(NuGetPackageRoot)llamasharp.backend.cpu\$(LLamaSharpPackageVersion)\LLamaSharpRuntimes\win-x64\native\noavx\**\*.*">
             <Link>runtimes\win-x64\native\noavx\%(RecursiveDir)%(Filename)%(Extension)</Link>
             <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
             <CopyToPublishDirectory>PreserveNewest</CopyToPublishDirectory>
@@ -160,14 +218,95 @@
 
     <ItemGroup Condition="$([MSBuild]::GetTargetPlatformIdentifier('$(TargetFramework)')) == 'maccatalyst'">
         <!-- Include macOS native libraries for MacCatalyst - include both x64 and arm64 -->
-        <Content Include="$(NuGetPackageRoot)llamasharp.backend.cpu\0.25.0\runtimes\osx-x64\native\**\*.*">
+        <Content Include="$(NuGetPackageRoot)llamasharp.backend.cpu\$(LLamaSharpPackageVersion)\LLamaSharpRuntimes\osx-x64\native\**\*.*">
             <Link>runtimes\osx-x64\native\%(RecursiveDir)%(Filename)%(Extension)</Link>
             <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
             <CopyToPublishDirectory>PreserveNewest</CopyToPublishDirectory>
             <Visible>false</Visible>
         </Content>
-        <Content Include="$(NuGetPackageRoot)llamasharp.backend.cpu\0.25.0\runtimes\osx-arm64\native\**\*.*">
+        <Content Include="$(NuGetPackageRoot)llamasharp.backend.cpu\$(LLamaSharpPackageVersion)\LLamaSharpRuntimes\osx-arm64\native\**\*.*">
             <Link>runtimes\osx-arm64\native\%(RecursiveDir)%(Filename)%(Extension)</Link>
+            <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+            <CopyToPublishDirectory>PreserveNewest</CopyToPublishDirectory>
+            <Visible>false</Visible>
+        </Content>
+        <!-- The macOS dylibs in LLamaSharp 0.27 reference @rpath/*.0.dylib names.
+             Ship duplicate files with those install names so runtime loading does not
+             depend on writing symlinks into the signed app bundle. -->
+        <Content Include="$(IntermediateOutputPath)LLamaSharpAliases\osx-arm64\libggml-base.0.dylib">
+            <Link>runtimes\osx-arm64\native\libggml-base.0.dylib</Link>
+            <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+            <CopyToPublishDirectory>PreserveNewest</CopyToPublishDirectory>
+            <Visible>false</Visible>
+        </Content>
+        <Content Include="$(IntermediateOutputPath)LLamaSharpAliases\osx-arm64\libggml-blas.0.dylib">
+            <Link>runtimes\osx-arm64\native\libggml-blas.0.dylib</Link>
+            <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+            <CopyToPublishDirectory>PreserveNewest</CopyToPublishDirectory>
+            <Visible>false</Visible>
+        </Content>
+        <Content Include="$(IntermediateOutputPath)LLamaSharpAliases\osx-arm64\libggml-cpu.0.dylib">
+            <Link>runtimes\osx-arm64\native\libggml-cpu.0.dylib</Link>
+            <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+            <CopyToPublishDirectory>PreserveNewest</CopyToPublishDirectory>
+            <Visible>false</Visible>
+        </Content>
+        <Content Include="$(IntermediateOutputPath)LLamaSharpAliases\osx-arm64\libggml-metal.0.dylib">
+            <Link>runtimes\osx-arm64\native\libggml-metal.0.dylib</Link>
+            <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+            <CopyToPublishDirectory>PreserveNewest</CopyToPublishDirectory>
+            <Visible>false</Visible>
+        </Content>
+        <Content Include="$(IntermediateOutputPath)LLamaSharpAliases\osx-arm64\libggml.0.dylib">
+            <Link>runtimes\osx-arm64\native\libggml.0.dylib</Link>
+            <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+            <CopyToPublishDirectory>PreserveNewest</CopyToPublishDirectory>
+            <Visible>false</Visible>
+        </Content>
+        <Content Include="$(IntermediateOutputPath)LLamaSharpAliases\osx-arm64\libllama.0.dylib">
+            <Link>runtimes\osx-arm64\native\libllama.0.dylib</Link>
+            <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+            <CopyToPublishDirectory>PreserveNewest</CopyToPublishDirectory>
+            <Visible>false</Visible>
+        </Content>
+        <Content Include="$(IntermediateOutputPath)LLamaSharpAliases\osx-arm64\libmtmd.0.dylib">
+            <Link>runtimes\osx-arm64\native\libmtmd.0.dylib</Link>
+            <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+            <CopyToPublishDirectory>PreserveNewest</CopyToPublishDirectory>
+            <Visible>false</Visible>
+        </Content>
+        <Content Include="$(IntermediateOutputPath)LLamaSharpAliases\osx-x64\libggml-base.0.dylib">
+            <Link>runtimes\osx-x64\native\libggml-base.0.dylib</Link>
+            <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+            <CopyToPublishDirectory>PreserveNewest</CopyToPublishDirectory>
+            <Visible>false</Visible>
+        </Content>
+        <Content Include="$(IntermediateOutputPath)LLamaSharpAliases\osx-x64\libggml-blas.0.dylib">
+            <Link>runtimes\osx-x64\native\libggml-blas.0.dylib</Link>
+            <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+            <CopyToPublishDirectory>PreserveNewest</CopyToPublishDirectory>
+            <Visible>false</Visible>
+        </Content>
+        <Content Include="$(IntermediateOutputPath)LLamaSharpAliases\osx-x64\libggml-cpu.0.dylib">
+            <Link>runtimes\osx-x64\native\libggml-cpu.0.dylib</Link>
+            <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+            <CopyToPublishDirectory>PreserveNewest</CopyToPublishDirectory>
+            <Visible>false</Visible>
+        </Content>
+        <Content Include="$(IntermediateOutputPath)LLamaSharpAliases\osx-x64\libggml.0.dylib">
+            <Link>runtimes\osx-x64\native\libggml.0.dylib</Link>
+            <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+            <CopyToPublishDirectory>PreserveNewest</CopyToPublishDirectory>
+            <Visible>false</Visible>
+        </Content>
+        <Content Include="$(IntermediateOutputPath)LLamaSharpAliases\osx-x64\libllama.0.dylib">
+            <Link>runtimes\osx-x64\native\libllama.0.dylib</Link>
+            <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+            <CopyToPublishDirectory>PreserveNewest</CopyToPublishDirectory>
+            <Visible>false</Visible>
+        </Content>
+        <Content Include="$(IntermediateOutputPath)LLamaSharpAliases\osx-x64\libmtmd.0.dylib">
+            <Link>runtimes\osx-x64\native\libmtmd.0.dylib</Link>
             <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
             <CopyToPublishDirectory>PreserveNewest</CopyToPublishDirectory>
             <Visible>false</Visible>
@@ -184,5 +323,21 @@
     <ItemGroup>
       <Folder Include="AI model\" />
     </ItemGroup>
+
+    <Target Name="CopyNativeLibsToMonoBundle" AfterTargets="Build" Condition="$([MSBuild]::GetTargetPlatformIdentifier('$(TargetFramework)')) == 'maccatalyst'">
+        <PropertyGroup>
+            <_MacArch>osx-x64</_MacArch>
+            <_MacArch Condition="'$(RuntimeIdentifier)' == 'maccatalyst-arm64'">osx-arm64</_MacArch>
+            <!-- Se não houver RuntimeIdentifier explícito, tenta detetar a arquitetura local -->
+            <_MacArch Condition="'$(RuntimeIdentifier)' == '' and '$([System.Runtime.InteropServices.RuntimeInformation]::OSArchitecture)' == 'Arm64'">osx-arm64</_MacArch>
+        </PropertyGroup>
+        <ItemGroup>
+            <MyDylibs Include="$(IntermediateOutputPath)LLamaSharpAliases\$(_MacArch)\*.dylib" />
+            <MyDylibs Include="$(NuGetPackageRoot)llamasharp.backend.cpu\$(LLamaSharpPackageVersion)\LLamaSharpRuntimes\$(_MacArch)\native\*.dylib" />
+        </ItemGroup>
+        <Copy SourceFiles="@(MyDylibs)" 
+              DestinationFolder="$(TargetDir)$(AssemblyName).app/Contents/MonoBundle/" 
+              SkipUnchangedFiles="true" />
+    </Target>
 
 </Project>

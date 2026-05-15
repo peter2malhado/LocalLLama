@@ -50,15 +50,23 @@ namespace localllama
                         bundlePath = Path.GetDirectoryName(Path.GetDirectoryName(appPath))!;
                     }
                     
-                    // Tentar diferentes caminhos possíveis
+                    // Tentar diferentes caminhos possíveis. LLamaSharp 0.26+ stores
+                    // package payloads under LLamaSharpRuntimes, but the app bundle
+                    // usually links them back under runtimes.
                     var possiblePaths = new List<string>
                     {
                         Path.Combine(appPath, "runtimes", "osx-arm64", "native"),
                         Path.Combine(appPath, "runtimes", "osx-x64", "native"),
+                        Path.Combine(appPath, "LLamaSharpRuntimes", "osx-arm64", "native"),
+                        Path.Combine(appPath, "LLamaSharpRuntimes", "osx-x64", "native"),
                         Path.Combine(bundlePath, "Contents", "Resources", "runtimes", "osx-arm64", "native"),
                         Path.Combine(bundlePath, "Contents", "Resources", "runtimes", "osx-x64", "native"),
+                        Path.Combine(bundlePath, "Contents", "Resources", "LLamaSharpRuntimes", "osx-arm64", "native"),
+                        Path.Combine(bundlePath, "Contents", "Resources", "LLamaSharpRuntimes", "osx-x64", "native"),
                         Path.Combine(appPath, "Contents", "Resources", "runtimes", "osx-arm64", "native"),
                         Path.Combine(appPath, "Contents", "Resources", "runtimes", "osx-x64", "native"),
+                        Path.Combine(appPath, "Contents", "Resources", "LLamaSharpRuntimes", "osx-arm64", "native"),
+                        Path.Combine(appPath, "Contents", "Resources", "LLamaSharpRuntimes", "osx-x64", "native"),
                     };
 
                     // Também procurar recursivamente a partir do BaseDirectory
@@ -66,9 +74,11 @@ namespace localllama
                     {
                         try
                         {
-                            var foundRuntimes =
- Directory.GetDirectories(appPath, "runtimes", SearchOption.AllDirectories);
-                            foreach (var runtimeDir in foundRuntimes)
+                            var foundRuntimeRoots = Directory
+                                .GetDirectories(appPath, "runtimes", SearchOption.AllDirectories)
+                                .Concat(Directory.GetDirectories(appPath, "LLamaSharpRuntimes", SearchOption.AllDirectories));
+
+                            foreach (var runtimeDir in foundRuntimeRoots)
                             {
                                 var osxArm64 = Path.Combine(runtimeDir, "osx-arm64", "native");
                                 var osxX64 = Path.Combine(runtimeDir, "osx-x64", "native");
@@ -121,6 +131,11 @@ namespace localllama
                     {
                     diagnostics.Add($"UsingNativeDir={nativeLibDir}");
                     EnsureVersionedLibraryAliases(nativeLibDir);
+                    AddNativeLibraryLoadDiagnostics(libllamaPath, diagnostics, "llama_backend_init", "llama_supports_gpu_offload");
+                    if (!string.IsNullOrWhiteSpace(libmtmdPath))
+                    {
+                        AddNativeLibraryLoadDiagnostics(libmtmdPath, diagnostics, "mtmd_context_params_default", "mtmd_support_vision");
+                    }
 
                     // Preload dependencies from the same directory so @rpath can resolve.
                     // Order matters: libggml.dylib depends on libggml-cpu.dylib.
@@ -174,6 +189,10 @@ namespace localllama
                                 NativeLibraryConfig.LLama.WithLibrary(libllamaPath);
                                 diagnostics.Add("NativeLibraryConfig=LLama.WithLibrary(llama)");
                             }
+
+                            // SkipCheck is only valid when fallback is disabled in LLamaSharp.
+                            NativeLibraryConfig.All.WithAutoFallback(false).SkipCheck(true);
+                            diagnostics.Add("NativeLibraryConfig=All.WithAutoFallback(false).SkipCheck(true)");
                         }
                         catch (Exception ex)
                         {
@@ -198,6 +217,29 @@ namespace localllama
                 }
 
                 _configured = true;
+            }
+        }
+
+        private static void AddNativeLibraryLoadDiagnostics(string libraryPath, List<string> diagnostics, params string[] exports)
+        {
+            try
+            {
+                if (!NativeLibrary.TryLoad(libraryPath, out var handle))
+                {
+                    diagnostics.Add($"NativeLibrary.TryLoad=false:{Path.GetFileName(libraryPath)}");
+                    return;
+                }
+
+                diagnostics.Add($"NativeLibrary.TryLoad=true:{Path.GetFileName(libraryPath)}");
+                foreach (var export in exports)
+                {
+                    var hasExport = NativeLibrary.TryGetExport(handle, export, out _);
+                    diagnostics.Add($"NativeLibrary.Export:{export}={hasExport}");
+                }
+            }
+            catch (Exception ex)
+            {
+                diagnostics.Add($"NativeLibrary.TryLoadException:{Path.GetFileName(libraryPath)}={ex.GetType().Name}:{ex.Message}");
             }
         }
 
