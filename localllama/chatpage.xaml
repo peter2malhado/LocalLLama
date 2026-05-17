@@ -37,11 +37,22 @@
 
         <!-- Área de input -->
         <Grid Grid.Row="1"
-              ColumnDefinitions="*,Auto"
+              ColumnDefinitions="Auto,*,Auto"
               Padding="10"
               BackgroundColor="#2C2C2C">
 
+            <Button Text="📎"
+                    FontSize="20"
+                    TextColor="White"
+                    BackgroundColor="#3A3A52"
+                    WidthRequest="50"
+                    HeightRequest="50"
+                    CornerRadius="25"
+                    Command="{Binding ImportDocumentCommand}"
+                    VerticalOptions="Center" />
+
             <Entry x:Name="MessageEntry"
+                   Grid.Column="1"
                    Placeholder="Escreve a tua mensagem..."
                    Text="{Binding CurrentMessage, Mode=TwoWay}"
                    FontSize="16"
@@ -52,7 +63,7 @@
                    Margin="10,0"
                    Completed="MessageEntry_Completed" />
 
-            <Button Grid.Column="1"
+            <Button Grid.Column="2"
                     Text="➤"
                     FontSize="20"
                     TextColor="White"
