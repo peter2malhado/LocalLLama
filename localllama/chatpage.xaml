@@ -4,7 +4,7 @@
              BackgroundColor="#1E1E1E"
              Padding="10">
 
-    <Grid RowDefinitions="*,Auto">
+    <Grid RowDefinitions="*,Auto,Auto">
 
         <!-- Lista de mensagens -->
         <CollectionView x:Name="MessagesView"
@@ -37,11 +37,22 @@
 
         <!-- Área de input -->
         <Grid Grid.Row="1"
-              ColumnDefinitions="*,Auto"
+              ColumnDefinitions="Auto,*,Auto"
               Padding="10"
               BackgroundColor="#2C2C2C">
 
+            <Button Text="📎"
+                    FontSize="20"
+                    TextColor="White"
+                    BackgroundColor="#3A3A52"
+                    WidthRequest="50"
+                    HeightRequest="50"
+                    CornerRadius="25"
+                    Command="{Binding ImportDocumentCommand}"
+                    VerticalOptions="Center" />
+
             <Entry x:Name="MessageEntry"
+                   Grid.Column="1"
                    Placeholder="Escreve a tua mensagem..."
                    Text="{Binding CurrentMessage, Mode=TwoWay}"
                    FontSize="16"
@@ -52,7 +63,7 @@
                    Margin="10,0"
                    Completed="MessageEntry_Completed" />
 
-            <Button Grid.Column="1"
+            <Button Grid.Column="2"
                     Text="➤"
                     FontSize="20"
                     TextColor="White"
@@ -63,5 +74,67 @@
                     Command="{Binding SendMessageCommand}"
                     VerticalOptions="Center" />
         </Grid>
+
+        <Frame Grid.Row="2"
+               Margin="0,8,0,0"
+               Padding="10"
+               CornerRadius="14"
+               HasShadow="False"
+               BorderColor="#2A2A3D"
+               BackgroundColor="#232338"
+               IsVisible="{Binding IsDeveloperStatsVisible}">
+            <Grid ColumnDefinitions="*,*"
+                  RowDefinitions="Auto,Auto"
+                  ColumnSpacing="12"
+                  RowSpacing="8">
+                <VerticalStackLayout Grid.Row="0"
+                                     Grid.Column="0"
+                                     Spacing="2">
+                    <Label Text="Tempo de resposta"
+                           FontSize="12"
+                           TextColor="#9AA0B4" />
+                    <Label Text="{Binding ResponseTimeText}"
+                           FontSize="15"
+                           FontAttributes="Bold"
+                           TextColor="White" />
+                </VerticalStackLayout>
+
+                <VerticalStackLayout Grid.Row="0"
+                                     Grid.Column="1"
+                                     Spacing="2">
+                    <Label Text="Tokens estimados"
+                           FontSize="12"
+                           TextColor="#9AA0B4" />
+                    <Label Text="{Binding TokenStatsText}"
+                           FontSize="15"
+                           FontAttributes="Bold"
+                           TextColor="White" />
+                </VerticalStackLayout>
+
+                <VerticalStackLayout Grid.Row="1"
+                                     Grid.Column="0"
+                                     Spacing="2">
+                    <Label Text="Contexto"
+                           FontSize="12"
+                           TextColor="#9AA0B4" />
+                    <Label Text="{Binding ContextStatsText}"
+                           FontSize="15"
+                           FontAttributes="Bold"
+                           TextColor="White" />
+                </VerticalStackLayout>
+
+                <VerticalStackLayout Grid.Row="1"
+                                     Grid.Column="1"
+                                     Spacing="2">
+                    <Label Text="Uso de RAM"
+                           FontSize="12"
+                           TextColor="#9AA0B4" />
+                    <Label Text="{Binding MemoryUsageText}"
+                           FontSize="15"
+                           FontAttributes="Bold"
+                           TextColor="White" />
+                </VerticalStackLayout>
+            </Grid>
+        </Frame>
     </Grid>
 </ContentPage>

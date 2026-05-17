@@ -89,6 +89,38 @@ public static class DatabaseHelper
                 CREATE INDEX IF NOT EXISTS idx_ChatMessages_ChatId 
                 ON ChatMessages(ChatId);";
 
+        var createRagDocumentsTable = @"
+                CREATE TABLE IF NOT EXISTS RagDocuments (
+                    Id INTEGER PRIMARY KEY AUTOINCREMENT,
+                    UserId TEXT NOT NULL,
+                    Name TEXT NOT NULL,
+                    FileName TEXT NOT NULL,
+                    FilePath TEXT NOT NULL,
+                    FileExtension TEXT,
+                    FileSizeBytes INTEGER DEFAULT 0,
+                    CreatedAt DATETIME DEFAULT CURRENT_TIMESTAMP
+                );";
+
+        var createRagChunksTable = @"
+                CREATE TABLE IF NOT EXISTS RagChunks (
+                    Id INTEGER PRIMARY KEY AUTOINCREMENT,
+                    DocumentId INTEGER NOT NULL,
+                    UserId TEXT NOT NULL,
+                    ChunkIndex INTEGER NOT NULL,
+                    Text TEXT NOT NULL,
+                    TokenEstimate INTEGER DEFAULT 0,
+                    CreatedAt DATETIME DEFAULT CURRENT_TIMESTAMP,
+                    FOREIGN KEY (DocumentId) REFERENCES RagDocuments(Id) ON DELETE CASCADE
+                );";
+
+        var createRagChunkIndex = @"
+                CREATE INDEX IF NOT EXISTS idx_RagChunks_DocumentId
+                ON RagChunks(DocumentId);";
+
+        var createRagUserIndex = @"
+                CREATE INDEX IF NOT EXISTS idx_RagDocuments_UserId
+                ON RagDocuments(UserId);";
+
         using var command1 = new SqliteCommand(createSessionsTable, connection);
         command1.ExecuteNonQuery();
 
@@ -97,5 +129,17 @@ public static class DatabaseHelper
 
         using var command3 = new SqliteCommand(createIndex, connection);
         command3.ExecuteNonQuery();
+
+        using var command4 = new SqliteCommand(createRagDocumentsTable, connection);
+        command4.ExecuteNonQuery();
+
+        using var command5 = new SqliteCommand(createRagChunksTable, connection);
+        command5.ExecuteNonQuery();
+
+        using var command6 = new SqliteCommand(createRagChunkIndex, connection);
+        command6.ExecuteNonQuery();
+
+        using var command7 = new SqliteCommand(createRagUserIndex, connection);
+        command7.ExecuteNonQuery();
     }
 }
