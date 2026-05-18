@@ -6,7 +6,7 @@
              Title="Login">
 
     <Grid>
-        <Image Source="dotnet_bot.png"
+        <Image Source="background.png"
                Aspect="AspectFill"
                Opacity="0.1" />
 
