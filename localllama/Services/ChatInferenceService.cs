@@ -83,7 +83,8 @@ public class ChatInferenceService
         _inferenceParams = new InferenceParams
         {
             MaxTokens = EffectiveSettings.MaxTokens,
-            AntiPrompts = new List<string> { "User:", "Query:" }
+            AntiPrompts = new List<string> { "User:", "Query:" },
+            OverflowStrategy = ContextOverflowStrategy.TruncateAndReprefill
         };
     }
 

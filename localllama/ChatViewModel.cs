@@ -189,7 +189,14 @@ public class ChatViewModel : BindableObject
 
         try
         {
+            if (InferenceSettingsService.IsWebSearchEnabled && !string.IsNullOrWhiteSpace(InferenceSettingsService.WebSearchApiKey))
+            {
+                botMessage.Text = "A pesquisar na Web... 🌐";
+            }
+
             var prompt = await _ragOrchestratorService.BuildPromptAsync(userInput);
+            botMessage.Text = string.Empty;
+
             var result = await _inferenceService.GenerateReplyAsync(prompt, partial => botMessage.Text = partial);
 
             botMessage.Text = result.FinalText;

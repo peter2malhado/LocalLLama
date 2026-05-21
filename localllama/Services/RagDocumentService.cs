@@ -2,6 +2,7 @@ using localllama.Models;
 using Microsoft.Data.Sqlite;
 using System.Globalization;
 using System.Text;
+using UglyToad.PdfPig;
 
 namespace localllama.Services;
 
@@ -31,10 +32,25 @@ public class RagDocumentService
         }
 
         string content;
-        await using (var stream = File.OpenRead(destinationPath))
-        using (var reader = new StreamReader(stream))
+        if (extension.Equals(".pdf", StringComparison.OrdinalIgnoreCase))
         {
-            content = await reader.ReadToEndAsync();
+            var sb = new StringBuilder();
+            using (var pdf = PdfDocument.Open(destinationPath))
+            {
+                foreach (var page in pdf.GetPages())
+                {
+                    sb.AppendLine(page.Text);
+                }
+            }
+            content = sb.ToString();
+        }
+        else
+        {
+            await using (var stream = File.OpenRead(destinationPath))
+            using (var reader = new StreamReader(stream))
+            {
+                content = await reader.ReadToEndAsync();
+            }
         }
 
         if (string.IsNullOrWhiteSpace(content))
@@ -274,7 +290,7 @@ public class RagDocumentService
         return extension != null && SupportedExtensions.Contains(extension, StringComparer.OrdinalIgnoreCase);
     }
 
-    private static readonly string[] SupportedExtensions = [".txt", ".md", ".json"];
+    private static readonly string[] SupportedExtensions = [".txt", ".md", ".json", ".pdf"];
 
     private static int ScoreChunk(string chunkText, IReadOnlyCollection<string> normalizedTerms, string originalQuery)
     {
