@@ -1,327 +1,141 @@
-# 🇬🇧 English Version
+<p align="center">
+  <img src="./assets/logo.png" alt="localllama logo" width="220" />
+</p>
 
-# 📑 Table of Contents
+<h1 align="center">localllama</h1>
 
-* [About the Project](#-about-the-project)
-* [Features](#-features)
-* [Architecture](#-architecture)
-* [Technologies](#-technologies)
-* [Screenshot](#-screenshot-1)
-* [Installation](#-installation)
-* [Project Structure](#-project-structure)
-* [Supported Models](#-supported-models)
-* [Project Goals](#-project-goals)
-* [Roadmap](#-roadmap-1)
-* [Contributing](#-contributing)
-* [License](#-license)
+<p align="center">
+  A private AI chat app that runs local GGUF models on your own device.
+</p>
 
----
+<p align="center">
+  Chat locally. Keep your history. Add your documents. Stay in control.
+</p>
 
-## 📌 About the Project
+<p align="center">
+  <img alt=".NET MAUI" src="https://img.shields.io/badge/.NET-MAUI-512BD4?style=for-the-badge" />
+  <img alt="C#" src="https://img.shields.io/badge/C%23-239120?style=for-the-badge&logo=c-sharp&logoColor=white" />
+  <img alt="SQLite" src="https://img.shields.io/badge/SQLite-003B57?style=for-the-badge&logo=sqlite&logoColor=white" />
+  <img alt="LLamaSharp" src="https://img.shields.io/badge/LLamaSharp-Local%20Inference-0F172A?style=for-the-badge" />
+</p>
 
-**LocalLlama** is a cross-platform application that allows you to run Large Language Models locally using GGUF files.
+## What is localllama?
 
-No cloud. No external APIs. Fully private.
+`localllama` is a local AI chat application built for people who want a simple, private, and practical way to run language models without depending on a cloud chatbot for the core experience.
 
----
+You can sign in, load a local `.gguf` model, start conversations, save your chat history, and even add your own documents so the app can use them as extra context during replies.
 
-## ✨ Features
+## Why use it?
 
-* 💬 ChatGPT-style interface
-* 🧠 Support for local GGUF models
-* ⚡ Powered by LLamaSharp
-* 🔌 Backend powered by llama.cpp
-* 📱 Cross-platform (Windows / Android / Linux)
-* 🔒 Fully offline execution
+- Private-first experience with local model execution
+- Persistent chat history saved on your device
+- Support for personal document context through local RAG
+- Simple model import and selection
+- Optional web search when you want extra online context
+- Multi-user support with separated local data
 
----
+## Main features
 
-## 🏗️ Architecture
+- Chat with local GGUF models
+- Create and reopen conversations
+- Automatically name chats from the first message
+- Import and manage local models
+- Download models from a remote catalog
+- Add `.txt`, `.md`, `.json`, and `.pdf` files to your knowledge base
+- Enable optional web search with Tavily
+- Manage separate local databases per user
 
-```
-UI (.NET MAUI)
-     ↓
-LLamaSharp (C# Wrapper)
-     ↓
-llama.cpp (Inference Engine)
-     ↓
-Local GGUF Model
-```
+## How it works
 
----
+1. Create an account or sign in.
+2. Import a `.gguf` model or download one from the built-in model catalog.
+3. Start a new conversation.
+4. Optionally add documents to the local RAG library.
+5. Ask questions and chat fully on your own device.
 
-## 🛠️ Technologies
+## Screenshots
 
-| Technology | Purpose           |
-| ---------- | ----------------- |
-| .NET MAUI  | Cross-platform UI |
-| C#         | Core logic        |
-| LLamaSharp | llama.cpp wrapper |
-| llama.cpp  | Inference engine  |
-| GGUF       | Model format      |
+<img width="1229" height="763" alt="localllama main view" src="https://github.com/user-attachments/assets/c1fd562c-a9ab-4721-8afe-d91908b458da" />
 
----
+<img width="1512" height="952" alt="localllama screenshot 1" src="https://github.com/user-attachments/assets/079f5727-b98c-4bc3-afe0-f2ab643dc9a9" />
+<img width="1512" height="952" alt="localllama screenshot 2" src="https://github.com/user-attachments/assets/4e06e9bc-4bdf-4ecc-9ad1-c6e9077f58ca" />
+<img width="1512" height="952" alt="localllama screenshot 3" src="https://github.com/user-attachments/assets/b62a1b93-ca03-432a-82e2-96d8fc8ea9ac" />
+<img width="1512" height="952" alt="localllama screenshot 4" src="https://github.com/user-attachments/assets/30e645e5-43af-43f0-8427-16a2d9030d52" />
+<img width="1512" height="952" alt="localllama screenshot 5" src="https://github.com/user-attachments/assets/f7067d8a-7c70-49f1-8127-6c238444e628" />
+<img width="1512" height="952" alt="localllama screenshot 6" src="https://github.com/user-attachments/assets/7b5702a1-04c0-4c56-98e9-53b369ace601" />
 
-## 📸 Screenshots
+## Installation
 
-<img width="1229" height="763" alt="image" src="https://github.com/user-attachments/assets/c1fd562c-a9ab-4721-8afe-d91908b458da" />
+### Requirements
 
-<img width="1512" height="952" alt="Captura de ecrã 2026-02-25, às 12 29 05" src="https://github.com/user-attachments/assets/079f5727-b98c-4bc3-afe0-f2ab643dc9a9" />
-<img width="1512" height="952" alt="Captura de ecrã 2026-02-25, às 12 32 03" src="https://github.com/user-attachments/assets/4e06e9bc-4bdf-4ecc-9ad1-c6e9077f58ca" />
-<img width="1512" height="952" alt="Captura de ecrã 2026-02-25, às 12 32 44" src="https://github.com/user-attachments/assets/b62a1b93-ca03-432a-82e2-96d8fc8ea9ac" />
+- A machine that supports the current target platforms
+- .NET SDK with MAUI support
+- MAUI workloads installed
+- A compatible `.gguf` model
 
-<img width="1512" height="952" alt="Captura de ecrã 2026-02-25, às 12 36 42" src="https://github.com/user-attachments/assets/30e645e5-43af-43f0-8427-16a2d9030d52" />
-<img width="1512" height="952" alt="Captura de ecrã 2026-02-25, às 12 39 14" src="https://github.com/user-attachments/assets/f7067d8a-7c70-49f1-8127-6c238444e628" />
+### Current target platforms
 
-<img width="1512" height="952" alt="Captura de ecrã 2026-02-25, às 12 36 55" src="https://github.com/user-attachments/assets/7b5702a1-04c0-4c56-98e9-53b369ace601" />
+- macOS via `net10.0-maccatalyst`
+- iOS via `net10.0-ios`
+- Windows via `net10.0-windows10.0.19041.0`
 
-
----
-
-## 📦 Installation
-
-### Clone repository
-
-```bash
-git clone https://github.com/your-user/your-repo.git
-cd your-repo
-```
-
-### Build
+### Setup
 
 ```bash
+git clone https://github.com/your-user/localllama.git
+cd localllama
 dotnet build
 ```
 
-### Run
+Then launch the project from Rider or Visual Studio and run it on your target platform.
 
-```bash
-dotnet run
-```
+## First-time use
 
----
+1. Open the app.
+2. Create an account or log in.
+3. Import a local `.gguf` model, or download one from the model manager.
+4. Open a new chat.
+5. If you want document-aware answers, import files into the document manager.
+6. Start chatting.
 
-## 📂 Project Structure
+## Supported content
 
-```
-📦 LocalLlama
- ┣ 📂 Models
- ┣ 📂 Services
- ┣ 📂 Views
- ┣ 📂 ViewModels
- ┗ 📜 App.xaml
-```
+### Models
 
----
+- GGUF-based language models
+- The code expects a default model named `llama-3.2-1b-instruct-q8_0.gguf` when available
 
-## 🧠 Supported Models
+### Documents for RAG
 
-* LLaMA
-* Mistral
-* TinyLlama
-* Phi
-* Any GGUF-compatible model
+- `.txt`
+- `.md`
+- `.json`
+- `.pdf`
 
----
+## Privacy
 
-## 🎯 Project Goals
+The app is designed around local usage:
 
-* Learn local LLM integration
-* Explore offline AI inference
-* Build cross-platform AI applications
-* Create an open-source ChatGPT alternative
+- Conversations are stored locally
+- User data is separated by account
+- Chat titles and messages are encrypted when the user encryption key is available
+- Web search is optional and only used when explicitly enabled
 
----
+## Notes
 
-## 🚀 Roadmap
+- Android-related files exist in the repository, but Android is not currently active in the main project target list
+- Some features, such as web search, require internet access and a valid Tavily API key
+- I could not verify `dotnet build` in this environment because the `dotnet` command is not available here
 
-* [ ] Real-time token streaming
-* [ ] Persistent chat history
-* [ ] Dynamic parameter configuration
-* [ ] Multi-model support
-* [ ] Android optimization
+## Roadmap
 
----
+- Better RAG retrieval with embeddings
+- More polished onboarding
+- Improved model management experience
+- Additional platform optimization
 
-## 🤝 Contributing
+## License
 
-Pull requests are welcome!
-Open an issue for suggestions or improvements 🚀
+Apache-2.0 license
 
----
-
-## 📜 License
-
- Apache-2.0 license
-
----
-
-# 🤖 LocalLlama — ChatGPT 100% Offline
-
-> Um chatbot moderno, privado e totalmente offline, construído com **.NET MAUI** e powered por **llama.cpp**.
-
----
-
-![.Net](https://img.shields.io/badge/.NET-5C2D91?style=for-the-badge&logo=.net&logoColor=white) ![Visual Studio](https://img.shields.io/badge/Visual%20Studio-5C2D91.svg?style=for-the-badge&logo=visual-studio&logoColor=white) ![C#](https://img.shields.io/badge/c%23-%23239120.svg?style=for-the-badge&logo=csharp&logoColor=white) ![GitHub](https://img.shields.io/badge/github-%23121011.svg?style=for-the-badge&logo=github&logoColor=white) ![Git](https://img.shields.io/badge/git-%23F05033.svg?style=for-the-badge&logo=git&logoColor=white)
-
-# 📑 Índice (Português)
-
-* [Sobre o Projeto](#-sobre-o-projeto)
-* [Funcionalidades](#-principais-funcionalidades)
-* [Arquitetura](#-arquitetura)
-* [Tecnologias](#-tecnologias-utilizadas)
-* [Screenshot](#-screenshot)
-* [Instalação](#-instalação)
-* [Estrutura do Projeto](#-estrutura-do-projeto)
-* [Modelos Compatíveis](#-modelos-compatíveis)
-* [Objetivo](#-objetivo-do-projeto)
-* [Roadmap](#-roadmap)
-* [Contribuições](#-contribuições)
-* [Licença](#-licença)
-* [English Version](#-english-version)
-
----
-
-# 🇵🇹 Versão em Português
-
-## 📌 Sobre o Projeto
-
-O **LocalLlama** é uma aplicação multiplataforma que permite correr modelos LLM localmente, sem necessidade de internet ou APIs externas.
-
-Tudo funciona 100% offline, garantindo privacidade total.
-
----
-
-## ✨ Principais Funcionalidades
-
-* 💬 Interface estilo ChatGPT
-* 🧠 Suporte a modelos GGUF locais
-* ⚡ Integração com LLamaSharp
-* 🔌 Backend com llama.cpp
-* 📱 Multiplataforma (Windows / Android / Linux)
-* 🔒 Execução totalmente offline
-
----
-
-## 🏗️ Arquitetura
-
-```
-UI (.NET MAUI)
-     ↓
-LLamaSharp (Wrapper C#)
-     ↓
-llama.cpp (Motor de Inferência)
-     ↓
-Modelo GGUF Local
-```
-
----
-
-## 🛠️ Tecnologias Utilizadas
-
-| Tecnologia | Função                   |
-| ---------- | ------------------------ |
-| .NET MAUI  | Interface Cross-Platform |
-| C#         | Lógica da aplicação      |
-| LLamaSharp | Wrapper para llama.cpp   |
-| llama.cpp  | Motor de inferência      |
-| GGUF       | Formato de modelos       |
-
----
-
-## 📸 Screenshot
-<img width="1229" height="763" alt="image" src="https://github.com/user-attachments/assets/c1fd562c-a9ab-4721-8afe-d91908b458da" />
-
-<img width="1512" height="952" alt="Captura de ecrã 2026-02-25, às 12 29 05" src="https://github.com/user-attachments/assets/079f5727-b98c-4bc3-afe0-f2ab643dc9a9" />
-<img width="1512" height="952" alt="Captura de ecrã 2026-02-25, às 12 32 03" src="https://github.com/user-attachments/assets/4e06e9bc-4bdf-4ecc-9ad1-c6e9077f58ca" />
-<img width="1512" height="952" alt="Captura de ecrã 2026-02-25, às 12 32 44" src="https://github.com/user-attachments/assets/b62a1b93-ca03-432a-82e2-96d8fc8ea9ac" />
-<img width="1512" height="952" alt="Captura de ecrã 2026-02-25, às 12 36 30" src="https://github.com/user-attachments/assets/a1ff9133-c9f1-4c6c-a7da-54cb08d70062" />
-<img width="1512" height="952" alt="Captura de ecrã 2026-02-25, às 12 36 42" src="https://github.com/user-attachments/assets/30e645e5-43af-43f0-8427-16a2d9030d52" />
-<img width="1512" height="952" alt="Captura de ecrã 2026-02-25, às 12 39 14" src="https://github.com/user-attachments/assets/f7067d8a-7c70-49f1-8127-6c238444e628" />
-
-<img width="1512" height="952" alt="Captura de ecrã 2026-02-25, às 12 36 55" src="https://github.com/user-attachments/assets/7b5702a1-04c0-4c56-98e9-53b369ace601" />
-
-
-
-## 📦 Instalação
-
-### Clonar o projeto
-
-```bash
-git clone https://github.com/teu-user/teu-repo.git
-cd teu-repo
-```
-
-### Build
-
-```bash
-dotnet build
-```
-
-### Executar
-
-```bash
-dotnet run
-```
-
----
-
-## 📂 Estrutura do Projeto
-
-```
-📦 LocalLlama
- ┣ 📂 Models
- ┣ 📂 Services
- ┣ 📂 Views
- ┣ 📂 ViewModels
- ┗ 📜 App.xaml
-```
-
----
-
-## 🧠 Modelos Compatíveis
-
-* LLaMA
-* Mistral
-* TinyLlama
-* Phi
-* Qualquer modelo em formato GGUF
-
----
-
-## 🎯 Objetivo do Projeto
-
-* Aprender integração de LLMs locais
-* Explorar inferência offline
-* Desenvolver aplicações AI multiplataforma
-* Criar alternativa open-source ao ChatGPT
-
----
-
-## 🚀 Roadmap
-
-* [ ] Streaming de tokens
-* [ ] Histórico persistente
-* [ ] Configuração dinâmica (temperature, top-p…)
-* [ ] Multi-model support
-* [ ] Otimização Android
-
----
-
-## 🤝 Contribuições
-
-Pull requests são bem-vindos!
-Abre uma issue para sugestões ou melhorias 🚀
-
----
-
-## 📜 Licença
-
-MIT License
-
----
-
-
-
-
-![.Net](https://img.shields.io/badge/.NET-5C2D91?style=for-the-badge&logo=.net&logoColor=white) ![Visual Studio](https://img.shields.io/badge/Visual%20Studio-5C2D91.svg?style=for-the-badge&logo=visual-studio&logoColor=white) ![C#](https://img.shields.io/badge/c%23-%23239120.svg?style=for-the-badge&logo=csharp&logoColor=white) ![GitHub](https://img.shields.io/badge/github-%23121011.svg?style=for-the-badge&logo=github&logoColor=white) ![Git](https://img.shields.io/badge/git-%23F05033.svg?style=for-the-badge&logo=git&logoColor=white)
+LocalLLama by joao malhado
