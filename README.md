@@ -1,5 +1,5 @@
 <p align="center">
-  <img src="./assets/logo.png" alt="localllama logo" width="220" />
+  <img src="localllama/Resources/AppIcon/o_melhor.png" alt="localllama logo" width="220" />
 </p>
 
 <h1 align="center">localllama</h1>
