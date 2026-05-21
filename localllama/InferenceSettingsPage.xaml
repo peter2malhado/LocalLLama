@@ -194,6 +194,47 @@
                 </VerticalStackLayout>
             </Frame>
 
+            <Frame BackgroundColor="#1E1E2E"
+                   BorderColor="#2A2A3D"
+                   CornerRadius="18"
+                   HasShadow="False"
+                   Padding="18">
+                <VerticalStackLayout Spacing="16">
+                    <Grid ColumnDefinitions="*,Auto"
+                          ColumnSpacing="12">
+                        <VerticalStackLayout Grid.Column="0"
+                                             Spacing="4">
+                            <Label Text="Pesquisa na Web"
+                                   FontSize="18"
+                                   FontAttributes="Bold"
+                                   TextColor="White" />
+                            <Label Text="Permite que a IA pesquise respostas na internet via Tavily API."
+                                   FontSize="13"
+                                   TextColor="#B0B0B0" />
+                        </VerticalStackLayout>
+
+                        <Switch x:Name="WebSearchSwitch"
+                                Grid.Column="1"
+                                Toggled="OnWebSearchToggled"
+                                OnColor="#10A37F"
+                                ThumbColor="White"
+                                VerticalOptions="Center" />
+                    </Grid>
+
+                    <VerticalStackLayout x:Name="WebSearchKeyContainer"
+                                         Spacing="6">
+                        <Label Text="Chave de API do Tavily"
+                               FontSize="14"
+                               TextColor="#B0B0B0" />
+                        <Entry x:Name="WebSearchApiKeyEntry"
+                               Placeholder="Introduz a chave tvly-..."
+                               BackgroundColor="#232338"
+                               TextColor="White"
+                               IsPassword="True" />
+                    </VerticalStackLayout>
+                </VerticalStackLayout>
+            </Frame>
+
             <Button Text="Guardar settings"
                     Clicked="OnSaveClicked"
                     BackgroundColor="#10A37F"

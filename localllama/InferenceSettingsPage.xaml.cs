@@ -31,6 +31,8 @@ public partial class InferenceSettingsPage : ContentPage
     {
         AutoModeSwitch.IsToggled = InferenceSettingsService.IsAutomaticMode;
         DeveloperModeSwitch.IsToggled = InferenceSettingsService.IsDeveloperStatsEnabled;
+        WebSearchSwitch.IsToggled = InferenceSettingsService.IsWebSearchEnabled;
+        WebSearchApiKeyEntry.Text = InferenceSettingsService.WebSearchApiKey;
 
         ContextSizePicker.SelectedIndex = FindIndex(ContextOptions, InferenceSettingsService.ManualContextSize);
         MaxTokensPicker.SelectedIndex = FindIndex(MaxTokenOptions, InferenceSettingsService.ManualMaxTokens);
@@ -38,6 +40,7 @@ public partial class InferenceSettingsPage : ContentPage
 
         UpdateAppliedSettingsPreview();
         UpdateManualVisibility();
+        UpdateWebSearchVisibility();
     }
 
     private void OnAutoModeToggled(object? sender, ToggledEventArgs e)
@@ -46,10 +49,18 @@ public partial class InferenceSettingsPage : ContentPage
         UpdateAppliedSettingsPreview();
     }
 
+    private void OnWebSearchToggled(object? sender, ToggledEventArgs e)
+    {
+        UpdateWebSearchVisibility();
+    }
+
     private async void OnSaveClicked(object sender, EventArgs e)
     {
         InferenceSettingsService.IsAutomaticMode = AutoModeSwitch.IsToggled;
         InferenceSettingsService.IsDeveloperStatsEnabled = DeveloperModeSwitch.IsToggled;
+        InferenceSettingsService.IsWebSearchEnabled = WebSearchSwitch.IsToggled;
+        InferenceSettingsService.WebSearchApiKey = WebSearchApiKeyEntry.Text?.Trim() ?? string.Empty;
+        
         InferenceSettingsService.ManualContextSize = GetSelectedValue(ContextOptions, ContextSizePicker.SelectedIndex, 2048);
         InferenceSettingsService.ManualMaxTokens = GetSelectedValue(MaxTokenOptions, MaxTokensPicker.SelectedIndex, 512);
         InferenceSettingsService.ManualGpuLayers = GetSelectedValue(GpuLayerOptions, GpuLayersPicker.SelectedIndex, 5);
@@ -61,6 +72,11 @@ public partial class InferenceSettingsPage : ContentPage
     private void UpdateManualVisibility()
     {
         ManualSettingsFrame.IsVisible = !AutoModeSwitch.IsToggled;
+    }
+
+    private void UpdateWebSearchVisibility()
+    {
+        WebSearchKeyContainer.IsVisible = WebSearchSwitch.IsToggled;
     }
 
     private void UpdateAppliedSettingsPreview()

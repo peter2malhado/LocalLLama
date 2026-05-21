@@ -16,6 +16,8 @@ public static class InferenceSettingsService
     private const string ManualMaxTokensKey = "inference_manual_max_tokens";
     private const string ManualGpuLayersKey = "inference_manual_gpu_layers";
     private const string DeveloperStatsKey = "inference_developer_stats";
+    private const string WebSearchEnabledKey = "web_search_enabled";
+    private const string WebSearchApiKeyKey = "web_search_api_key";
 
     public static bool IsAutomaticMode
     {
@@ -45,6 +47,18 @@ public static class InferenceSettingsService
     {
         get => Preferences.Get(DeveloperStatsKey, false);
         set => Preferences.Set(DeveloperStatsKey, value);
+    }
+
+    public static bool IsWebSearchEnabled
+    {
+        get => Preferences.Get(WebSearchEnabledKey, false);
+        set => Preferences.Set(WebSearchEnabledKey, value);
+    }
+
+    public static string WebSearchApiKey
+    {
+        get => Preferences.Get(WebSearchApiKeyKey, string.Empty);
+        set => Preferences.Set(WebSearchApiKeyKey, value);
     }
 
     public static EffectiveInferenceSettings GetEffectiveSettings(string? modelPath)
