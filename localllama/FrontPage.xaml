@@ -72,6 +72,15 @@
                         CornerRadius="15"
                         Clicked="OnStartChatClicked" />
 
+                <Button Text="🧠 Personalidades"
+                        BackgroundColor="#9C27B0"
+                        TextColor="White"
+                        FontSize="16"
+                        FontAttributes="Bold"
+                        Padding="15,12"
+                        CornerRadius="15"
+                        Clicked="OnOpenPersonalitiesClicked" />
+
                 <Button Text="📥 Gerenciar"
                         BackgroundColor="#FF5722"
                         TextColor="White"
@@ -142,6 +151,11 @@
                                     <Label Text="{Binding Title}"
                                            TextColor="White"
                                            FontSize="18"
+                                           FontAttributes="Bold" />
+
+                                    <Label Text="{Binding PersonalityName}"
+                                           TextColor="#C7B8FF"
+                                           FontSize="12"
                                            FontAttributes="Bold" />
 
                                     <!-- Preview da última mensagem -->

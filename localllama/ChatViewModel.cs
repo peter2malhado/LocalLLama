@@ -13,6 +13,7 @@ public class ChatViewModel : BindableObject
     private readonly DeveloperStatsService _developerStatsService = new();
     private readonly ChatInferenceService _inferenceService = new();
     private readonly RagOrchestratorService _ragOrchestratorService;
+    private readonly WebSearchService _webSearchService = new();
     private ChatSessionModel? _currentChat;
     private string _currentMessage = string.Empty;
     private bool _llamaReady;
@@ -22,6 +23,7 @@ public class ChatViewModel : BindableObject
     private string _tokenStatsText = "0";
     private string _contextStatsText = "0 / 0";
     private string _memoryUsageText = "0 MB";
+    private string _personalityName = ChatPromptCatalog.DefaultPersonalityName;
 
     public ChatViewModel(string chatId)
     {
@@ -118,6 +120,19 @@ public class ChatViewModel : BindableObject
     public ICommand SendMessageCommand { get; }
     public ICommand ImportDocumentCommand { get; }
 
+    public string PersonalityName
+    {
+        get => _personalityName;
+        set
+        {
+            if (_personalityName == value)
+                return;
+
+            _personalityName = value;
+            OnPropertyChanged();
+        }
+    }
+
     private void InitializeInference()
     {
         IsDeveloperStatsVisible = InferenceSettingsService.IsDeveloperStatsEnabled;
@@ -146,6 +161,7 @@ public class ChatViewModel : BindableObject
     private async void LoadSession()
     {
         _currentChat = await _conversationService.LoadOrCreateAsync(_chatId);
+        PersonalityName = _currentChat.PersonalityName;
         _conversationService.PopulateMessages(Messages, _currentChat.Messages);
         RebuildInferenceSession();
         RefreshDeveloperStats();
@@ -189,7 +205,9 @@ public class ChatViewModel : BindableObject
 
         try
         {
-            if (InferenceSettingsService.IsWebSearchEnabled && !string.IsNullOrWhiteSpace(InferenceSettingsService.WebSearchApiKey))
+            if (InferenceSettingsService.IsWebSearchEnabled &&
+                !string.IsNullOrWhiteSpace(InferenceSettingsService.WebSearchApiKey) &&
+                _webSearchService.ShouldSearchWeb(userInput))
             {
                 botMessage.Text = "A pesquisar na Web... 🌐";
             }
@@ -201,7 +219,12 @@ public class ChatViewModel : BindableObject
 
             botMessage.Text = result.FinalText;
 
-            await _conversationService.SaveAsync(_chatId, _currentChat.Title, Messages);
+            await _conversationService.SaveAsync(
+                _chatId,
+                _currentChat.Title,
+                Messages,
+                _currentChat.PersonalityName,
+                _currentChat.PersonalityPrompt);
             _currentChat.Messages = Messages.Select(m => new ChatMessage
             {
                 Role = m.IsUser ? "user" : "bot",
@@ -243,7 +266,7 @@ public class ChatViewModel : BindableObject
         if (_currentChat == null)
             return;
 
-        _inferenceService.RebuildSession(_currentChat.Messages);
+        _inferenceService.RebuildSession(_currentChat.Messages, _currentChat.PersonalityPrompt);
     }
 
     private void RefreshDeveloperStats()

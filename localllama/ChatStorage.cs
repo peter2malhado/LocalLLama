@@ -24,7 +24,7 @@ public static class ChatStorage
 
             // Carregar todas as sessões primeiro
             var selectSessionsCommand = new SqliteCommand(
-                "SELECT Id, Title FROM ChatSessions WHERE UserId = @UserId ORDER BY Id",
+                "SELECT Id, Title, PersonalityName, PersonalityPrompt FROM ChatSessions WHERE UserId = @UserId ORDER BY Id",
                 connection);
             selectSessionsCommand.Parameters.AddWithValue("@UserId", CurrentUserId);
 
@@ -37,6 +37,12 @@ public static class ChatStorage
                     {
                         Id = reader.GetString(0),
                         Title = ChatCrypto.DecryptText(reader.GetString(1)),
+                        PersonalityName = reader.IsDBNull(2)
+                            ? ChatPromptCatalog.DefaultPersonalityName
+                            : ChatCrypto.DecryptText(reader.GetString(2)),
+                        PersonalityPrompt = reader.IsDBNull(3)
+                            ? ChatPromptCatalog.SystemPrompt
+                            : ChatCrypto.DecryptText(reader.GetString(3)),
                         Messages = new List<ChatMessage>()
                     };
                     chats.Add(chat);
@@ -92,12 +98,14 @@ public static class ChatStorage
             {
                 // Inserir ou atualizar sessão
                 var upsertSessionCommand = new SqliteCommand(
-                    @"INSERT OR REPLACE INTO ChatSessions (Id, UserId, Title) 
-                          VALUES (@Id, @UserId, @Title)",
+                    @"INSERT OR REPLACE INTO ChatSessions (Id, UserId, Title, PersonalityName, PersonalityPrompt) 
+                          VALUES (@Id, @UserId, @Title, @PersonalityName, @PersonalityPrompt)",
                     connection);
                 upsertSessionCommand.Parameters.AddWithValue("@Id", chat.Id);
                 upsertSessionCommand.Parameters.AddWithValue("@UserId", CurrentUserId);
                 upsertSessionCommand.Parameters.AddWithValue("@Title", ChatCrypto.EncryptText(chat.Title));
+                upsertSessionCommand.Parameters.AddWithValue("@PersonalityName", ChatCrypto.EncryptText(chat.PersonalityName));
+                upsertSessionCommand.Parameters.AddWithValue("@PersonalityPrompt", ChatCrypto.EncryptText(chat.PersonalityPrompt));
                 upsertSessionCommand.ExecuteNonQuery();
 
                 // Limpar mensagens antigas e inserir novas
@@ -125,7 +133,10 @@ public static class ChatStorage
     }
 
     // ➕ Cria um novo chat com ID automático
-    public static async Task<ChatSession> CreateNewChatAsync(string title = "Nova Conversa")
+    public static async Task<ChatSession> CreateNewChatAsync(
+        string title = "Nova Conversa",
+        string? personalityName = null,
+        string? personalityPrompt = null)
     {
         return await Task.Run(() =>
         {
@@ -159,17 +170,23 @@ public static class ChatStorage
 
             // Inserir nova sessão
             var insertCommand = new SqliteCommand(
-                "INSERT INTO ChatSessions (Id, UserId, Title) VALUES (@Id, @UserId, @Title)",
+                "INSERT INTO ChatSessions (Id, UserId, Title, PersonalityName, PersonalityPrompt) VALUES (@Id, @UserId, @Title, @PersonalityName, @PersonalityPrompt)",
                 connection);
             insertCommand.Parameters.AddWithValue("@Id", newId);
             insertCommand.Parameters.AddWithValue("@UserId", CurrentUserId);
             insertCommand.Parameters.AddWithValue("@Title", ChatCrypto.EncryptText(title));
+            insertCommand.Parameters.AddWithValue("@PersonalityName",
+                ChatCrypto.EncryptText(personalityName ?? ChatPromptCatalog.DefaultPersonalityName));
+            insertCommand.Parameters.AddWithValue("@PersonalityPrompt",
+                ChatCrypto.EncryptText(personalityPrompt ?? ChatPromptCatalog.SystemPrompt));
             insertCommand.ExecuteNonQuery();
 
             return new ChatSession
             {
                 Id = newId,
                 Title = title,
+                PersonalityName = personalityName ?? ChatPromptCatalog.DefaultPersonalityName,
+                PersonalityPrompt = personalityPrompt ?? ChatPromptCatalog.SystemPrompt,
                 Messages = new List<ChatMessage>()
             };
         });
@@ -184,7 +201,7 @@ public static class ChatStorage
 
             // Buscar sessão
             var selectSessionCommand = new SqliteCommand(
-                "SELECT Id, Title FROM ChatSessions WHERE Id = @Id AND UserId = @UserId",
+                "SELECT Id, Title, PersonalityName, PersonalityPrompt FROM ChatSessions WHERE Id = @Id AND UserId = @UserId",
                 connection);
             selectSessionCommand.Parameters.AddWithValue("@Id", id);
             selectSessionCommand.Parameters.AddWithValue("@UserId", CurrentUserId);
@@ -196,6 +213,12 @@ public static class ChatStorage
             {
                 Id = reader.GetString(0),
                 Title = ChatCrypto.DecryptText(reader.GetString(1)),
+                PersonalityName = reader.IsDBNull(2)
+                    ? ChatPromptCatalog.DefaultPersonalityName
+                    : ChatCrypto.DecryptText(reader.GetString(2)),
+                PersonalityPrompt = reader.IsDBNull(3)
+                    ? ChatPromptCatalog.SystemPrompt
+                    : ChatCrypto.DecryptText(reader.GetString(3)),
                 Messages = new List<ChatMessage>()
             };
 
@@ -260,6 +283,23 @@ public static class ChatStorage
             updateCommand.Parameters.AddWithValue("@Id", chatId);
             updateCommand.Parameters.AddWithValue("@UserId", CurrentUserId);
             updateCommand.Parameters.AddWithValue("@Title", ChatCrypto.EncryptText(newTitle));
+            updateCommand.ExecuteNonQuery();
+        });
+    }
+
+    public static async Task UpdateChatPersonalityAsync(string chatId, string personalityName, string personalityPrompt)
+    {
+        await Task.Run(() =>
+        {
+            using var connection = DatabaseHelper.GetUserConnection();
+
+            var updateCommand = new SqliteCommand(
+                "UPDATE ChatSessions SET PersonalityName = @PersonalityName, PersonalityPrompt = @PersonalityPrompt WHERE Id = @Id AND UserId = @UserId",
+                connection);
+            updateCommand.Parameters.AddWithValue("@Id", chatId);
+            updateCommand.Parameters.AddWithValue("@UserId", CurrentUserId);
+            updateCommand.Parameters.AddWithValue("@PersonalityName", ChatCrypto.EncryptText(personalityName));
+            updateCommand.Parameters.AddWithValue("@PersonalityPrompt", ChatCrypto.EncryptText(personalityPrompt));
             updateCommand.ExecuteNonQuery();
         });
     }

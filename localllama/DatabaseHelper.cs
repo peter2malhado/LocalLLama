@@ -69,7 +69,9 @@ public static class DatabaseHelper
                 CREATE TABLE IF NOT EXISTS ChatSessions (
                     Id TEXT PRIMARY KEY,
                     UserId TEXT,
-                    Title TEXT NOT NULL
+                    Title TEXT NOT NULL,
+                    PersonalityName TEXT,
+                    PersonalityPrompt TEXT
                 );";
 
         // Criar tabela de mensagens
@@ -124,6 +126,9 @@ public static class DatabaseHelper
         using var command1 = new SqliteCommand(createSessionsTable, connection);
         command1.ExecuteNonQuery();
 
+        EnsureColumnExists(connection, "ChatSessions", "PersonalityName", "TEXT");
+        EnsureColumnExists(connection, "ChatSessions", "PersonalityPrompt", "TEXT");
+
         using var command2 = new SqliteCommand(createMessagesTable, connection);
         command2.ExecuteNonQuery();
 
@@ -141,5 +146,22 @@ public static class DatabaseHelper
 
         using var command7 = new SqliteCommand(createRagUserIndex, connection);
         command7.ExecuteNonQuery();
+    }
+
+    private static void EnsureColumnExists(SqliteConnection connection, string tableName, string columnName, string columnDefinition)
+    {
+        using var pragmaCommand = new SqliteCommand($"PRAGMA table_info({tableName});", connection);
+        using var reader = pragmaCommand.ExecuteReader();
+
+        while (reader.Read())
+        {
+            if (string.Equals(reader["name"]?.ToString(), columnName, StringComparison.OrdinalIgnoreCase))
+                return;
+        }
+
+        using var alterCommand = new SqliteCommand(
+            $"ALTER TABLE {tableName} ADD COLUMN {columnName} {columnDefinition};",
+            connection);
+        alterCommand.ExecuteNonQuery();
     }
 }

@@ -14,28 +14,33 @@ public class RagDocumentService
     {
         if (result == null)
             throw new ArgumentNullException(nameof(result));
+        if (!UserContext.IsReady)
+            throw new InvalidOperationException("A sessão do utilizador não tem chave de encriptação disponível.");
 
         var extension = Path.GetExtension(result.FileName);
         if (!IsSupportedExtension(extension))
-            throw new InvalidOperationException("Formato não suportado. Usa .txt, .md ou .json.");
+            throw new InvalidOperationException("Formato não suportado. Usa .txt, .md, .json ou .pdf.");
 
         var documentsDir = GetDocumentsDirectory();
         Directory.CreateDirectory(documentsDir);
 
         var uniqueName = BuildUniqueFileName(documentsDir, result.FileName);
-        var destinationPath = Path.Combine(documentsDir, uniqueName);
+        var destinationPath = Path.Combine(documentsDir, $"{uniqueName}.enc");
 
+        byte[] sourceBytes;
         await using (var src = await result.OpenReadAsync())
-        await using (var dest = File.Open(destinationPath, FileMode.Create, FileAccess.Write, FileShare.None))
+        await using (var buffer = new MemoryStream())
         {
-            await src.CopyToAsync(dest);
+            await src.CopyToAsync(buffer);
+            sourceBytes = buffer.ToArray();
         }
 
         string content;
         if (extension.Equals(".pdf", StringComparison.OrdinalIgnoreCase))
         {
             var sb = new StringBuilder();
-            using (var pdf = PdfDocument.Open(destinationPath))
+            await using (var pdfStream = new MemoryStream(sourceBytes, writable: false))
+            using (var pdf = PdfDocument.Open(pdfStream))
             {
                 foreach (var page in pdf.GetPages())
                 {
@@ -46,12 +51,14 @@ public class RagDocumentService
         }
         else
         {
-            await using (var stream = File.OpenRead(destinationPath))
-            using (var reader = new StreamReader(stream))
+            using (var reader = new StreamReader(new MemoryStream(sourceBytes, writable: false), detectEncodingFromByteOrderMarks: true))
             {
                 content = await reader.ReadToEndAsync();
             }
         }
+
+        var encryptedFileBytes = ChatCrypto.EncryptBytes(sourceBytes);
+        await File.WriteAllBytesAsync(destinationPath, encryptedFileBytes);
 
         if (string.IsNullOrWhiteSpace(content))
         {
@@ -80,11 +87,11 @@ public class RagDocumentService
                 connection,
                 transaction);
             insertDocument.Parameters.AddWithValue("@UserId", CurrentUserId);
-            insertDocument.Parameters.AddWithValue("@Name", Path.GetFileNameWithoutExtension(uniqueName));
-            insertDocument.Parameters.AddWithValue("@FileName", uniqueName);
-            insertDocument.Parameters.AddWithValue("@FilePath", destinationPath);
+            insertDocument.Parameters.AddWithValue("@Name", ChatCrypto.EncryptText(Path.GetFileNameWithoutExtension(uniqueName)));
+            insertDocument.Parameters.AddWithValue("@FileName", ChatCrypto.EncryptText(uniqueName));
+            insertDocument.Parameters.AddWithValue("@FilePath", ChatCrypto.EncryptText(destinationPath));
             insertDocument.Parameters.AddWithValue("@FileExtension", extension);
-            insertDocument.Parameters.AddWithValue("@FileSizeBytes", new FileInfo(destinationPath).Length);
+            insertDocument.Parameters.AddWithValue("@FileSizeBytes", sourceBytes.LongLength);
 
             var documentId = (long)(insertDocument.ExecuteScalar() ?? 0L);
 
@@ -100,7 +107,7 @@ public class RagDocumentService
                 insertChunk.Parameters.AddWithValue("@DocumentId", documentId);
                 insertChunk.Parameters.AddWithValue("@UserId", CurrentUserId);
                 insertChunk.Parameters.AddWithValue("@ChunkIndex", i);
-                insertChunk.Parameters.AddWithValue("@Text", chunks[i]);
+                insertChunk.Parameters.AddWithValue("@Text", ChatCrypto.EncryptText(chunks[i]));
                 insertChunk.Parameters.AddWithValue("@TokenEstimate", EstimateTokenCount(chunks[i]));
                 insertChunk.ExecuteNonQuery();
             }
@@ -147,8 +154,8 @@ public class RagDocumentService
                 documents.Add(new RagDocumentEntry
                 {
                     Id = reader.GetInt64(0),
-                    Name = reader.GetString(1),
-                    FileName = reader.GetString(2),
+                    Name = ChatCrypto.DecryptText(reader.GetString(1)),
+                    FileName = ChatCrypto.DecryptText(reader.GetString(2)),
                     Extension = reader.IsDBNull(3) ? string.Empty : reader.GetString(3),
                     SizeText = FormatSize(reader.IsDBNull(4) ? 0 : reader.GetInt64(4)),
                     DateText = createdAt == DateTime.MinValue ? string.Empty : createdAt.ToString("yyyy-MM-dd"),
@@ -173,6 +180,7 @@ public class RagDocumentService
             fileQuery.Parameters.AddWithValue("@Id", documentId);
             fileQuery.Parameters.AddWithValue("@UserId", CurrentUserId);
             filePath = fileQuery.ExecuteScalar() as string;
+            filePath = string.IsNullOrWhiteSpace(filePath) ? filePath : ChatCrypto.DecryptText(filePath);
 
             using var transaction = connection.BeginTransaction();
 
@@ -223,7 +231,7 @@ public class RagDocumentService
             using var reader = command.ExecuteReader();
             while (reader.Read())
             {
-                var text = reader.GetString(4);
+                var text = ChatCrypto.DecryptText(reader.GetString(4));
                 var score = ScoreChunk(text, normalizedTerms, query);
                 if (score <= 0)
                     continue;
@@ -231,8 +239,8 @@ public class RagDocumentService
                 matches.Add(new RagChunkMatch
                 {
                     DocumentId = reader.GetInt64(0),
-                    DocumentName = reader.GetString(1),
-                    FileName = reader.GetString(2),
+                    DocumentName = ChatCrypto.DecryptText(reader.GetString(1)),
+                    FileName = ChatCrypto.DecryptText(reader.GetString(2)),
                     ChunkIndex = reader.GetInt32(3),
                     Text = text,
                     Score = score
@@ -276,7 +284,7 @@ public class RagDocumentService
         var candidate = $"{name}{extension}";
         var counter = 1;
 
-        while (File.Exists(Path.Combine(directory, candidate)))
+        while (File.Exists(Path.Combine(directory, $"{candidate}.enc")))
         {
             candidate = $"{name}_{counter}{extension}";
             counter++;

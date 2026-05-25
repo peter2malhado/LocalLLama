@@ -1,5 +1,6 @@
 using System.Text;
 using System.Text.Json;
+using System.Text.RegularExpressions;
 
 namespace localllama.Services;
 
@@ -7,12 +8,30 @@ public class WebSearchService
 {
     private readonly HttpClient _httpClient = new();
 
+    private static readonly string[] SearchIntentKeywords =
+    {
+        "hoje", "agora", "atual", "atualizado", "ultimas", "últimas", "ultimos", "últimos",
+        "noticias", "notícias", "preço", "precos", "preços", "cotação", "cotacao", "tempo",
+        "meteorologia", "resultado", "resultados", "placar", "jogo", "jogos", "classificação",
+        "classificacao", "ranking", "tendência", "tendencia", "lançamento", "lancamento",
+        "release", "versão", "versao", "documentação", "documentacao", "api", "site", "web",
+        "internet", "pesquisa", "pesquisar", "procura", "procurar", "encontra", "encontrar",
+        "compara", "comparar", "restaurante", "hotel", "voo", "voos", "agenda", "horário",
+        "horario", "mercado", "bolsa", "bitcoin", "ações", "acoes", "euro", "dólar", "dolar"
+    };
+
+    private static readonly string[] GreetingPhrases =
+    {
+        "ola", "olá", "boas", "bom dia", "boa tarde", "boa noite", "tudo bem", "como estas",
+        "como estás", "hey", "oi", "yo"
+    };
+
     public async Task<string?> SearchWebAsync(string query, int maxResults = 3)
     {
         var isEnabled = InferenceSettingsService.IsWebSearchEnabled;
         var apiKey = InferenceSettingsService.WebSearchApiKey;
 
-        if (!isEnabled || string.IsNullOrWhiteSpace(apiKey))
+        if (!isEnabled || string.IsNullOrWhiteSpace(apiKey) || !ShouldSearchWeb(query))
             return null;
 
         try
@@ -78,6 +97,52 @@ public class WebSearchService
             System.Diagnostics.Debug.WriteLine($"Erro ao pesquisar na web: {ex.Message}");
             return null;
         }
+    }
+
+    public bool ShouldSearchWeb(string? query)
+    {
+        if (string.IsNullOrWhiteSpace(query))
+            return false;
+
+        var normalized = Normalize(query);
+        if (string.IsNullOrWhiteSpace(normalized))
+            return false;
+
+        if (GreetingPhrases.Any(phrase => normalized.Equals(phrase, StringComparison.Ordinal) ||
+                                          normalized.StartsWith($"{phrase} ", StringComparison.Ordinal)))
+        {
+            return false;
+        }
+
+        var wordCount = normalized.Split(' ', StringSplitOptions.RemoveEmptyEntries).Length;
+        if (wordCount <= 3 && !ContainsSearchIntent(normalized))
+            return false;
+
+        if (!normalized.Contains('?') && wordCount <= 5 && !ContainsSearchIntent(normalized))
+            return false;
+
+        return ContainsSearchIntent(normalized) || LooksLikeCurrentInfoQuestion(normalized);
+    }
+
+    private static bool ContainsSearchIntent(string normalizedQuery)
+    {
+        return SearchIntentKeywords.Any(keyword => normalizedQuery.Contains(keyword, StringComparison.Ordinal));
+    }
+
+    private static bool LooksLikeCurrentInfoQuestion(string normalizedQuery)
+    {
+        return normalizedQuery.Contains("quem e", StringComparison.Ordinal) ||
+               normalizedQuery.Contains("quem é", StringComparison.Ordinal) ||
+               normalizedQuery.Contains("qual e o", StringComparison.Ordinal) ||
+               normalizedQuery.Contains("qual é o", StringComparison.Ordinal) ||
+               normalizedQuery.Contains("quando", StringComparison.Ordinal) ||
+               normalizedQuery.Contains("onde", StringComparison.Ordinal) ||
+               Regex.IsMatch(normalizedQuery, @"\b(202[4-9]|203\d)\b", RegexOptions.CultureInvariant);
+    }
+
+    private static string Normalize(string query)
+    {
+        return query.Trim().ToLowerInvariant();
     }
 
     private static void LogRawResponse(string query, string jsonResponse)

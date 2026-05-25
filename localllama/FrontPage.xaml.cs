@@ -52,11 +52,19 @@ public partial class FrontPage : ContentPage
     // 👉 Botão "Nova Conversa"
     private async void OnStartChatClicked(object sender, EventArgs e)
     {
-        var newChat = await ChatStorage.CreateNewChatAsync();
+        var personality = PersonalitySelectionService.Selected;
+        var newChat = await ChatStorage.CreateNewChatAsync(
+            personalityName: personality.Name,
+            personalityPrompt: personality.Prompt);
         Conversations.Add(newChat);
 
         // Abre a página do novo chat
         await Navigation.PushAsync(new chatpage(newChat.Id));
+    }
+
+    private async void OnOpenPersonalitiesClicked(object sender, EventArgs e)
+    {
+        await Navigation.PushAsync(new PersonalitiesPage());
     }
 
     // 📥 Abrir Gerenciador de Modelos

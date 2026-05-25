@@ -15,7 +15,9 @@ public class ChatConversationService
         var newChat = new ChatSessionModel
         {
             Id = chatId,
-            Title = ChatPromptCatalog.DefaultChatTitle
+            Title = ChatPromptCatalog.DefaultChatTitle,
+            PersonalityName = PersonalitySelectionService.Selected.Name,
+            PersonalityPrompt = PersonalitySelectionService.Selected.Prompt
         };
 
         var allChats = await ChatStorage.LoadChatsAsync();
@@ -37,7 +39,12 @@ public class ChatConversationService
         }
     }
 
-    public async Task SaveAsync(string chatId, string title, IEnumerable<Message> messages)
+    public async Task SaveAsync(
+        string chatId,
+        string title,
+        IEnumerable<Message> messages,
+        string? personalityName = null,
+        string? personalityPrompt = null)
     {
         var allChats = await ChatStorage.LoadChatsAsync();
         var existing = allChats.FirstOrDefault(c => c.Id == chatId);
@@ -50,6 +57,8 @@ public class ChatConversationService
         if (existing != null)
         {
             existing.Title = title;
+            existing.PersonalityName = personalityName ?? existing.PersonalityName;
+            existing.PersonalityPrompt = personalityPrompt ?? existing.PersonalityPrompt;
             existing.Messages = mappedMessages;
         }
         else
@@ -58,6 +67,8 @@ public class ChatConversationService
             {
                 Id = chatId,
                 Title = title,
+                PersonalityName = personalityName ?? PersonalitySelectionService.Selected.Name,
+                PersonalityPrompt = personalityPrompt ?? PersonalitySelectionService.Selected.Prompt,
                 Messages = mappedMessages
             });
         }

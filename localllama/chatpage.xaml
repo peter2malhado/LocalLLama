@@ -4,11 +4,34 @@
              BackgroundColor="#1E1E1E"
              Padding="10">
 
-    <Grid RowDefinitions="*,Auto,Auto">
+    <Grid RowDefinitions="Auto,*,Auto,Auto">
+
+        <Grid Grid.Row="0"
+              ColumnDefinitions="*,Auto"
+              Padding="4,0,4,10">
+            <Label Text="Conversa"
+                   FontSize="22"
+                   FontAttributes="Bold"
+                   TextColor="White"
+                   VerticalOptions="Center" />
+
+            <Frame Grid.Column="1"
+                   Padding="12,6"
+                   BackgroundColor="#2B2B40"
+                   BorderColor="#45456B"
+                   CornerRadius="16"
+                   HasShadow="False"
+                   HorizontalOptions="End">
+                <Label Text="{Binding PersonalityName}"
+                       TextColor="#E7D9FF"
+                       FontSize="13"
+                       FontAttributes="Bold" />
+            </Frame>
+        </Grid>
 
         <!-- Lista de mensagens -->
         <CollectionView x:Name="MessagesView"
-                        Grid.Row="0"
+                        Grid.Row="1"
                         ItemsSource="{Binding Messages}"
                         VerticalOptions="FillAndExpand"
                         BackgroundColor="Transparent"
@@ -36,7 +59,7 @@
         </CollectionView>
 
         <!-- Área de input -->
-        <Grid Grid.Row="1"
+        <Grid Grid.Row="2"
               ColumnDefinitions="Auto,*,Auto"
               Padding="10"
               BackgroundColor="#2C2C2C">
@@ -75,7 +98,7 @@
                     VerticalOptions="Center" />
         </Grid>
 
-        <Frame Grid.Row="2"
+        <Frame Grid.Row="3"
                Margin="0,8,0,0"
                Padding="10"
                CornerRadius="14"

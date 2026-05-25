@@ -88,13 +88,15 @@ public class ChatInferenceService
         };
     }
 
-    public void RebuildSession(IEnumerable<ChatMessage> messages)
+    public void RebuildSession(IEnumerable<ChatMessage> messages, string? systemPrompt = null)
     {
         if (_executor == null)
             return;
 
         var chatHistory = new ChatHistory();
-        chatHistory.AddMessage(AuthorRole.System, ChatPromptCatalog.SystemPrompt);
+        chatHistory.AddMessage(AuthorRole.System, string.IsNullOrWhiteSpace(systemPrompt)
+            ? ChatPromptCatalog.SystemPrompt
+            : systemPrompt);
 
         foreach (var message in messages)
         {
