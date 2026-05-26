@@ -8,7 +8,7 @@
     <Grid>
         <Image Source="background.png"
                Aspect="AspectFill"
-               Opacity="0.1" />
+               Opacity="0.7" />
 
         <ScrollView>
             <Grid Padding="32"

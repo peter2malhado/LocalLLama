@@ -16,6 +16,13 @@ public partial class FrontPage : ContentPage
     }
 
     public ObservableCollection<ChatSession> Conversations { get; set; } = new();
+    public string ConversationSummary =>
+        Conversations.Count switch
+        {
+            0 => "Nenhuma conversa ativa ainda.",
+            1 => "1 conversa pronta para continuar.",
+            _ => $"{Conversations.Count} conversas prontas para continuar."
+        };
 
     // Atualizar lista quando a página aparecer (quando voltar de outra página)
     protected override void OnAppearing()
@@ -36,6 +43,8 @@ public partial class FrontPage : ContentPage
             Conversations.Clear();
             foreach (var chat in sortedChats)
                 Conversations.Add(chat);
+
+            OnPropertyChanged(nameof(ConversationSummary));
         }
         catch (Exception ex)
         {
@@ -49,6 +58,11 @@ public partial class FrontPage : ContentPage
         await Navigation.PushAsync(new DatabaseManagerPage());
     }
 
+    private void OnOpenDatabaseToolsClicked(object sender, TappedEventArgs e)
+    {
+        OnOpenDatabaseToolsClicked(sender, EventArgs.Empty);
+    }
+
     // 👉 Botão "Nova Conversa"
     private async void OnStartChatClicked(object sender, EventArgs e)
     {
@@ -57,6 +71,7 @@ public partial class FrontPage : ContentPage
             personalityName: personality.Name,
             personalityPrompt: personality.Prompt);
         Conversations.Add(newChat);
+        OnPropertyChanged(nameof(ConversationSummary));
 
         // Abre a página do novo chat
         await Navigation.PushAsync(new chatpage(newChat.Id));
@@ -67,16 +82,31 @@ public partial class FrontPage : ContentPage
         await Navigation.PushAsync(new PersonalitiesPage());
     }
 
+    private void OnOpenPersonalitiesClicked(object sender, TappedEventArgs e)
+    {
+        OnOpenPersonalitiesClicked(sender, EventArgs.Empty);
+    }
+
     // 📥 Abrir Gerenciador de Modelos
     private async void OnOpenModelManagerClicked(object sender, EventArgs e)
     {
         await Navigation.PushAsync(new ModelManagerPage());
     }
 
+    private void OnOpenModelManagerClicked(object sender, TappedEventArgs e)
+    {
+        OnOpenModelManagerClicked(sender, EventArgs.Empty);
+    }
+
     // 📁 Abrir Modelos Locais
     private async void OnOpenLocalModelsClicked(object sender, EventArgs e)
     {
         await Navigation.PushAsync(new LocalModelsPage());
+    }
+
+    private void OnOpenLocalModelsClicked(object sender, TappedEventArgs e)
+    {
+        OnOpenLocalModelsClicked(sender, EventArgs.Empty);
     }
 
     private async void OnOpenSettingsClicked(object sender, EventArgs e)
@@ -89,6 +119,11 @@ public partial class FrontPage : ContentPage
         await Navigation.PushAsync(new DocumentManagerPage());
     }
 
+    private void OnOpenDocumentManagerClicked(object sender, TappedEventArgs e)
+    {
+        OnOpenDocumentManagerClicked(sender, EventArgs.Empty);
+    }
+
     // 👉 Quando o utilizador seleciona uma conversa existente
     private async void OnChatSelected(object sender, SelectionChangedEventArgs e)
     {
@@ -96,6 +131,12 @@ public partial class FrontPage : ContentPage
             await Navigation.PushAsync(new chatpage(selectedChat.Id));
 
         ((CollectionView)sender).SelectedItem = null;
+    }
+
+    private async void OnChatSelectedButtonClicked(object sender, EventArgs e)
+    {
+        if (sender is Button button && button.CommandParameter is ChatSession chat)
+            await Navigation.PushAsync(new chatpage(chat.Id));
     }
 
     // ✏️ Editar nome da conversa
@@ -148,6 +189,7 @@ public partial class FrontPage : ContentPage
 
                     // Remover da lista local
                     Conversations.Remove(chat);
+                    OnPropertyChanged(nameof(ConversationSummary));
 
                     await DisplayAlert("Sucesso", "Conversa deletada com sucesso!", "OK");
                 }
