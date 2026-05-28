@@ -118,7 +118,7 @@
                                          Spacing="8">
                         <Border Style="{StaticResource SidebarNavBorderStyle}">
                             <Border.GestureRecognizers>
-                                <TapGestureRecognizer Tapped="OnOpenDocumentManagerClicked" />
+                                <TapGestureRecognizer Tapped="OnOpenDocumentManagerTapped" />
                             </Border.GestureRecognizers>
                             <Grid ColumnDefinitions="26,*"
                                   ColumnSpacing="14">
@@ -137,7 +137,7 @@
 
                         <Border Style="{StaticResource SidebarNavBorderStyle}">
                             <Border.GestureRecognizers>
-                                <TapGestureRecognizer Tapped="OnOpenModelManagerClicked" />
+                                <TapGestureRecognizer Tapped="OnOpenModelManagerTapped" />
                             </Border.GestureRecognizers>
                             <Grid ColumnDefinitions="26,*"
                                   ColumnSpacing="14">
@@ -156,7 +156,7 @@
 
                         <Border Style="{StaticResource SidebarNavBorderStyle}">
                             <Border.GestureRecognizers>
-                                <TapGestureRecognizer Tapped="OnOpenPersonalitiesClicked" />
+                                <TapGestureRecognizer Tapped="OnOpenPersonalitiesTapped" />
                             </Border.GestureRecognizers>
                             <Grid ColumnDefinitions="26,*"
                                   ColumnSpacing="14">
@@ -175,7 +175,7 @@
 
                         <Border Style="{StaticResource SidebarNavBorderStyle}">
                             <Border.GestureRecognizers>
-                                <TapGestureRecognizer Tapped="OnOpenLocalModelsClicked" />
+                                <TapGestureRecognizer Tapped="OnOpenLocalModelsTapped" />
                             </Border.GestureRecognizers>
                             <Grid ColumnDefinitions="26,*"
                                   ColumnSpacing="14">
@@ -194,7 +194,7 @@
 
                         <Border Style="{StaticResource SidebarNavBorderStyle}">
                             <Border.GestureRecognizers>
-                                <TapGestureRecognizer Tapped="OnOpenDatabaseToolsClicked" />
+                                <TapGestureRecognizer Tapped="OnOpenDatabaseToolsTapped" />
                             </Border.GestureRecognizers>
                             <Grid ColumnDefinitions="26,*"
                                   ColumnSpacing="14">
@@ -295,10 +295,15 @@
                                    FontSize="28"
                                    TextColor="#8B93AF"
                                    VerticalOptions="Center" />
-                            <Label Grid.Column="1"
-                                   Text="Pesquisar conversas..."
+                            <Entry Grid.Column="1"
+                                   Text="{Binding SearchText}"
+                                   Placeholder="Pesquisar conversas..."
+                                   PlaceholderColor="#777F99"
+                                   TextColor="White"
                                    FontSize="18"
-                                   TextColor="#777F99"
+                                   BackgroundColor="Transparent"
+                                   ClearButtonVisibility="WhileEditing"
+                                   TextChanged="OnSearchTextChanged"
                                    VerticalOptions="Center" />
                         </Grid>
                     </Border>

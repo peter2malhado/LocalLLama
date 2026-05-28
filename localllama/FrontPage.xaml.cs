@@ -7,6 +7,8 @@ namespace localllama;
 public partial class FrontPage : ContentPage
 
 {
+    private readonly List<ChatSession> allConversations = new();
+
     public FrontPage()
     {
         InitializeComponent();
@@ -16,6 +18,7 @@ public partial class FrontPage : ContentPage
     }
 
     public ObservableCollection<ChatSession> Conversations { get; set; } = new();
+    public string SearchText { get; set; } = string.Empty;
     public string ConversationSummary =>
         Conversations.Count switch
         {
@@ -40,11 +43,9 @@ public partial class FrontPage : ContentPage
             // Ordenar chats: os com mais mensagens primeiro (mais recentes/ativos)
             var sortedChats = chats.OrderByDescending(c => c.MessageCount).ToList();
 
-            Conversations.Clear();
-            foreach (var chat in sortedChats)
-                Conversations.Add(chat);
-
-            OnPropertyChanged(nameof(ConversationSummary));
+            allConversations.Clear();
+            allConversations.AddRange(sortedChats);
+            ApplyConversationFilter();
         }
         catch (Exception ex)
         {
@@ -58,7 +59,7 @@ public partial class FrontPage : ContentPage
         await Navigation.PushAsync(new DatabaseManagerPage());
     }
 
-    private void OnOpenDatabaseToolsClicked(object sender, TappedEventArgs e)
+    private void OnOpenDatabaseToolsTapped(object sender, TappedEventArgs e)
     {
         OnOpenDatabaseToolsClicked(sender, EventArgs.Empty);
     }
@@ -79,10 +80,18 @@ public partial class FrontPage : ContentPage
 
     private async void OnOpenPersonalitiesClicked(object sender, EventArgs e)
     {
-        await Navigation.PushAsync(new PersonalitiesPage());
+        try
+        {
+            var page = new PersonalitiesPage();
+            await Navigation.PushAsync(page);
+        }
+        catch (Exception ex)
+        {
+            await DisplayAlert("Erro", $"Não foi possível abrir Personalidades: {ex.Message}", "OK");
+        }
     }
 
-    private void OnOpenPersonalitiesClicked(object sender, TappedEventArgs e)
+    private void OnOpenPersonalitiesTapped(object sender, TappedEventArgs e)
     {
         OnOpenPersonalitiesClicked(sender, EventArgs.Empty);
     }
@@ -93,7 +102,7 @@ public partial class FrontPage : ContentPage
         await Navigation.PushAsync(new ModelManagerPage());
     }
 
-    private void OnOpenModelManagerClicked(object sender, TappedEventArgs e)
+    private void OnOpenModelManagerTapped(object sender, TappedEventArgs e)
     {
         OnOpenModelManagerClicked(sender, EventArgs.Empty);
     }
@@ -104,7 +113,7 @@ public partial class FrontPage : ContentPage
         await Navigation.PushAsync(new LocalModelsPage());
     }
 
-    private void OnOpenLocalModelsClicked(object sender, TappedEventArgs e)
+    private void OnOpenLocalModelsTapped(object sender, TappedEventArgs e)
     {
         OnOpenLocalModelsClicked(sender, EventArgs.Empty);
     }
@@ -119,7 +128,7 @@ public partial class FrontPage : ContentPage
         await Navigation.PushAsync(new DocumentManagerPage());
     }
 
-    private void OnOpenDocumentManagerClicked(object sender, TappedEventArgs e)
+    private void OnOpenDocumentManagerTapped(object sender, TappedEventArgs e)
     {
         OnOpenDocumentManagerClicked(sender, EventArgs.Empty);
     }
@@ -137,6 +146,36 @@ public partial class FrontPage : ContentPage
     {
         if (sender is Button button && button.CommandParameter is ChatSession chat)
             await Navigation.PushAsync(new chatpage(chat.Id));
+    }
+
+    private void OnSearchTextChanged(object sender, TextChangedEventArgs e)
+    {
+        SearchText = e.NewTextValue ?? string.Empty;
+        ApplyConversationFilter();
+    }
+
+    private void ApplyConversationFilter()
+    {
+        var normalizedSearch = SearchText.Trim();
+
+        IEnumerable<ChatSession> filteredChats = allConversations;
+        if (!string.IsNullOrWhiteSpace(normalizedSearch))
+            filteredChats = allConversations.Where(chat =>
+                ContainsIgnoreCase(chat.Title, normalizedSearch) ||
+                ContainsIgnoreCase(chat.LastMessagePreview, normalizedSearch) ||
+                ContainsIgnoreCase(chat.PersonalityName, normalizedSearch));
+
+        Conversations.Clear();
+        foreach (var chat in filteredChats)
+            Conversations.Add(chat);
+
+        OnPropertyChanged(nameof(ConversationSummary));
+    }
+
+    private static bool ContainsIgnoreCase(string? source, string value)
+    {
+        return !string.IsNullOrWhiteSpace(source) &&
+               source.Contains(value, StringComparison.OrdinalIgnoreCase);
     }
 
     // ✏️ Editar nome da conversa

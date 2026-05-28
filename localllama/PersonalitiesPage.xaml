@@ -52,6 +52,23 @@
                                 <Label Text="{Binding Description}"
                                        FontSize="14"
                                        TextColor="#B8B8C8" />
+                                <HorizontalStackLayout Spacing="10"
+                                                       IsVisible="{Binding IsCustom}">
+                                    <Button Text="Editar"
+                                            Clicked="OnEditCustomClicked"
+                                            CommandParameter="{Binding .}"
+                                            BackgroundColor="#FFA726"
+                                            TextColor="White"
+                                            CornerRadius="14"
+                                            Padding="14,8" />
+                                    <Button Text="Apagar"
+                                            Clicked="OnDeleteCustomClicked"
+                                            CommandParameter="{Binding .}"
+                                            BackgroundColor="#E53935"
+                                            TextColor="White"
+                                            CornerRadius="14"
+                                            Padding="14,8" />
+                                </HorizontalStackLayout>
                             </VerticalStackLayout>
                         </Frame>
                     </DataTemplate>
@@ -64,7 +81,7 @@
                    CornerRadius="18"
                    HasShadow="False">
                 <VerticalStackLayout Spacing="12">
-                    <Label Text="Criar personalidade"
+                    <Label Text="{Binding EditorTitle}"
                            FontSize="20"
                            FontAttributes="Bold"
                            TextColor="White" />
@@ -83,12 +100,24 @@
                             AutoSize="TextChanges"
                             MinimumHeightRequest="180" />
 
-                    <Button Text="Usar personalidade criada"
-                            Clicked="OnCreateCustomClicked"
-                            BackgroundColor="#FF7043"
-                            TextColor="White"
-                            CornerRadius="16"
-                            Padding="14,12" />
+                    <HorizontalStackLayout Spacing="10">
+                        <Button Text="{Binding SaveButtonText}"
+                                Clicked="OnSaveCustomClicked"
+                                BackgroundColor="#FF7043"
+                                TextColor="White"
+                                CornerRadius="16"
+                                Padding="14,12"
+                                HorizontalOptions="FillAndExpand" />
+
+                        <Button Text="Cancelar"
+                                Clicked="OnCancelEditClicked"
+                                BackgroundColor="#4B5563"
+                                TextColor="White"
+                                CornerRadius="16"
+                                Padding="14,12"
+                                HorizontalOptions="FillAndExpand"
+                                IsVisible="{Binding IsEditingCustom}" />
+                    </HorizontalStackLayout>
                 </VerticalStackLayout>
             </Frame>
 
