@@ -462,5 +462,40 @@
                 </VerticalStackLayout>
             </ScrollView>
         </Grid>
+
+        <Grid IsVisible="{Binding IsImportingModel}"
+              BackgroundColor="#B0000000"
+              Padding="24">
+            <Border HorizontalOptions="Center"
+                    VerticalOptions="Center"
+                    WidthRequest="320"
+                    Padding="24"
+                    BackgroundColor="#151A2B"
+                    Stroke="#2B3450"
+                    StrokeThickness="1">
+                <Border.StrokeShape>
+                    <RoundRectangle CornerRadius="24" />
+                </Border.StrokeShape>
+
+                <VerticalStackLayout Spacing="16">
+                    <ActivityIndicator IsRunning="True"
+                                       Color="#7C4DFF"
+                                       HeightRequest="42"
+                                       WidthRequest="42"
+                                       HorizontalOptions="Center" />
+                    <Label Text="{Binding ImportStatusText}"
+                           TextColor="White"
+                           FontAttributes="Bold"
+                           FontSize="18"
+                           HorizontalTextAlignment="Center" />
+                    <ProgressBar Progress="{Binding ImportProgress}"
+                                 HeightRequest="8" />
+                    <Label Text="{Binding ImportProgressText}"
+                           TextColor="#98A1BD"
+                           FontSize="13"
+                           HorizontalTextAlignment="Center" />
+                </VerticalStackLayout>
+            </Border>
+        </Grid>
     </Grid>
 </ContentPage>

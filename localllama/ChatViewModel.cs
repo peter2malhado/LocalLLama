@@ -17,6 +17,8 @@ public class ChatViewModel : BindableObject
     private ChatSessionModel? _currentChat;
     private string _currentMessage = string.Empty;
     private bool _llamaReady;
+    private bool _isModelLoading;
+    private string _loadingStatusText = "A carregar o modelo...";
     private string? _initErrorMessage;
     private bool _isDeveloperStatsVisible;
     private string _responseTimeText = "Aguardando";
@@ -32,9 +34,6 @@ public class ChatViewModel : BindableObject
 
         SendMessageCommand = new Command(async () => await SendMessageAsync());
         ImportDocumentCommand = new Command(async () => await ImportDocumentAsync());
-
-        InitializeInference();
-        LoadSession();
     }
 
     public ObservableCollection<Message> Messages { get; } = new();
@@ -117,6 +116,32 @@ public class ChatViewModel : BindableObject
         }
     }
 
+    public bool IsModelLoading
+    {
+        get => _isModelLoading;
+        private set
+        {
+            if (_isModelLoading == value)
+                return;
+
+            _isModelLoading = value;
+            OnPropertyChanged();
+        }
+    }
+
+    public string LoadingStatusText
+    {
+        get => _loadingStatusText;
+        private set
+        {
+            if (_loadingStatusText == value)
+                return;
+
+            _loadingStatusText = value;
+            OnPropertyChanged();
+        }
+    }
+
     public ICommand SendMessageCommand { get; }
     public ICommand ImportDocumentCommand { get; }
 
@@ -133,13 +158,21 @@ public class ChatViewModel : BindableObject
         }
     }
 
-    private void InitializeInference()
+    public async Task InitializeAndLoadAsync()
     {
-        IsDeveloperStatsVisible = InferenceSettingsService.IsDeveloperStatsEnabled;
+        if (_currentChat != null || IsModelLoading || _llamaReady || _initErrorMessage != null)
+        {
+            if (_currentChat == null)
+                await LoadSessionAsync();
+            return;
+        }
+
+        IsModelLoading = true;
+        LoadingStatusText = "A carregar o modelo...";
 
         try
         {
-            _inferenceService.Initialize();
+            await Task.Run(() => _inferenceService.Initialize());
             _llamaReady = true;
         }
         catch (Exception ex)
@@ -156,10 +189,21 @@ public class ChatViewModel : BindableObject
                 Text = $"Erro ao carregar o modelo. {_initErrorMessage}"
             });
         }
+
+        try
+        {
+            LoadingStatusText = "A preparar a conversa...";
+            await LoadSessionAsync();
+        }
+        finally
+        {
+            IsModelLoading = false;
+        }
     }
 
-    private async void LoadSession()
+    private async Task LoadSessionAsync()
     {
+        IsDeveloperStatsVisible = InferenceSettingsService.IsDeveloperStatsEnabled;
         _currentChat = await _conversationService.LoadOrCreateAsync(_chatId);
         PersonalityName = _currentChat.PersonalityName;
         _conversationService.PopulateMessages(Messages, _currentChat.Messages);
@@ -174,9 +218,11 @@ public class ChatViewModel : BindableObject
             Messages.Add(new Message
             {
                 IsUser = false,
-                Text = string.IsNullOrWhiteSpace(_initErrorMessage)
-                    ? "Modelo não está carregado. Seleciona um modelo .gguf válido."
-                    : $"Modelo não está carregado. {_initErrorMessage}"
+                Text = IsModelLoading
+                    ? "O modelo ainda está a carregar. Aguarda um momento."
+                    : string.IsNullOrWhiteSpace(_initErrorMessage)
+                        ? "Modelo não está carregado. Seleciona um modelo .gguf válido."
+                        : $"Modelo não está carregado. {_initErrorMessage}"
             });
             return;
         }
@@ -199,6 +245,7 @@ public class ChatViewModel : BindableObject
         CurrentMessage = string.Empty;
 
         await _conversationService.UpdateTitleIfNeededAsync(_currentChat, _chatId, userInput);
+        await PersistentMemoryService.CaptureFromUserMessageAsync(userInput);
 
         var botMessage = new Message { Text = string.Empty, IsUser = false };
         Messages.Add(botMessage);

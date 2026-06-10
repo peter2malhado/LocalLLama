@@ -16,8 +16,11 @@ public class RagOrchestratorService
     {
         var localContext = await _ragDocumentService.BuildContextBlockAsync(userInput);
         var webContext = await _webSearchService.SearchWebAsync(userInput);
+        var memoryContext = await PersistentMemoryService.BuildContextBlockAsync(userInput);
 
-        if (string.IsNullOrWhiteSpace(localContext) && string.IsNullOrWhiteSpace(webContext))
+        if (string.IsNullOrWhiteSpace(localContext) &&
+            string.IsNullOrWhiteSpace(webContext) &&
+            string.IsNullOrWhiteSpace(memoryContext))
             return userInput;
 
         var promptBuilder = new StringBuilder();
@@ -33,6 +36,12 @@ public class RagOrchestratorService
         {
             promptBuilder.AppendLine("Contexto de pesquisa na Web:");
             promptBuilder.AppendLine(webContext);
+            promptBuilder.AppendLine();
+        }
+
+        if (!string.IsNullOrWhiteSpace(memoryContext))
+        {
+            promptBuilder.AppendLine(memoryContext);
             promptBuilder.AppendLine();
         }
 

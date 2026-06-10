@@ -159,5 +159,40 @@
                 </VerticalStackLayout>
             </Grid>
         </Frame>
+
+        <Grid Grid.RowSpan="4"
+              BackgroundColor="#B0000000"
+              IsVisible="{Binding IsModelLoading}"
+              InputTransparent="False">
+            <Border HorizontalOptions="Center"
+                    VerticalOptions="Center"
+                    WidthRequest="280"
+                    Padding="24"
+                    BackgroundColor="#171B2A"
+                    Stroke="#2C3550"
+                    StrokeThickness="1">
+                <Border.StrokeShape>
+                    <RoundRectangle CornerRadius="22" />
+                </Border.StrokeShape>
+
+                <VerticalStackLayout Spacing="16"
+                                     HorizontalOptions="Center"
+                                     VerticalOptions="Center">
+                    <ActivityIndicator IsRunning="True"
+                                       Color="#7C4DFF"
+                                       HeightRequest="42"
+                                       WidthRequest="42" />
+                    <Label Text="{Binding LoadingStatusText}"
+                           TextColor="White"
+                           FontSize="18"
+                           FontAttributes="Bold"
+                           HorizontalTextAlignment="Center" />
+                    <Label Text="Isto pode demorar alguns segundos."
+                           TextColor="#A6AEC6"
+                           FontSize="13"
+                           HorizontalTextAlignment="Center" />
+                </VerticalStackLayout>
+            </Border>
+        </Grid>
     </Grid>
 </ContentPage>

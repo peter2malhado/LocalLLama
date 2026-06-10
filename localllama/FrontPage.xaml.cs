@@ -8,6 +8,9 @@ public partial class FrontPage : ContentPage
 
 {
     private readonly List<ChatSession> allConversations = new();
+    private bool _isImportingModel;
+    private double _importProgress;
+    private string _importStatusText = "A importar modelo...";
 
     public FrontPage()
     {
@@ -19,6 +22,49 @@ public partial class FrontPage : ContentPage
 
     public ObservableCollection<ChatSession> Conversations { get; set; } = new();
     public string SearchText { get; set; } = string.Empty;
+    public bool IsImportingModel
+    {
+        get => _isImportingModel;
+        set
+        {
+            if (_isImportingModel == value)
+                return;
+
+            _isImportingModel = value;
+            OnPropertyChanged(nameof(IsImportingModel));
+        }
+    }
+
+    public double ImportProgress
+    {
+        get => _importProgress;
+        set
+        {
+            var clamped = Math.Clamp(value, 0, 1);
+            if (Math.Abs(_importProgress - clamped) < 0.0001)
+                return;
+
+            _importProgress = clamped;
+            OnPropertyChanged(nameof(ImportProgress));
+            OnPropertyChanged(nameof(ImportProgressText));
+        }
+    }
+
+    public string ImportStatusText
+    {
+        get => _importStatusText;
+        set
+        {
+            if (_importStatusText == value)
+                return;
+
+            _importStatusText = value;
+            OnPropertyChanged(nameof(ImportStatusText));
+        }
+    }
+
+    public string ImportProgressText => $"{ImportProgress:P0}";
+
     public string ConversationSummary =>
         Conversations.Count switch
         {
@@ -264,7 +310,13 @@ public partial class FrontPage : ContentPage
                 return;
             }
 
-            var localPath = await SaveModelToAppDataAsync(result);
+            IsImportingModel = true;
+            ImportStatusText = $"A importar {result.FileName}";
+            ImportProgress = 0;
+
+            await Task.Yield();
+
+            var localPath = await SaveModelToAppDataAsync(result, new Progress<double>(p => ImportProgress = p));
             ModelConfig.SelectedModelPath = localPath;
             await DisplayAlert("Modelo selecionado", Path.GetFileName(localPath), "OK");
         }
@@ -272,9 +324,15 @@ public partial class FrontPage : ContentPage
         {
             await DisplayAlert("Erro", $"Não foi possível selecionar o modelo: {ex.Message}", "OK");
         }
+        finally
+        {
+            IsImportingModel = false;
+            ImportStatusText = "A importar modelo...";
+            ImportProgress = 0;
+        }
     }
 
-    private static async Task<string> SaveModelToAppDataAsync(FileResult result)
+    private static async Task<string> SaveModelToAppDataAsync(FileResult result, IProgress<double>? progress = null)
     {
         var appDataDir = FileSystem.AppDataDirectory;
         var modelsDir = Path.Combine(appDataDir, "models");
@@ -284,7 +342,21 @@ public partial class FrontPage : ContentPage
 
         await using var src = await result.OpenReadAsync();
         await using var dest = File.Open(destPath, FileMode.Create, FileAccess.Write, FileShare.None);
-        await src.CopyToAsync(dest);
+        var buffer = new byte[1024 * 1024];
+        var totalRead = 0L;
+        var totalBytes = src.CanSeek ? src.Length : 0L;
+        int read;
+
+        while ((read = await src.ReadAsync(buffer.AsMemory(0, buffer.Length))) > 0)
+        {
+            await dest.WriteAsync(buffer.AsMemory(0, read));
+            totalRead += read;
+
+            if (progress != null && totalBytes > 0)
+                progress.Report((double)totalRead / totalBytes);
+        }
+
+        progress?.Report(1.0);
 
         return destPath;
     }

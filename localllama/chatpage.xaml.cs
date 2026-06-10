@@ -6,6 +6,7 @@ public partial class chatpage : ContentPage
 {
     private readonly string _chatId;
     private readonly ChatViewModel _viewModel;
+    private bool _hasStartedLoading;
 
     // Construtor padrão (por exemplo, quando abres a app)
     public chatpage() : this("default") // Usa "default" como ID padrão
@@ -54,10 +55,23 @@ public partial class chatpage : ContentPage
             });
     }
 
-    protected override void OnAppearing()
+    protected override async void OnAppearing()
     {
         base.OnAppearing();
-        // Scroll para a última mensagem quando a página aparece
+        if (_hasStartedLoading)
+        {
+            ScrollToLastMessage();
+            return;
+        }
+
+        _hasStartedLoading = true;
+        await InitializeAndScrollAsync();
+    }
+
+    private async Task InitializeAndScrollAsync()
+    {
+        await Task.Yield();
+        await _viewModel.InitializeAndLoadAsync();
         ScrollToLastMessage();
     }
 }
