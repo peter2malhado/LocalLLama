@@ -25,17 +25,11 @@
   <component name="ChangeListManager">
     <list default="true" id="3d9c196b-eab1-473a-a7fa-71a922d2b3a8" name="Changes" comment="">
       <change beforePath="$PROJECT_DIR$/.idea/.idea.localllama/.idea/workspace.xml" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/.idea.localllama/.idea/workspace.xml" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/localllama/ChatSession.cs" beforeDir="false" afterPath="$PROJECT_DIR$/localllama/ChatSession.cs" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/localllama/ChatStorage.cs" beforeDir="false" afterPath="$PROJECT_DIR$/localllama/ChatStorage.cs" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/localllama/ChatViewModel.cs" beforeDir="false" afterPath="$PROJECT_DIR$/localllama/ChatViewModel.cs" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/localllama/DatabaseHelper.cs" beforeDir="false" afterPath="$PROJECT_DIR$/localllama/DatabaseHelper.cs" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/localllama/FrontPage.xaml" beforeDir="false" afterPath="$PROJECT_DIR$/localllama/FrontPage.xaml" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/localllama/FrontPage.xaml.cs" beforeDir="false" afterPath="$PROJECT_DIR$/localllama/FrontPage.xaml.cs" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/localllama/Message.cs" beforeDir="false" afterPath="$PROJECT_DIR$/localllama/Message.cs" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/localllama/Services/ChatConversationService.cs" beforeDir="false" afterPath="$PROJECT_DIR$/localllama/Services/ChatConversationService.cs" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/localllama/Services/ChatInferenceService.cs" beforeDir="false" afterPath="$PROJECT_DIR$/localllama/Services/ChatInferenceService.cs" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/localllama/LocalModelsPage.xaml" beforeDir="false" afterPath="$PROJECT_DIR$/localllama/LocalModelsPage.xaml" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/localllama/Services/RagDocumentPickerOptions.cs" beforeDir="false" afterPath="$PROJECT_DIR$/localllama/Services/RagDocumentPickerOptions.cs" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/localllama/ViewModels/LocalModelsViewModel.cs" beforeDir="false" afterPath="$PROJECT_DIR$/localllama/ViewModels/LocalModelsViewModel.cs" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/localllama/chatpage.xaml" beforeDir="false" afterPath="$PROJECT_DIR$/localllama/chatpage.xaml" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/localllama/localllama.csproj" beforeDir="false" afterPath="$PROJECT_DIR$/localllama/localllama.csproj" afterDir="false" />
     </list>
     <option name="SHOW_DIALOG" value="false" />
     <option name="HIGHLIGHT_CONFLICTS" value="true" />
@@ -177,7 +171,7 @@
     </decayedShown>
   </component>
   <component name="ProblemsViewState">
-    <option name="selectedTabId" value="SWEA" />
+    <option name="selectedTabId" value="CurrentFile" />
   </component>
   <component name="ProjectColorInfo">{
   &quot;associatedIndex&quot;: 4
@@ -373,7 +367,7 @@
       <workItem from="1777203759612" duration="1430000" />
       <workItem from="1777624672240" duration="259000" />
       <workItem from="1777652839269" duration="2687000" />
-      <workItem from="1781623079363" duration="5200000" />
+      <workItem from="1781623079363" duration="8744000" />
     </task>
     <task id="LOCAL-00001" summary="fix para o mac os &#10;tive de fazer que o mac os puxe os dll manualmente no nativelibraryhelper uma classe so para o macos">
       <option name="closed" value="true" />
@@ -503,7 +497,15 @@
       <option name="project" value="LOCAL" />
       <updated>1774465354410</updated>
     </task>
-    <option name="localTasksCounter" value="17" />
+    <task id="LOCAL-00017" summary="novas Funções &#10;uma de fazer docs o user faz um pormpt e ele cria um docs pdf ou codigo mesmo &#10;&#10;agora em testes a funcao de ele ver uma imagem e poder interpertar ela">
+      <option name="closed" value="true" />
+      <created>1781796191455</created>
+      <option name="number" value="00017" />
+      <option name="presentableId" value="LOCAL-00017" />
+      <option name="project" value="LOCAL" />
+      <updated>1781796191455</updated>
+    </task>
+    <option name="localTasksCounter" value="18" />
     <servers />
   </component>
   <component name="TypeScriptGeneratedFilesManager">
@@ -586,7 +588,8 @@
     <MESSAGE value="an update of the .NET SDK from version 9 to 10 by maccatalyst, as well as iOS" />
     <MESSAGE value="fica em pauza" />
     <MESSAGE value="esta merda so nao funcinaa" />
-    <option name="LAST_COMMIT_MESSAGE" value="esta merda so nao funcinaa" />
+    <MESSAGE value="novas Funções &#10;uma de fazer docs o user faz um pormpt e ele cria um docs pdf ou codigo mesmo &#10;&#10;agora em testes a funcao de ele ver uma imagem e poder interpertar ela" />
+    <option name="LAST_COMMIT_MESSAGE" value="novas Funções &#10;uma de fazer docs o user faz um pormpt e ele cria um docs pdf ou codigo mesmo &#10;&#10;agora em testes a funcao de ele ver uma imagem e poder interpertar ela" />
   </component>
   <component name="XDebuggerManager">
     <breakpoint-manager>

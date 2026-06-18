@@ -11,8 +11,8 @@
 
     <Grid RowDefinitions="Auto,*">
         <!-- Header -->
-        <Grid Grid.Row="0" Padding="20,22" ColumnDefinitions="*,Auto">
-            <VerticalStackLayout Spacing="6">
+        <Grid Grid.Row="0" Padding="20,22" RowDefinitions="Auto,Auto" ColumnDefinitions="*,Auto">
+            <VerticalStackLayout Grid.Row="0" Spacing="6">
                 <Label Text="Modelos locais"
                        FontSize="26"
                        TextColor="#E8EDF4"
@@ -21,7 +21,8 @@
                        FontSize="13"
                        TextColor="#9AA4B2" />
             </VerticalStackLayout>
-            <Button Text="Importar"
+            <Button Grid.Row="0"
+                    Text="Importar"
                     Grid.Column="1"
                     BackgroundColor="#16A34A"
                     TextColor="White"
@@ -29,6 +30,19 @@
                     Padding="16,10"
                     CornerRadius="12"
                     Command="{Binding ImportModelCommand}" />
+            <VerticalStackLayout Grid.Row="1"
+                                 Grid.ColumnSpan="2"
+                                 Spacing="6"
+                                 IsVisible="{Binding IsImporting}"
+                                 Margin="0,14,0,0">
+                <ProgressBar Progress="{Binding ImportProgress}" HeightRequest="6" />
+                <Label Text="{Binding ImportStatusText}"
+                       TextColor="#9AA4B2"
+                       FontSize="12" />
+                <Label Text="{Binding ImportProgressText}"
+                       TextColor="#64748B"
+                       FontSize="11" />
+            </VerticalStackLayout>
         </Grid>
 
         <!-- Lista -->

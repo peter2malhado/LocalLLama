@@ -6,6 +6,10 @@ namespace localllama.ViewModels;
 
 public class LocalModelsViewModel : BindableObject
 {
+    private bool _isImporting;
+    private double _importProgress;
+    private string _importStatusText = "A importar modelo...";
+
     public LocalModelsViewModel()
     {
         LoadLocalModelsCommand = new Command(async () => await LoadLocalModelsAsync());
@@ -20,6 +24,43 @@ public class LocalModelsViewModel : BindableObject
     public Command ImportModelCommand { get; }
     public Command<AIModel> UseModelCommand { get; }
     public Command<AIModel> RemoveModelCommand { get; }
+
+    public bool IsImporting
+    {
+        get => _isImporting;
+        set
+        {
+            if (_isImporting == value) return;
+            _isImporting = value;
+            OnPropertyChanged();
+        }
+    }
+
+    public double ImportProgress
+    {
+        get => _importProgress;
+        set
+        {
+            var clamped = Math.Clamp(value, 0, 1);
+            if (Math.Abs(_importProgress - clamped) < 0.0001) return;
+            _importProgress = clamped;
+            OnPropertyChanged();
+            OnPropertyChanged(nameof(ImportProgressText));
+        }
+    }
+
+    public string ImportProgressText => $"{ImportProgress:P0}";
+
+    public string ImportStatusText
+    {
+        get => _importStatusText;
+        set
+        {
+            if (_importStatusText == value) return;
+            _importStatusText = value;
+            OnPropertyChanged();
+        }
+    }
 
     public async Task LoadLocalModelsAsync()
     {
@@ -75,6 +116,12 @@ public class LocalModelsViewModel : BindableObject
                 return;
             }
 
+            IsImporting = true;
+            ImportStatusText = $"A importar {result.FileName}";
+            ImportProgress = 0;
+
+            await Task.Yield();
+
             var modelsDir = Path.Combine(FileSystem.AppDataDirectory, "models");
             Directory.CreateDirectory(modelsDir);
 
@@ -82,7 +129,29 @@ public class LocalModelsViewModel : BindableObject
 
             await using var src = await result.OpenReadAsync();
             await using var dest = File.Open(destPath, FileMode.Create, FileAccess.Write, FileShare.None);
-            await src.CopyToAsync(dest);
+            var buffer = new byte[1024 * 1024];
+            var totalBytes = src.CanSeek ? src.Length : 0L;
+            var totalRead = 0L;
+            int read;
+
+            while ((read = await src.ReadAsync(buffer.AsMemory(0, buffer.Length))) > 0)
+            {
+                await dest.WriteAsync(buffer.AsMemory(0, read));
+                totalRead += read;
+                if (totalBytes > 0)
+                    ImportProgress = (double)totalRead / totalBytes;
+            }
+
+            await dest.FlushAsync();
+            ImportProgress = 1;
+
+            var sourceSize = totalBytes > 0 ? totalBytes : totalRead;
+            var destSize = new FileInfo(destPath).Length;
+            if (destSize != sourceSize)
+            {
+                File.Delete(destPath);
+                throw new IOException($"Cópia incompleta. Fonte {sourceSize} bytes, destino {destSize} bytes.");
+            }
 
             ModelConfig.SelectedModelPath = destPath;
             await ShowAlertAsync("Modelo importado", result.FileName);
@@ -96,6 +165,12 @@ public class LocalModelsViewModel : BindableObject
         catch (Exception ex)
         {
             await ShowAlertAsync("Erro", $"Não foi possível importar: {ex.Message}");
+        }
+        finally
+        {
+            IsImporting = false;
+            ImportStatusText = "A importar modelo...";
+            ImportProgress = 0;
         }
     }
 

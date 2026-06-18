@@ -36,7 +36,6 @@ public class ChatViewModel : BindableObject
 
         SendMessageCommand = new Command(async () => await SendMessageAsync());
         ImportDocumentCommand = new Command(async () => await ImportDocumentAsync());
-        PickImageCommand = new Command(async () => await PickImageAsync());
         ClearImageCommand = new Command(ClearSelectedImage);
     }
 
@@ -164,7 +163,6 @@ public class ChatViewModel : BindableObject
 
     public ICommand SendMessageCommand { get; }
     public ICommand ImportDocumentCommand { get; }
-    public ICommand PickImageCommand { get; }
     public ICommand ClearImageCommand { get; }
 
     public string PersonalityName
@@ -329,9 +327,15 @@ public class ChatViewModel : BindableObject
     {
         try
         {
-            var result = await FilePicker.Default.PickAsync(RagDocumentPickerOptions.Create("Adicionar documento ao RAG local"));
+            var result = await FilePicker.Default.PickAsync(RagDocumentPickerOptions.Create("Adicionar documento ou foto"));
             if (result == null)
                 return;
+
+            if (IsImageFile(result.FileName))
+            {
+                await AttachImageAsync(result);
+                return;
+            }
 
             var entry = await _ragDocumentService.ImportDocumentAsync(result);
             await ShowAlertAsync("Documento", $"{entry.DisplayName} foi adicionado ao RAG local.");
@@ -350,39 +354,34 @@ public class ChatViewModel : BindableObject
         _inferenceService.RebuildSession(_currentChat.Messages, _currentChat.PersonalityPrompt);
     }
 
-    private async Task PickImageAsync()
+    private static bool IsImageFile(string fileName)
     {
-        try
-        {
-            var result = await FilePicker.Default.PickAsync(new PickOptions
-            {
-                PickerTitle = "Escolher foto",
-                FileTypes = FilePickerFileType.Images
-            });
+        var ext = Path.GetExtension(fileName);
+        return ext.Equals(".png", StringComparison.OrdinalIgnoreCase) ||
+               ext.Equals(".jpg", StringComparison.OrdinalIgnoreCase) ||
+               ext.Equals(".jpeg", StringComparison.OrdinalIgnoreCase) ||
+               ext.Equals(".webp", StringComparison.OrdinalIgnoreCase) ||
+               ext.Equals(".bmp", StringComparison.OrdinalIgnoreCase) ||
+               ext.Equals(".gif", StringComparison.OrdinalIgnoreCase);
+    }
 
-            if (result == null)
-                return;
+    private async Task AttachImageAsync(FileResult result)
+    {
+        var storageDir = Path.Combine(FileSystem.AppDataDirectory, "chat-images", UserContext.Username ?? "default", _chatId);
+        Directory.CreateDirectory(storageDir);
 
-            var storageDir = Path.Combine(FileSystem.AppDataDirectory, "chat-images", UserContext.Username ?? "default", _chatId);
-            Directory.CreateDirectory(storageDir);
+        var ext = Path.GetExtension(result.FileName);
+        if (string.IsNullOrWhiteSpace(ext))
+            ext = ".jpg";
 
-            var ext = Path.GetExtension(result.FileName);
-            if (string.IsNullOrWhiteSpace(ext))
-                ext = ".jpg";
+        var fileName = $"{DateTime.UtcNow:yyyyMMdd_HHmmssfff}{ext}";
+        var destinationPath = Path.Combine(storageDir, fileName);
 
-            var fileName = $"{DateTime.UtcNow:yyyyMMdd_HHmmssfff}{ext}";
-            var destinationPath = Path.Combine(storageDir, fileName);
+        await using var source = await result.OpenReadAsync();
+        await using var destination = File.Open(destinationPath, FileMode.Create, FileAccess.Write, FileShare.None);
+        await source.CopyToAsync(destination);
 
-            await using var source = await result.OpenReadAsync();
-            await using var destination = File.Open(destinationPath, FileMode.Create, FileAccess.Write, FileShare.None);
-            await source.CopyToAsync(destination);
-
-            SelectedImagePath = destinationPath;
-        }
-        catch (Exception ex)
-        {
-            await ShowAlertAsync("Erro", $"Não foi possível escolher a foto: {ex.Message}");
-        }
+        SelectedImagePath = destinationPath;
     }
 
     private void ClearSelectedImage()

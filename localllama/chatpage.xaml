@@ -65,81 +65,86 @@
         </CollectionView>
 
         <!-- Área de input -->
-        <Grid Grid.Row="2"
-              ColumnDefinitions="Auto,*,Auto,Auto"
-              Padding="10"
-              BackgroundColor="#2C2C2C">
+        <Border Grid.Row="2"
+                BackgroundColor="#2C2C2C"
+                Stroke="#3A3A52"
+                StrokeThickness="1"
+                Padding="14,14,14,16">
+            <Border.StrokeShape>
+                <RoundRectangle CornerRadius="22" />
+            </Border.StrokeShape>
 
-            <Button Text="📎"
-                    FontSize="20"
-                    TextColor="White"
-                    BackgroundColor="#3A3A52"
-                    WidthRequest="50"
-                    HeightRequest="50"
-                    CornerRadius="25"
-                    Command="{Binding ImportDocumentCommand}"
-                    VerticalOptions="Center" />
+            <Grid RowDefinitions="Auto,Auto"
+                  ColumnDefinitions="Auto,*,Auto"
+                  RowSpacing="14"
+                  ColumnSpacing="14">
 
-            <Button Grid.Column="1"
-                    Text="🖼️"
-                    FontSize="20"
-                    TextColor="White"
-                    BackgroundColor="#3A3A52"
-                    WidthRequest="50"
-                    HeightRequest="50"
-                    CornerRadius="25"
-                    Command="{Binding PickImageCommand}"
-                    VerticalOptions="Center" />
-
-            <Entry x:Name="MessageEntry"
-                   Grid.Column="2"
-                   Placeholder="Escreve a tua mensagem..."
-                   Text="{Binding CurrentMessage, Mode=TwoWay}"
-                   FontSize="16"
-                   TextColor="White"
-                   PlaceholderColor="#888"
-                   BackgroundColor="Transparent"
-                   VerticalOptions="Center"
-                   Margin="10,0"
-                   Completed="MessageEntry_Completed" />
-
-            <Button Grid.Column="3"
-                    Text="➤"
-                    FontSize="20"
-                    TextColor="White"
-                    BackgroundColor="#10A37F"
-                    WidthRequest="50"
-                    HeightRequest="50"
-                    CornerRadius="25"
-                    Command="{Binding SendMessageCommand}"
-                    VerticalOptions="Center" />
-        </Grid>
-
-        <Grid Grid.Row="2"
-              IsVisible="{Binding HasSelectedImage}"
-              VerticalOptions="Start"
-              Margin="70,-92,70,0"
-              InputTransparent="False">
-            <Frame Padding="6"
-                   CornerRadius="14"
-                   BackgroundColor="#141824"
-                   BorderColor="#3A3A52"
-                   HasShadow="False">
-                <Grid ColumnDefinitions="*,Auto">
-                    <Image Source="{Binding SelectedImagePath}"
-                           Aspect="AspectFill"
-                           HeightRequest="110" />
-                    <Button Grid.Column="1"
-                            Text="✕"
-                            WidthRequest="36"
-                            HeightRequest="36"
-                            CornerRadius="18"
-                            BackgroundColor="#8A2F3B"
-                            TextColor="White"
-                            Command="{Binding ClearImageCommand}" />
+                <Grid Grid.Row="0"
+                      Grid.ColumnSpan="3"
+                      IsVisible="{Binding HasSelectedImage}"
+                      ColumnDefinitions="Auto,*">
+                    <Grid WidthRequest="132"
+                          HeightRequest="132">
+                        <Frame Padding="0"
+                               CornerRadius="18"
+                               BackgroundColor="#141824"
+                               BorderColor="#45456B"
+                               HasShadow="False"
+                               Margin="0">
+                            <Image Source="{Binding SelectedImagePath}"
+                                   Aspect="AspectFill" />
+                        </Frame>
+                        <Button HorizontalOptions="End"
+                                VerticalOptions="Start"
+                                Margin="8"
+                                Text="✕"
+                                WidthRequest="28"
+                                HeightRequest="28"
+                                CornerRadius="14"
+                                FontSize="12"
+                                BackgroundColor="#8A2F3B"
+                                TextColor="White"
+                                Command="{Binding ClearImageCommand}" />
+                    </Grid>
                 </Grid>
-            </Frame>
-        </Grid>
+
+                <Button Grid.Row="1"
+                        Text="📎"
+                        FontSize="20"
+                        TextColor="White"
+                        BackgroundColor="#3A3A52"
+                        WidthRequest="48"
+                        HeightRequest="48"
+                        CornerRadius="24"
+                        Command="{Binding ImportDocumentCommand}"
+                        VerticalOptions="End" />
+
+                <Entry x:Name="MessageEntry"
+                       Grid.Row="1"
+                       Grid.Column="1"
+                       Placeholder="Write a message..."
+                       Text="{Binding CurrentMessage, Mode=TwoWay}"
+                       FontSize="16"
+                       TextColor="White"
+                       PlaceholderColor="#888"
+                       BackgroundColor="Transparent"
+                       VerticalOptions="End"
+                       Margin="4,0"
+                       Completed="MessageEntry_Completed" />
+
+                <Button Grid.Row="1"
+                        Grid.Column="2"
+                        Text="➤"
+                        FontSize="20"
+                        TextColor="White"
+                        BackgroundColor="#C86A46"
+                        WidthRequest="48"
+                        HeightRequest="48"
+                        CornerRadius="24"
+                        Command="{Binding SendMessageCommand}"
+                        VerticalOptions="End" />
+            </Grid>
+        </Border>
 
         <Frame Grid.Row="3"
                Margin="0,8,0,0"
