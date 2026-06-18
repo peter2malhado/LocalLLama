@@ -7,6 +7,7 @@ public class Message : INotifyPropertyChanged
 {
     private bool _isUser;
     private string _text;
+    private string? _imagePath;
 
     public string Text
     {
@@ -33,6 +34,22 @@ public class Message : INotifyPropertyChanged
             }
         }
     }
+
+    public string? ImagePath
+    {
+        get => _imagePath;
+        set
+        {
+            if (_imagePath != value)
+            {
+                _imagePath = value;
+                OnPropertyChanged();
+                OnPropertyChanged(nameof(HasImage));
+            }
+        }
+    }
+
+    public bool HasImage => !string.IsNullOrWhiteSpace(_imagePath);
 
     public event PropertyChangedEventHandler PropertyChanged;
 

@@ -1,4 +1,5 @@
 using System.Collections.ObjectModel;
+using System.IO;
 using System.Windows.Input;
 using localllama;
 using localllama.Models;
@@ -16,6 +17,7 @@ public class ChatViewModel : BindableObject
     private readonly WebSearchService _webSearchService = new();
     private ChatSessionModel? _currentChat;
     private string _currentMessage = string.Empty;
+    private string? _selectedImagePath;
     private bool _llamaReady;
     private bool _isModelLoading;
     private string _loadingStatusText = "A carregar o modelo...";
@@ -34,6 +36,8 @@ public class ChatViewModel : BindableObject
 
         SendMessageCommand = new Command(async () => await SendMessageAsync());
         ImportDocumentCommand = new Command(async () => await ImportDocumentAsync());
+        PickImageCommand = new Command(async () => await PickImageAsync());
+        ClearImageCommand = new Command(ClearSelectedImage);
     }
 
     public ObservableCollection<Message> Messages { get; } = new();
@@ -63,6 +67,22 @@ public class ChatViewModel : BindableObject
             OnPropertyChanged();
         }
     }
+
+    public string? SelectedImagePath
+    {
+        get => _selectedImagePath;
+        set
+        {
+            if (_selectedImagePath == value)
+                return;
+
+            _selectedImagePath = value;
+            OnPropertyChanged();
+            OnPropertyChanged(nameof(HasSelectedImage));
+        }
+    }
+
+    public bool HasSelectedImage => !string.IsNullOrWhiteSpace(_selectedImagePath);
 
     public string ResponseTimeText
     {
@@ -144,6 +164,8 @@ public class ChatViewModel : BindableObject
 
     public ICommand SendMessageCommand { get; }
     public ICommand ImportDocumentCommand { get; }
+    public ICommand PickImageCommand { get; }
+    public ICommand ClearImageCommand { get; }
 
     public string PersonalityName
     {
@@ -227,7 +249,7 @@ public class ChatViewModel : BindableObject
             return;
         }
 
-        if (string.IsNullOrWhiteSpace(CurrentMessage))
+        if (string.IsNullOrWhiteSpace(CurrentMessage) && string.IsNullOrWhiteSpace(SelectedImagePath))
             return;
 
         if (_currentChat == null)
@@ -241,11 +263,21 @@ public class ChatViewModel : BindableObject
         }
 
         var userInput = CurrentMessage.Trim();
-        Messages.Add(new Message { Text = userInput, IsUser = true });
+        var promptText = string.IsNullOrWhiteSpace(userInput) && !string.IsNullOrWhiteSpace(SelectedImagePath)
+            ? "Descreve a imagem e responde de forma útil."
+            : userInput;
+        Messages.Add(new Message
+        {
+            Text = promptText,
+            IsUser = true,
+            ImagePath = SelectedImagePath
+        });
         CurrentMessage = string.Empty;
+        var attachedImagePath = SelectedImagePath;
+        SelectedImagePath = null;
 
-        await _conversationService.UpdateTitleIfNeededAsync(_currentChat, _chatId, userInput);
-        await PersistentMemoryService.CaptureFromUserMessageAsync(userInput);
+        await _conversationService.UpdateTitleIfNeededAsync(_currentChat, _chatId, promptText);
+        await PersistentMemoryService.CaptureFromUserMessageAsync(promptText);
 
         var botMessage = new Message { Text = string.Empty, IsUser = false };
         Messages.Add(botMessage);
@@ -259,10 +291,12 @@ public class ChatViewModel : BindableObject
                 botMessage.Text = "A pesquisar na Web... 🌐";
             }
 
-            var prompt = await _ragOrchestratorService.BuildPromptAsync(userInput);
-            botMessage.Text = string.Empty;
+        var prompt = await _ragOrchestratorService.BuildPromptAsync(promptText);
+        botMessage.Text = string.Empty;
 
-            var result = await _inferenceService.GenerateReplyAsync(prompt, partial => botMessage.Text = partial);
+        var result = attachedImagePath == null
+            ? await _inferenceService.GenerateReplyAsync(prompt, partial => botMessage.Text = partial)
+            : await _inferenceService.GenerateReplyWithImageAsync(prompt, attachedImagePath, partial => botMessage.Text = partial);
 
             botMessage.Text = result.FinalText;
 
@@ -314,6 +348,46 @@ public class ChatViewModel : BindableObject
             return;
 
         _inferenceService.RebuildSession(_currentChat.Messages, _currentChat.PersonalityPrompt);
+    }
+
+    private async Task PickImageAsync()
+    {
+        try
+        {
+            var result = await FilePicker.Default.PickAsync(new PickOptions
+            {
+                PickerTitle = "Escolher foto",
+                FileTypes = FilePickerFileType.Images
+            });
+
+            if (result == null)
+                return;
+
+            var storageDir = Path.Combine(FileSystem.AppDataDirectory, "chat-images", UserContext.Username ?? "default", _chatId);
+            Directory.CreateDirectory(storageDir);
+
+            var ext = Path.GetExtension(result.FileName);
+            if (string.IsNullOrWhiteSpace(ext))
+                ext = ".jpg";
+
+            var fileName = $"{DateTime.UtcNow:yyyyMMdd_HHmmssfff}{ext}";
+            var destinationPath = Path.Combine(storageDir, fileName);
+
+            await using var source = await result.OpenReadAsync();
+            await using var destination = File.Open(destinationPath, FileMode.Create, FileAccess.Write, FileShare.None);
+            await source.CopyToAsync(destination);
+
+            SelectedImagePath = destinationPath;
+        }
+        catch (Exception ex)
+        {
+            await ShowAlertAsync("Erro", $"Não foi possível escolher a foto: {ex.Message}");
+        }
+    }
+
+    private void ClearSelectedImage()
+    {
+        SelectedImagePath = null;
     }
 
     private void RefreshDeveloperStats()

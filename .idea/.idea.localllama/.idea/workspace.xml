@@ -25,12 +25,17 @@
   <component name="ChangeListManager">
     <list default="true" id="3d9c196b-eab1-473a-a7fa-71a922d2b3a8" name="Changes" comment="">
       <change beforePath="$PROJECT_DIR$/.idea/.idea.localllama/.idea/workspace.xml" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/.idea.localllama/.idea/workspace.xml" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/localllama/ChatSession.cs" beforeDir="false" afterPath="$PROJECT_DIR$/localllama/ChatSession.cs" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/localllama/ChatStorage.cs" beforeDir="false" afterPath="$PROJECT_DIR$/localllama/ChatStorage.cs" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/localllama/ChatViewModel.cs" beforeDir="false" afterPath="$PROJECT_DIR$/localllama/ChatViewModel.cs" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/localllama/DatabaseHelper.cs" beforeDir="false" afterPath="$PROJECT_DIR$/localllama/DatabaseHelper.cs" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/localllama/FrontPage.xaml" beforeDir="false" afterPath="$PROJECT_DIR$/localllama/FrontPage.xaml" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/localllama/FrontPage.xaml.cs" beforeDir="false" afterPath="$PROJECT_DIR$/localllama/FrontPage.xaml.cs" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/localllama/Services/RagOrchestratorService.cs" beforeDir="false" afterPath="$PROJECT_DIR$/localllama/Services/RagOrchestratorService.cs" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/localllama/Message.cs" beforeDir="false" afterPath="$PROJECT_DIR$/localllama/Message.cs" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/localllama/Services/ChatConversationService.cs" beforeDir="false" afterPath="$PROJECT_DIR$/localllama/Services/ChatConversationService.cs" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/localllama/Services/ChatInferenceService.cs" beforeDir="false" afterPath="$PROJECT_DIR$/localllama/Services/ChatInferenceService.cs" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/localllama/chatpage.xaml" beforeDir="false" afterPath="$PROJECT_DIR$/localllama/chatpage.xaml" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/localllama/chatpage.xaml.cs" beforeDir="false" afterPath="$PROJECT_DIR$/localllama/chatpage.xaml.cs" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/localllama/localllama.csproj" beforeDir="false" afterPath="$PROJECT_DIR$/localllama/localllama.csproj" afterDir="false" />
     </list>
     <option name="SHOW_DIALOG" value="false" />
     <option name="HIGHLIGHT_CONFLICTS" value="true" />
@@ -64,7 +69,7 @@
     </option>
     <option name="RECENT_BRANCH_BY_REPOSITORY">
       <map>
-        <entry key="$PROJECT_DIR$" value="mac-os-mcp-teste-ai-" />
+        <entry key="$PROJECT_DIR$" value="master" />
       </map>
     </option>
     <option name="RECENT_GIT_ROOT_PATH" value="$PROJECT_DIR$" />
@@ -84,9 +89,18 @@
   }
 }</component>
   <component name="HighlightingSettingsPerFile">
+    <setting file="file://$PROJECT_DIR$/.junie/memory/language.json" root0="FORCE_HIGHLIGHTING" />
     <setting file="file://$PROJECT_DIR$/global.json" root0="FORCE_HIGHLIGHTING" />
-    <setting file="file://$PROJECT_DIR$/localllama/Platforms/MacCatalyst/Program.cs" root0="FORCE_HIGHLIGHTING" />
+    <setting file="file://$PROJECT_DIR$/localllama/ChatStorage.cs" root0="FORCE_HIGHLIGHTING" />
+    <setting file="file://$PROJECT_DIR$/localllama/FrontPage.xaml" root0="FORCE_HIGHLIGHTING" />
+    <setting file="file://$PROJECT_DIR$/localllama/FrontPage.xaml.cs" root0="FORCE_HIGHLIGHTING" />
+    <setting file="file://$PROJECT_DIR$/localllama/LoginPage.xaml" root0="FORCE_HIGHLIGHTING" />
+    <setting file="file://$PROJECT_DIR$/localllama/MauiProgram.cs" root0="FORCE_HIGHLIGHTING" />
+    <setting file="file://$PROJECT_DIR$/localllama/ModelConfig.cs" root0="FORCE_HIGHLIGHTING" />
+    <setting file="file://$PROJECT_DIR$/localllama/Platforms/MacCatalyst/Program.cs" root0="SKIP_HIGHLIGHTING" />
+    <setting file="file://$PROJECT_DIR$/localllama/Platforms/iOS/AppDelegate.cs" root0="FORCE_HIGHLIGHTING" />
     <setting file="file://$PROJECT_DIR$/localllama/Platforms/iOS/Program.cs" root0="SKIP_HIGHLIGHTING" />
+    <setting file="file://$PROJECT_DIR$/localllama/SignupPage.xaml" root0="FORCE_HIGHLIGHTING" />
   </component>
   <component name="InvalidFacetManager">
     <ignored-facets>
@@ -105,23 +119,23 @@
   <component name="MetaFilesCheckinStateConfiguration" checkMetaFiles="true" />
   <component name="NextEditCompletionFeaturesState">
     <decayedCancelled>
-      <entry key="MS100" value="1.0005090164847856" />
-      <entry key="MS500" value="1.2194554494023797" />
-      <entry key="S2" value="1.6844419065460174" />
-      <entry key="S5" value="1.859286136015224" />
-      <entry key="S10" value="1.9294770648215427" />
-      <entry key="S30" value="2.110825390122498" />
-      <entry key="S60" value="2.355931816260332" />
-      <entry key="M2" value="2.6007350566029794" />
-      <entry key="M5" value="2.8164781509558967" />
-      <entry key="M10" value="2.9037246039463582" />
-      <entry key="M15" value="2.9347683233724515" />
-      <entry key="M30" value="2.966848435223625" />
-      <entry key="H1" value="2.9834302114018616" />
-      <entry key="H2" value="3.0462487729044607" />
-      <entry key="H4" value="4.066973225953993" />
-      <entry key="D1" value="15.787994469318036" />
-      <entry key="W1" value="22.563503688357617" />
+      <entry key="MS100" value="1.0000845403728096" />
+      <entry key="MS500" value="1.1539905946957307" />
+      <entry key="S2" value="2.2813668304846058" />
+      <entry key="S5" value="5.428298241287383" />
+      <entry key="S10" value="9.161357580252181" />
+      <entry key="S30" value="15.658981923808483" />
+      <entry key="S60" value="18.741753598486348" />
+      <entry key="M2" value="20.6930886162461" />
+      <entry key="M5" value="22.029802514607404" />
+      <entry key="M10" value="22.506558839521997" />
+      <entry key="M15" value="22.66915144465546" />
+      <entry key="M30" value="22.83362319880646" />
+      <entry key="H1" value="22.91657186822003" />
+      <entry key="H2" value="22.95840766402018" />
+      <entry key="H4" value="22.992597585475938" />
+      <entry key="D1" value="25.400404570303596" />
+      <entry key="W1" value="40.596016597925555" />
     </decayedCancelled>
     <decayedSelected>
       <entry key="MS100" value="0.0" />
@@ -143,23 +157,23 @@
       <entry key="W1" value="0.0" />
     </decayedSelected>
     <decayedShown>
-      <entry key="MS100" value="0.9017156178833124" />
-      <entry key="MS500" value="1.1949561838413258" />
-      <entry key="S2" value="1.676180005061774" />
-      <entry key="S5" value="1.855661569459004" />
-      <entry key="S10" value="1.927582751442599" />
-      <entry key="S30" value="2.109819484476634" />
-      <entry key="S60" value="2.3551125306616654" />
-      <entry key="M2" value="2.600163695400973" />
-      <entry key="M5" value="2.816192165164856" />
-      <entry key="M10" value="2.9035699630970093" />
-      <entry key="M15" value="2.934662464086972" />
-      <entry key="M30" value="2.9667940761397116" />
-      <entry key="H1" value="2.9834026651979944" />
-      <entry key="H2" value="3.0462348514093502" />
-      <entry key="H4" value="4.066965722540347" />
-      <entry key="D1" value="15.787992217310242" />
-      <entry key="W1" value="22.563503284099088" />
+      <entry key="MS100" value="0.9795030981440221" />
+      <entry key="MS500" value="1.1492007863062665" />
+      <entry key="S2" value="2.2788383838409065" />
+      <entry key="S5" value="5.425665630643529" />
+      <entry key="S10" value="9.159048314069345" />
+      <entry key="S30" value="15.657608897490462" />
+      <entry key="S60" value="18.740919865849516" />
+      <entry key="M2" value="20.692624713121948" />
+      <entry key="M5" value="22.02960400051432" />
+      <entry key="M10" value="22.506457266938313" />
+      <entry key="M15" value="22.669083202713683" />
+      <entry key="M30" value="22.833588811239924" />
+      <entry key="H1" value="22.91655460718954" />
+      <entry key="H2" value="22.958399015794974" />
+      <entry key="H4" value="22.992593227007802" />
+      <entry key="D1" value="25.400403391131412" />
+      <entry key="W1" value="40.59601614706739" />
     </decayedShown>
   </component>
   <component name="ProblemsViewState">
@@ -179,42 +193,44 @@
     <option name="hideEmptyMiddlePackages" value="true" />
     <option name="showLibraryContents" value="true" />
   </component>
-  <component name="PropertiesComponent"><![CDATA[{
-  "keyToString": {
-    "Android.chatbot.executor": "Run",
-    "Android.localllama.executor": "Debug",
-    "Device#class com.jetbrains.rider.run.multiPlatform.ios.devices.IOSSimulatorKind#com.jetbrains.rider.run.multiPlatform.ios.devices.IOSDevicesProvider#iOS: chatbot": "iPhone 16e (iOS 26.0)",
-    "Device#class com.jetbrains.rider.run.multiPlatform.ios.devices.IOSSimulatorKind#com.jetbrains.rider.run.multiPlatform.ios.devices.IOSDevicesProvider#iOS: localllama": "iPhone 17 Pro (iOS 26.0)",
-    "DeviceKind#com.jetbrains.rider.run.multiPlatform.ios.devices.IOSDevicesProvider": "Simulator",
-    "ModuleVcsDetector.initialDetectionPerformed": "true",
-    "Publish to folder.Publish chatbot to folder.executor": "Run",
-    "Publish to folder.Publish test.executor": "Run",
-    "RunOnceActivity.MCP Project settings loaded": "true",
-    "RunOnceActivity.ShowReadmeOnStart": "true",
-    "RunOnceActivity.TerminalTabsStorage.copyFrom.TerminalArrangementManager.252": "true",
-    "RunOnceActivity.cidr.known.project.marker": "true",
-    "RunOnceActivity.git.unshallow": "true",
-    "RunOnceActivity.readMode.enableVisualFormatting": "true",
-    "RunOnceActivity.typescript.service.memoryLimit.init": "true",
-    "cidr.known.project.marker": "true",
-    "codeWithMe.voiceChat.enabledByDefault": "false",
-    "com.intellij.ml.llm.matterhorn.ej.ui.settings.DefaultModelSelectionForGA.v1": "true",
-    "git-widget-placeholder": "memoria-ai-",
-    "iOS.chatbot.executor": "Run",
-    "iOS.localllama.executor": "Debug",
-    "junie.onboarding.icon.badge.shown": "true",
-    "macOS.chatbot.executor": "Run",
-    "macOS.localllama.executor": "Run",
-    "node.js.detected.package.eslint": "true",
-    "node.js.detected.package.tslint": "true",
-    "node.js.selected.package.eslint": "(autodetect)",
-    "node.js.selected.package.tslint": "(autodetect)",
-    "nodejs_package_manager_path": "npm",
-    "settings.editor.selected.configurable": "editor.preferences.fonts.default",
-    "to.speed.mode.migration.done": "true",
-    "vue.rearranger.settings.migration": "true"
+  <component name="PropertiesComponent">{
+  &quot;keyToString&quot;: {
+    &quot;Android.chatbot.executor&quot;: &quot;Run&quot;,
+    &quot;Android.localllama.executor&quot;: &quot;Debug&quot;,
+    &quot;Device#class com.jetbrains.rider.run.multiPlatform.ios.devices.IOSSimulatorKind#com.jetbrains.rider.run.multiPlatform.ios.devices.IOSDevicesProvider#iOS: chatbot&quot;: &quot;iPhone 16e (iOS 26.0)&quot;,
+    &quot;Device#class com.jetbrains.rider.run.multiPlatform.ios.devices.IOSSimulatorKind#com.jetbrains.rider.run.multiPlatform.ios.devices.IOSDevicesProvider#iOS: localllama&quot;: &quot;iPhone 17 Pro (iOS 26.0)&quot;,
+    &quot;DeviceKind#com.jetbrains.rider.run.multiPlatform.ios.devices.IOSDevicesProvider&quot;: &quot;Simulator&quot;,
+    &quot;ModuleVcsDetector.initialDetectionPerformed&quot;: &quot;true&quot;,
+    &quot;Publish to folder.Publish chatbot to folder.executor&quot;: &quot;Run&quot;,
+    &quot;Publish to folder.Publish localllama to folder.executor&quot;: &quot;Run&quot;,
+    &quot;Publish to folder.Publish test.executor&quot;: &quot;Run&quot;,
+    &quot;Publish to folder.o melhor .executor&quot;: &quot;Run&quot;,
+    &quot;RunOnceActivity.MCP Project settings loaded&quot;: &quot;true&quot;,
+    &quot;RunOnceActivity.ShowReadmeOnStart&quot;: &quot;true&quot;,
+    &quot;RunOnceActivity.TerminalTabsStorage.copyFrom.TerminalArrangementManager.252&quot;: &quot;true&quot;,
+    &quot;RunOnceActivity.cidr.known.project.marker&quot;: &quot;true&quot;,
+    &quot;RunOnceActivity.git.unshallow&quot;: &quot;true&quot;,
+    &quot;RunOnceActivity.readMode.enableVisualFormatting&quot;: &quot;true&quot;,
+    &quot;RunOnceActivity.typescript.service.memoryLimit.init&quot;: &quot;true&quot;,
+    &quot;cidr.known.project.marker&quot;: &quot;true&quot;,
+    &quot;codeWithMe.voiceChat.enabledByDefault&quot;: &quot;false&quot;,
+    &quot;com.intellij.ml.llm.matterhorn.ej.ui.settings.DefaultModelSelectionForGA.v1&quot;: &quot;true&quot;,
+    &quot;git-widget-placeholder&quot;: &quot;copilot-docs-generation&quot;,
+    &quot;iOS.chatbot.executor&quot;: &quot;Run&quot;,
+    &quot;iOS.localllama.executor&quot;: &quot;Debug&quot;,
+    &quot;junie.onboarding.icon.badge.shown&quot;: &quot;true&quot;,
+    &quot;macOS.chatbot.executor&quot;: &quot;Run&quot;,
+    &quot;macOS.localllama.executor&quot;: &quot;Run&quot;,
+    &quot;node.js.detected.package.eslint&quot;: &quot;true&quot;,
+    &quot;node.js.detected.package.tslint&quot;: &quot;true&quot;,
+    &quot;node.js.selected.package.eslint&quot;: &quot;(autodetect)&quot;,
+    &quot;node.js.selected.package.tslint&quot;: &quot;(autodetect)&quot;,
+    &quot;nodejs_package_manager_path&quot;: &quot;npm&quot;,
+    &quot;settings.editor.selected.configurable&quot;: &quot;editor.preferences.fonts.default&quot;,
+    &quot;to.speed.mode.migration.done&quot;: &quot;true&quot;,
+    &quot;vue.rearranger.settings.migration&quot;: &quot;true&quot;
   }
-}]]></component>
+}</component>
   <component name="RunManager" selected="macOS.localllama">
     <configuration name="Publish chatbot to folder" type="DotNetFolderPublish" factoryName="Publish to folder">
       <riderPublish configuration="Release" platform="Any CPU" self_contained="true" target_folder="$PROJECT_DIR$/chatbot/bin/Release/net9.0-maccatalyst/publish" target_framework="net9.0-maccatalyst" uuid_high="-3276868341325936462" uuid_low="-7237507979231653480">
@@ -230,8 +246,36 @@
       </riderPublish>
       <method v="2" />
     </configuration>
+    <configuration name="Publish localllama to folder" type="DotNetFolderPublish" factoryName="Publish to folder">
+      <riderPublish configuration="Release" platform="Any CPU" self_contained="true" target_folder="$USER_HOME$/Documents/localLLama coizas " target_framework="net10.0-maccatalyst" uuid_high="-3276868341325936462" uuid_low="-7237507979231653480">
+        <option name="extraSettings">
+          <map>
+            <entry key="CreatePackage" value="false" />
+          </map>
+        </option>
+        <runtimes>
+          <item value="maccatalyst-x64" />
+          <item value="maccatalyst-arm64" />
+        </runtimes>
+      </riderPublish>
+      <method v="2" />
+    </configuration>
     <configuration name="Publish test" type="DotNetFolderPublish" factoryName="Publish to folder">
       <riderPublish configuration="Release" platform="Any CPU" self_contained="true" target_folder="$USER_HOME$/Documents/minhas coisas/localllama" target_framework="net9.0-maccatalyst" uuid_high="-3276868341325936462" uuid_low="-7237507979231653480">
+        <option name="extraSettings">
+          <map>
+            <entry key="CreatePackage" value="true" />
+          </map>
+        </option>
+        <runtimes>
+          <item value="maccatalyst-x64" />
+          <item value="maccatalyst-arm64" />
+        </runtimes>
+      </riderPublish>
+      <method v="2" />
+    </configuration>
+    <configuration name="o melhor " type="DotNetFolderPublish" factoryName="Publish to folder">
+      <riderPublish configuration="Release" platform="Any CPU" self_contained="true" target_folder="$USER_HOME$/Documents/localLLama coizas " target_framework="net10.0-maccatalyst" uuid_high="-3276868341325936462" uuid_low="-7237507979231653480">
         <option name="extraSettings">
           <map>
             <entry key="CreatePackage" value="true" />
@@ -272,6 +316,8 @@
       <item itemvalue="Android.localllama" />
       <item itemvalue="iOS.localllama" />
       <item itemvalue="macOS.localllama" />
+      <item itemvalue="Publish to folder.Publish localllama to folder" />
+      <item itemvalue="Publish to folder.o melhor " />
       <item itemvalue="Publish to folder.Publish chatbot to folder" />
       <item itemvalue="Publish to folder.Publish test" />
     </list>
@@ -327,6 +373,7 @@
       <workItem from="1777203759612" duration="1430000" />
       <workItem from="1777624672240" duration="259000" />
       <workItem from="1777652839269" duration="2687000" />
+      <workItem from="1781623079363" duration="5200000" />
     </task>
     <task id="LOCAL-00001" summary="fix para o mac os &#10;tive de fazer que o mac os puxe os dll manualmente no nativelibraryhelper uma classe so para o macos">
       <option name="closed" value="true" />
@@ -538,7 +585,8 @@
     <MESSAGE value="name change chatbot to localllama&#10;&#10;Signed-off-by: peter2malhado &lt;33017@aeccb.pt&gt;" />
     <MESSAGE value="an update of the .NET SDK from version 9 to 10 by maccatalyst, as well as iOS" />
     <MESSAGE value="fica em pauza" />
-    <option name="LAST_COMMIT_MESSAGE" value="fica em pauza" />
+    <MESSAGE value="esta merda so nao funcinaa" />
+    <option name="LAST_COMMIT_MESSAGE" value="esta merda so nao funcinaa" />
   </component>
   <component name="XDebuggerManager">
     <breakpoint-manager>

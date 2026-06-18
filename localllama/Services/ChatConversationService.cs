@@ -34,7 +34,8 @@ public class ChatConversationService
             target.Add(new Message
             {
                 Text = msg.Text,
-                IsUser = string.Equals(msg.Role, "user", StringComparison.OrdinalIgnoreCase)
+                IsUser = string.Equals(msg.Role, "user", StringComparison.OrdinalIgnoreCase),
+                ImagePath = msg.ImagePath
             });
         }
     }
@@ -51,7 +52,8 @@ public class ChatConversationService
         var mappedMessages = messages.Select(m => new ChatMessage
         {
             Role = m.IsUser ? "user" : "bot",
-            Text = m.Text
+            Text = m.Text,
+            ImagePath = m.ImagePath
         }).ToList();
 
         if (existing != null)

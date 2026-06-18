@@ -48,10 +48,16 @@
                                BackgroundColor="{Binding IsUser, Converter={StaticResource MessageColorConverter}}"
                                HorizontalOptions="{Binding IsUser, Converter={StaticResource MessageAlignmentConverter}}"
                                MaximumWidthRequest="280">
-                            <Label Text="{Binding Text}"
-                                   TextColor="White"
-                                   FontSize="16"
-                                   LineBreakMode="WordWrap" />
+                            <VerticalStackLayout Spacing="8">
+                                <Image Source="{Binding ImagePath}"
+                                       IsVisible="{Binding HasImage}"
+                                       Aspect="AspectFill"
+                                       HeightRequest="180" />
+                                <Label Text="{Binding Text}"
+                                       TextColor="White"
+                                       FontSize="16"
+                                       LineBreakMode="WordWrap" />
+                            </VerticalStackLayout>
                         </Frame>
                     </Grid>
                 </DataTemplate>
@@ -60,7 +66,7 @@
 
         <!-- Área de input -->
         <Grid Grid.Row="2"
-              ColumnDefinitions="Auto,*,Auto"
+              ColumnDefinitions="Auto,*,Auto,Auto"
               Padding="10"
               BackgroundColor="#2C2C2C">
 
@@ -74,8 +80,19 @@
                     Command="{Binding ImportDocumentCommand}"
                     VerticalOptions="Center" />
 
+            <Button Grid.Column="1"
+                    Text="🖼️"
+                    FontSize="20"
+                    TextColor="White"
+                    BackgroundColor="#3A3A52"
+                    WidthRequest="50"
+                    HeightRequest="50"
+                    CornerRadius="25"
+                    Command="{Binding PickImageCommand}"
+                    VerticalOptions="Center" />
+
             <Entry x:Name="MessageEntry"
-                   Grid.Column="1"
+                   Grid.Column="2"
                    Placeholder="Escreve a tua mensagem..."
                    Text="{Binding CurrentMessage, Mode=TwoWay}"
                    FontSize="16"
@@ -86,7 +103,7 @@
                    Margin="10,0"
                    Completed="MessageEntry_Completed" />
 
-            <Button Grid.Column="2"
+            <Button Grid.Column="3"
                     Text="➤"
                     FontSize="20"
                     TextColor="White"
@@ -96,6 +113,32 @@
                     CornerRadius="25"
                     Command="{Binding SendMessageCommand}"
                     VerticalOptions="Center" />
+        </Grid>
+
+        <Grid Grid.Row="2"
+              IsVisible="{Binding HasSelectedImage}"
+              VerticalOptions="Start"
+              Margin="70,-92,70,0"
+              InputTransparent="False">
+            <Frame Padding="6"
+                   CornerRadius="14"
+                   BackgroundColor="#141824"
+                   BorderColor="#3A3A52"
+                   HasShadow="False">
+                <Grid ColumnDefinitions="*,Auto">
+                    <Image Source="{Binding SelectedImagePath}"
+                           Aspect="AspectFill"
+                           HeightRequest="110" />
+                    <Button Grid.Column="1"
+                            Text="✕"
+                            WidthRequest="36"
+                            HeightRequest="36"
+                            CornerRadius="18"
+                            BackgroundColor="#8A2F3B"
+                            TextColor="White"
+                            Command="{Binding ClearImageCommand}" />
+                </Grid>
+            </Frame>
         </Grid>
 
         <Frame Grid.Row="3"

@@ -39,12 +39,14 @@
         <TargetPlatformMinVersion Condition="$([MSBuild]::GetTargetPlatformIdentifier('$(TargetFramework)')) == 'windows'">10.0.17763.0</TargetPlatformMinVersion>
         <SupportedOSPlatformVersion Condition="$([MSBuild]::GetTargetPlatformIdentifier('$(TargetFramework)')) == 'tizen'">6.5</SupportedOSPlatformVersion>
         <Platforms>AnyCPU;x86</Platforms>
+        <MtouchUseLlvm>false</MtouchUseLlvm>
+        <RunAOTCompilation>false</RunAOTCompilation>
 
     </PropertyGroup>
 
     <ItemGroup>
         <!-- App Icon -->
-        <MauiIcon Include="Resources\AppIcon\o_melhor.png" resize="true"/>
+        <MauiIcon Include="Resources\AppIcon\o_melhor.png" resize="true" Color="#512BD4"/>
         <!-- Splash Screen -->
         <MauiSplashScreen Include="Resources\Splash\splash.svg" Color="#512BD4" BaseSize="128,128"/>
 
@@ -144,6 +146,8 @@
         <PackageReference Include="Microsoft.Data.Sqlite" Version="10.0.1" />
         <PackageReference Include="Microsoft.SemanticKernel.Abstractions" Version="1.74.0" />
         <PackageReference Include="UglyToad.PdfPig" Version="1.7.0-custom-5" />
+        <PackageReference Include="DocumentFormat.OpenXml" Version="2.24.0" />
+        <PackageReference Include="QuestPDF" Version="2024.3.0" />
     </ItemGroup>
 
     <PropertyGroup>

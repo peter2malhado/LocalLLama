@@ -55,7 +55,7 @@ public static class ChatStorage
             {
                 var placeholders = string.Join(",", sessionIds.Select((_, i) => $"@id{i}"));
                 var selectMessagesCommand = new SqliteCommand(
-                    $"SELECT ChatId, Role, Text FROM ChatMessages WHERE UserId = @UserId AND ChatId IN ({placeholders}) ORDER BY ChatId, Id",
+                    $"SELECT ChatId, Role, Text, ImagePath FROM ChatMessages WHERE UserId = @UserId AND ChatId IN ({placeholders}) ORDER BY ChatId, Id",
                     connection);
                 selectMessagesCommand.Parameters.AddWithValue("@UserId", CurrentUserId);
 
@@ -73,7 +73,8 @@ public static class ChatStorage
                     messagesByChatId[chatId].Add(new ChatMessage
                     {
                         Role = messagesReader.GetString(1),
-                        Text = ChatCrypto.DecryptText(messagesReader.GetString(2))
+                        Text = ChatCrypto.DecryptText(messagesReader.GetString(2)),
+                        ImagePath = messagesReader.IsDBNull(3) ? null : ChatCrypto.DecryptText(messagesReader.GetString(3))
                     });
                 }
 
@@ -120,12 +121,13 @@ public static class ChatStorage
                 foreach (var message in chat.Messages)
                 {
                     var insertMessageCommand = new SqliteCommand(
-                        "INSERT INTO ChatMessages (ChatId, UserId, Role, Text) VALUES (@ChatId, @UserId, @Role, @Text)",
+                        "INSERT INTO ChatMessages (ChatId, UserId, Role, Text, ImagePath) VALUES (@ChatId, @UserId, @Role, @Text, @ImagePath)",
                         connection);
                     insertMessageCommand.Parameters.AddWithValue("@ChatId", chat.Id);
                     insertMessageCommand.Parameters.AddWithValue("@UserId", CurrentUserId);
                     insertMessageCommand.Parameters.AddWithValue("@Role", message.Role);
                     insertMessageCommand.Parameters.AddWithValue("@Text", ChatCrypto.EncryptText(message.Text));
+                    insertMessageCommand.Parameters.AddWithValue("@ImagePath", string.IsNullOrWhiteSpace(message.ImagePath) ? DBNull.Value : ChatCrypto.EncryptText(message.ImagePath));
                     insertMessageCommand.ExecuteNonQuery();
                 }
             }
@@ -224,7 +226,7 @@ public static class ChatStorage
 
             // Buscar mensagens
             var selectMessagesCommand = new SqliteCommand(
-                "SELECT Role, Text FROM ChatMessages WHERE ChatId = @ChatId AND UserId = @UserId ORDER BY Id",
+                "SELECT Role, Text, ImagePath FROM ChatMessages WHERE ChatId = @ChatId AND UserId = @UserId ORDER BY Id",
                 connection);
             selectMessagesCommand.Parameters.AddWithValue("@ChatId", id);
             selectMessagesCommand.Parameters.AddWithValue("@UserId", CurrentUserId);
@@ -234,7 +236,8 @@ public static class ChatStorage
                 chat.Messages.Add(new ChatMessage
                 {
                     Role = messagesReader.GetString(0),
-                    Text = ChatCrypto.DecryptText(messagesReader.GetString(1))
+                    Text = ChatCrypto.DecryptText(messagesReader.GetString(1)),
+                    ImagePath = messagesReader.IsDBNull(2) ? null : ChatCrypto.DecryptText(messagesReader.GetString(2))
                 });
 
             return chat;
@@ -264,9 +267,10 @@ public static class ChatStorage
                 insertCommand.Parameters.AddWithValue("@ChatId", chatId);
                 insertCommand.Parameters.AddWithValue("@UserId", CurrentUserId);
                 insertCommand.Parameters.AddWithValue("@Role", role);
-                insertCommand.Parameters.AddWithValue("@Text", ChatCrypto.EncryptText(text));
-                insertCommand.ExecuteNonQuery();
-            }
+                    insertCommand.Parameters.AddWithValue("@Text", ChatCrypto.EncryptText(text));
+                    insertCommand.Parameters.AddWithValue("@ImagePath", DBNull.Value);
+                    insertCommand.ExecuteNonQuery();
+                }
         });
     }
 

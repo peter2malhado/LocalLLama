@@ -1,0 +1,279 @@
+<?xml version="1.0" encoding="utf-8" ?>
+<ContentPage xmlns="http://schemas.microsoft.com/dotnet/2021/maui"
+             xmlns:x="http://schemas.microsoft.com/winfx/2009/xaml"
+             xmlns:vm="clr-namespace:localllama.ViewModels"
+             x:Class="localllama.GenerateDocumentPage"
+             x:Name="RootPage"
+             Title="Gerar Documento"
+             BackgroundColor="#090B14">
+
+    <ContentPage.BindingContext>
+        <vm:GenerateDocumentViewModel />
+    </ContentPage.BindingContext>
+
+    <Grid>
+    <ScrollView>
+        <VerticalStackLayout Padding="22,18" Spacing="16">
+
+            <!-- Cabeçalho -->
+            <VerticalStackLayout Spacing="4">
+                <Label Text="Gerar Documento"
+                       TextColor="White"
+                       FontSize="26"
+                       FontAttributes="Bold" />
+                <Label Text="Cola texto, escolhe o formato e deixa a IA estruturar o conteúdo."
+                       TextColor="#98A1BD"
+                       FontSize="14" />
+            </VerticalStackLayout>
+
+            <!-- Área de texto -->
+            <Border BackgroundColor="#0F1522"
+                    Stroke="#232941"
+                    StrokeThickness="1"
+                    Padding="4">
+                <Border.StrokeShape>
+                    <RoundRectangle CornerRadius="14" />
+                </Border.StrokeShape>
+                <Editor HeightRequest="220"
+                        Text="{Binding InputText}"
+                        AutoSize="TextChanges"
+                        BackgroundColor="Transparent"
+                        TextColor="White"
+                        PlaceholderColor="#555F80"
+                        Placeholder="Cole ou escreva o texto aqui..."
+                        FontSize="15" />
+            </Border>
+
+            <!-- Selector de formato -->
+            <Border BackgroundColor="#111527"
+                    Stroke="#232941"
+                    StrokeThickness="1"
+                    Padding="14,10">
+                <Border.StrokeShape>
+                    <RoundRectangle CornerRadius="14" />
+                </Border.StrokeShape>
+                <Grid ColumnDefinitions="Auto,*" ColumnSpacing="12">
+                    <Label Text="Formato"
+                           TextColor="#D0D5E6"
+                           FontSize="15"
+                           VerticalOptions="Center" />
+                    <Picker Grid.Column="1"
+                            ItemsSource="{Binding Formats}"
+                            SelectedItem="{Binding SelectedFormat}"
+                            Title="Escolher formato"
+                            TextColor="White"
+                            TitleColor="#777F99"
+                            BackgroundColor="Transparent"
+                            VerticalOptions="Center" />
+                </Grid>
+            </Border>
+
+            <!-- Selector de extensão (só visível para Código) -->
+            <Border BackgroundColor="#111527"
+                    Stroke="#232941"
+                    StrokeThickness="1"
+                    Padding="14,10"
+                    IsVisible="{Binding IsCodeFormat}">
+                <Border.StrokeShape>
+                    <RoundRectangle CornerRadius="14" />
+                </Border.StrokeShape>
+                <Grid ColumnDefinitions="Auto,*" ColumnSpacing="12">
+                    <Label Text="Extensão"
+                           TextColor="#D0D5E6"
+                           FontSize="15"
+                           VerticalOptions="Center" />
+                    <Picker Grid.Column="1"
+                            ItemsSource="{Binding CodeExtensions}"
+                            SelectedItem="{Binding SelectedCodeExtension}"
+                            Title="Escolher extensão"
+                            TextColor="White"
+                            TitleColor="#777F99"
+                            BackgroundColor="Transparent"
+                            VerticalOptions="Center" />
+                </Grid>
+                <Label Text="A extensão escolhida fica no ficheiro gerado e no botão Exportar."
+                       TextColor="#8E96B2"
+                       FontSize="11"
+                       Margin="0,8,0,0" />
+            </Border>
+
+            <!-- Botão Gerar -->
+            <Button Text="✦  Gerar com IA"
+                    Command="{Binding GenerateCommand}"
+                    TextColor="White"
+                    FontAttributes="Bold"
+                    FontSize="16"
+                    CornerRadius="16"
+                    HeightRequest="52"
+                    IsEnabled="{Binding IsNotBusy}">
+                <Button.Background>
+                    <LinearGradientBrush StartPoint="0,0" EndPoint="1,0">
+                        <GradientStop Color="#6F63FF" Offset="0.0" />
+                        <GradientStop Color="#7C4DFF" Offset="1.0" />
+                    </LinearGradientBrush>
+                </Button.Background>
+            </Button>
+
+            <!-- Estado / progresso -->
+            <Border BackgroundColor="#111830"
+                    Stroke="#2A3255"
+                    StrokeThickness="1"
+                    Padding="14,12"
+                    IsVisible="{Binding IsBusy}">
+                <Border.StrokeShape>
+                    <RoundRectangle CornerRadius="12" />
+                </Border.StrokeShape>
+                <VerticalStackLayout Spacing="10">
+                    <ActivityIndicator IsRunning="{Binding IsBusy}"
+                                       Color="#7C4DFF"
+                                       HeightRequest="32"
+                                       WidthRequest="32"
+                                       HorizontalOptions="Center" />
+                    <Label Text="{Binding StatusText}"
+                           TextColor="#B79CFF"
+                           FontSize="13"
+                           HorizontalTextAlignment="Center" />
+                </VerticalStackLayout>
+            </Border>
+
+            <!-- Status text quando não está ocupado mas tem mensagem -->
+            <Border BackgroundColor="#111830"
+                    Stroke="#2A3255"
+                    StrokeThickness="1"
+                    Padding="14,10"
+                    IsVisible="{Binding HasStatus}">
+                <Border.StrokeShape>
+                    <RoundRectangle CornerRadius="12" />
+                </Border.StrokeShape>
+                <Label Text="{Binding StatusText}"
+                       TextColor="#63D7A3"
+                       FontSize="13"
+                       HorizontalTextAlignment="Center" />
+            </Border>
+
+            <!-- Nota informativa -->
+            <Border BackgroundColor="#0D111E"
+                    Stroke="#1E2540"
+                    StrokeThickness="1"
+                    Padding="14,10">
+                <Border.StrokeShape>
+                    <RoundRectangle CornerRadius="10" />
+                </Border.StrokeShape>
+                <Label Text="ℹ️  A IA analisa o texto e gera uma estrutura JSON intermédia antes de produzir o ficheiro. Se o modelo não estiver carregado, é usado um parser heurístico local."
+                       TextColor="#6B7491"
+                       FontSize="12"
+                       LineBreakMode="WordWrap" />
+            </Border>
+
+            <Border BackgroundColor="#111830"
+                    Stroke="#2A3255"
+                    StrokeThickness="1"
+                    Padding="14,12">
+                <Border.StrokeShape>
+                    <RoundRectangle CornerRadius="12" />
+                </Border.StrokeShape>
+                <VerticalStackLayout Spacing="8">
+                    <Label Text="Documentos guardados no programa"
+                           TextColor="White"
+                           FontAttributes="Bold"
+                           FontSize="16" />
+                    <Label Text="Tudo o que geras fica aqui por defeito. Exporta quando quiseres."
+                           TextColor="#98A1BD"
+                           FontSize="12" />
+                    <CollectionView ItemsSource="{Binding GeneratedDocuments}"
+                                    SelectionMode="None"
+                                    HeightRequest="260">
+                        <CollectionView.ItemTemplate>
+                            <DataTemplate>
+                                <Grid Padding="10,8"
+                                      RowDefinitions="Auto,Auto"
+                                      ColumnDefinitions="*,Auto"
+                                      ColumnSpacing="10">
+                                    <VerticalStackLayout Spacing="2">
+                                        <Label Text="{Binding DisplayName}"
+                                               TextColor="White"
+                                               FontAttributes="Bold"
+                                               FontSize="14" />
+                                        <Label Text="{Binding SizeText}"
+                                               TextColor="#98A1BD"
+                                               FontSize="11" />
+                                        <Label Text="{Binding DateText}"
+                                               TextColor="#98A1BD"
+                                               FontSize="11" />
+                                    </VerticalStackLayout>
+                                    <HorizontalStackLayout Grid.Column="1"
+                                                           Spacing="8"
+                                                           VerticalOptions="Center">
+                                        <Button Text="Abrir"
+                                                Command="{Binding Source={x:Reference RootPage}, Path=BindingContext.OpenDocumentCommand}"
+                                                CommandParameter="{Binding .}"
+                                                BackgroundColor="#3A3A52"
+                                                TextColor="White"
+                                                CornerRadius="12"
+                                                FontSize="12"
+                                                HeightRequest="36"
+                                                Padding="12,0" />
+                                        <Button Text="Exportar"
+                                                Command="{Binding Source={x:Reference RootPage}, Path=BindingContext.ExportDocumentCommand}"
+                                                CommandParameter="{Binding .}"
+                                                BackgroundColor="#3A3A52"
+                                                TextColor="White"
+                                                CornerRadius="12"
+                                                FontSize="12"
+                                                HeightRequest="36"
+                                                Padding="12,0" />
+                                        <Button Text="Apagar"
+                                                Command="{Binding Source={x:Reference RootPage}, Path=BindingContext.DeleteDocumentCommand}"
+                                                CommandParameter="{Binding .}"
+                                                BackgroundColor="#8A2F3B"
+                                                TextColor="White"
+                                                CornerRadius="12"
+                                                FontSize="12"
+                                                HeightRequest="36"
+                                                Padding="12,0" />
+                                    </HorizontalStackLayout>
+                                </Grid>
+                            </DataTemplate>
+                        </CollectionView.ItemTemplate>
+                    </CollectionView>
+                </VerticalStackLayout>
+            </Border>
+
+        </VerticalStackLayout>
+    </ScrollView>
+
+        <Grid BackgroundColor="#B0000000"
+              IsVisible="{Binding IsModelLoading}"
+              InputTransparent="False">
+            <Border HorizontalOptions="Center"
+                    VerticalOptions="Center"
+                    WidthRequest="280"
+                    Padding="24"
+                    BackgroundColor="#171B2A"
+                    Stroke="#2C3550"
+                    StrokeThickness="1">
+                <Border.StrokeShape>
+                    <RoundRectangle CornerRadius="22" />
+                </Border.StrokeShape>
+
+                <VerticalStackLayout Spacing="16"
+                                     HorizontalOptions="Center"
+                                     VerticalOptions="Center">
+                    <ActivityIndicator IsRunning="True"
+                                       Color="#7C4DFF"
+                                       HeightRequest="42"
+                                       WidthRequest="42" />
+                    <Label Text="{Binding LoadingStatusText}"
+                           TextColor="White"
+                           FontSize="18"
+                           FontAttributes="Bold"
+                           HorizontalTextAlignment="Center" />
+                    <Label Text="Isto pode demorar alguns segundos."
+                           TextColor="#A6AEC6"
+                           FontSize="13"
+                           HorizontalTextAlignment="Center" />
+                </VerticalStackLayout>
+            </Border>
+        </Grid>
+    </Grid>
+</ContentPage>

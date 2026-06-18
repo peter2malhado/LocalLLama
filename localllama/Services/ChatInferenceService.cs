@@ -1,6 +1,7 @@
 using System.Diagnostics;
 using LLama;
 using LLama.Common;
+using LLama.Native;
 using localllama;
 using localllama.Models;
 
@@ -11,6 +12,7 @@ public class ChatInferenceService
     private readonly List<string> _modelResolutionDiagnostics = new();
     private readonly List<string> _modelLoadDiagnostics = new();
     private InteractiveExecutor? _executor;
+    private MtmdWeights? _mtmdWeights;
     private InferenceParams? _inferenceParams;
     private LLama.ChatSession? _session;
 
@@ -79,7 +81,10 @@ public class ChatInferenceService
                 ex);
         }
 
-        _executor = new InteractiveExecutor(context);
+        _mtmdWeights = TryLoadVisionWeights(model, modelPath);
+        _executor = _mtmdWeights != null
+            ? new InteractiveExecutor(context, _mtmdWeights)
+            : new InteractiveExecutor(context);
         _inferenceParams = new InferenceParams
         {
             MaxTokens = EffectiveSettings.MaxTokens,
@@ -110,24 +115,43 @@ public class ChatInferenceService
     }
 
     public async Task<ChatInferenceResult> GenerateReplyAsync(string prompt, Action<string> onPartial)
+        => await GenerateReplyInternalAsync(prompt, null, onPartial);
+
+    public async Task<ChatInferenceResult> GenerateReplyWithImageAsync(string prompt, string imagePath, Action<string> onPartial)
+        => await GenerateReplyInternalAsync(prompt, imagePath, onPartial);
+
+    private async Task<ChatInferenceResult> GenerateReplyInternalAsync(string prompt, string? imagePath, Action<string> onPartial)
     {
         if (_session == null || _inferenceParams == null)
             throw new InvalidOperationException("A conversa ainda está a ser preparada. Tenta novamente dentro de um instante.");
+
+        if (!string.IsNullOrWhiteSpace(imagePath) && _mtmdWeights == null)
+            throw new InvalidOperationException("Modelo atual não suporta visão. Carrega modelo multimodal com mmproj.");
 
         var timer = Stopwatch.StartNew();
         var reply = string.Empty;
         var updateCount = 0;
 
-        await foreach (var text in _session.ChatAsync(new ChatHistory.Message(AuthorRole.User, prompt), _inferenceParams))
+        try
         {
-            reply += text;
-            updateCount++;
+            if (!string.IsNullOrWhiteSpace(imagePath))
+                _mtmdWeights?.LoadMedia(imagePath);
 
-            var cleaned = CleanReply(reply);
-            onPartial(cleaned);
+            await foreach (var text in _session.ChatAsync(new ChatHistory.Message(AuthorRole.User, prompt), _inferenceParams))
+            {
+                reply += text;
+                updateCount++;
 
-            if (updateCount % 3 == 0)
-                await Task.Delay(1);
+                var cleaned = CleanReply(reply);
+                onPartial(cleaned);
+
+                if (updateCount % 3 == 0)
+                    await Task.Delay(1);
+            }
+        }
+        finally
+        {
+            _mtmdWeights?.ClearMedia();
         }
 
         timer.Stop();
@@ -159,6 +183,56 @@ public class ChatInferenceService
         return reply.Replace("bob:", "", StringComparison.OrdinalIgnoreCase)
             .Replace("User:", "", StringComparison.OrdinalIgnoreCase)
             .Trim();
+    }
+
+    private MtmdWeights? TryLoadVisionWeights(LLamaWeights model, string modelPath)
+    {
+        var mmprojPath = ResolveMmprojPath(modelPath);
+        if (string.IsNullOrWhiteSpace(mmprojPath) || !File.Exists(mmprojPath))
+            return null;
+
+        try
+        {
+            var mtmd = MtmdWeights.LoadFromFile(mmprojPath, model, MtmdContextParams.Default());
+            if (!mtmd.SupportsVision)
+            {
+                mtmd.Dispose();
+                return null;
+            }
+
+            _modelLoadDiagnostics.Add($"Mmproj={mmprojPath}");
+            _modelLoadDiagnostics.Add("Vision=enabled");
+            return mtmd;
+        }
+        catch (Exception ex)
+        {
+            _modelLoadDiagnostics.Add($"VisionLoadFail={ex.GetType().Name}:{ex.Message}");
+            return null;
+        }
+    }
+
+    private static string? ResolveMmprojPath(string modelPath)
+    {
+        var dir = Path.GetDirectoryName(modelPath);
+        if (string.IsNullOrWhiteSpace(dir) || !Directory.Exists(dir))
+            return null;
+
+        var baseName = Path.GetFileNameWithoutExtension(modelPath);
+        var candidates = new[]
+        {
+            Path.Combine(dir, $"{baseName}.mmproj"),
+            Path.Combine(dir, $"{baseName}.mmproj.bin"),
+            Path.Combine(dir, $"{baseName}.mmproj.gguf"),
+        };
+
+        foreach (var candidate in candidates)
+        {
+            if (File.Exists(candidate))
+                return candidate;
+        }
+
+        return Directory.GetFiles(dir, "*mmproj*", SearchOption.TopDirectoryOnly)
+            .FirstOrDefault(File.Exists);
     }
 
     private static string ResolveModelPath(string? selectedModelPath, string defaultModelFile, List<string>? diagnostics = null)

@@ -179,6 +179,24 @@ public partial class FrontPage : ContentPage
         OnOpenDocumentManagerClicked(sender, EventArgs.Empty);
     }
 
+    // 📄 Abrir página de geração de documento
+    private async void OnOpenGenerateDocumentClicked(object sender, EventArgs e)
+    {
+        try
+        {
+            await Navigation.PushAsync(new GenerateDocumentPage());
+        }
+        catch (Exception ex)
+        {
+            await DisplayAlert("Erro", $"Não foi possível abrir Gerar Documento: {ex.Message}", "OK");
+        }
+    }
+
+    private void OnOpenGenerateDocumentTapped(object sender, TappedEventArgs e)
+    {
+        OnOpenGenerateDocumentClicked(sender, EventArgs.Empty);
+    }
+
     // 👉 Quando o utilizador seleciona uma conversa existente
     private async void OnChatSelected(object sender, SelectionChangedEventArgs e)
     {

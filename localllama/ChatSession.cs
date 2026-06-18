@@ -4,6 +4,7 @@ public class ChatMessage
 {
     public string Role { get; set; } // "user" ou "bot"
     public string Text { get; set; }
+    public string? ImagePath { get; set; }
 }
 
 public class ChatSession
@@ -26,6 +27,9 @@ public class ChatSession
                 return "Nenhuma mensagem ainda";
 
             var lastMessage = Messages.Last();
+            if (!string.IsNullOrWhiteSpace(lastMessage.ImagePath))
+                return string.IsNullOrWhiteSpace(lastMessage.Text) ? "[Foto]" : "[Foto] " + lastMessage.Text;
+
             var preview = lastMessage.Text ?? "";
 
             // Limitar a 50 caracteres para preview

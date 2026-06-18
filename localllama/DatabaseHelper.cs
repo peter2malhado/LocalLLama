@@ -82,6 +82,7 @@ public static class DatabaseHelper
                     UserId TEXT,
                     Role TEXT NOT NULL,
                     Text TEXT NOT NULL,
+                    ImagePath TEXT,
                     CreatedAt DATETIME DEFAULT CURRENT_TIMESTAMP,
                     FOREIGN KEY (ChatId) REFERENCES ChatSessions(Id) ON DELETE CASCADE
                 );";
@@ -131,6 +132,8 @@ public static class DatabaseHelper
 
         using var command2 = new SqliteCommand(createMessagesTable, connection);
         command2.ExecuteNonQuery();
+
+        EnsureColumnExists(connection, "ChatMessages", "ImagePath", "TEXT");
 
         using var command3 = new SqliteCommand(createIndex, connection);
         command3.ExecuteNonQuery();
