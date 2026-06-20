@@ -1,4 +1,5 @@
 using localllama.Models;
+using DocumentFormat.OpenXml.Packaging;
 using Microsoft.Data.Sqlite;
 using System.Globalization;
 using System.Text;
@@ -19,7 +20,7 @@ public class RagDocumentService
 
         var extension = Path.GetExtension(result.FileName);
         if (!IsSupportedExtension(extension))
-            throw new InvalidOperationException("Formato não suportado. Usa .txt, .md, .json ou .pdf.");
+            throw new InvalidOperationException("Formato não suportado. Usa .txt, .md, .json, .pdf ou .docx.");
 
         var documentsDir = GetDocumentsDirectory();
         Directory.CreateDirectory(documentsDir);
@@ -48,6 +49,10 @@ public class RagDocumentService
                 }
             }
             content = sb.ToString();
+        }
+        else if (extension.Equals(".docx", StringComparison.OrdinalIgnoreCase))
+        {
+            content = ExtractDocxText(sourceBytes);
         }
         else
         {
@@ -207,7 +212,7 @@ public class RagDocumentService
         });
     }
 
-    public async Task<List<RagChunkMatch>> SearchRelevantChunksAsync(string query, int maxResults = 4)
+    public async Task<List<RagChunkMatch>> SearchRelevantChunksAsync(string query, int maxResults = 4, IReadOnlyCollection<long>? allowedDocumentIds = null)
     {
         return await Task.Run(() =>
         {
@@ -227,48 +232,90 @@ public class RagDocumentService
                 connection);
             command.Parameters.AddWithValue("@UserId", CurrentUserId);
 
-            var matches = new List<RagChunkMatch>();
+            var chunks = new List<ChunkCandidate>();
             using var reader = command.ExecuteReader();
             while (reader.Read())
             {
                 var text = ChatCrypto.DecryptText(reader.GetString(4));
-                var score = ScoreChunk(text, normalizedTerms, query);
-                if (score <= 0)
-                    continue;
-
-                matches.Add(new RagChunkMatch
+                chunks.Add(new ChunkCandidate
                 {
                     DocumentId = reader.GetInt64(0),
                     DocumentName = ChatCrypto.DecryptText(reader.GetString(1)),
                     FileName = ChatCrypto.DecryptText(reader.GetString(2)),
                     ChunkIndex = reader.GetInt32(3),
-                    Text = text,
-                    Score = score
+                    Text = text
                 });
             }
 
-            return matches
+            if (allowedDocumentIds != null)
+            {
+                if (allowedDocumentIds.Count == 0)
+                    return new List<RagChunkMatch>();
+
+                chunks = chunks.Where(chunk => allowedDocumentIds.Contains(chunk.DocumentId)).ToList();
+            }
+
+            if (chunks.Count == 0)
+                return new List<RagChunkMatch>();
+
+            var documentFrequency = BuildDocumentFrequency(chunks, normalizedTerms);
+            var ranked = chunks
+                .Select(chunk => new RagChunkMatch
+                {
+                    DocumentId = chunk.DocumentId,
+                    DocumentName = chunk.DocumentName,
+                    FileName = chunk.FileName,
+                    ChunkIndex = chunk.ChunkIndex,
+                    Text = chunk.Text,
+                    Score = ScoreChunk(chunk.Text, normalizedTerms, query, chunks.Count, documentFrequency)
+                })
+                .Where(match => match.Score > 0)
                 .OrderByDescending(m => m.Score)
                 .ThenBy(m => m.DocumentName)
                 .ThenBy(m => m.ChunkIndex)
-                .Take(maxResults)
                 .ToList();
+
+            return PickDiverseMatches(ranked, maxResults);
         });
     }
 
-    public async Task<string?> BuildContextBlockAsync(string query, int maxResults = 4)
+    public async Task<string?> BuildContextBlockAsync(string query, int maxResults = 4, IReadOnlyCollection<long>? allowedDocumentIds = null)
     {
-        var matches = await SearchRelevantChunksAsync(query, maxResults);
+        var matches = await SearchRelevantChunksAsync(query, maxResults * 3, allowedDocumentIds);
         if (matches.Count == 0)
             return null;
 
         var parts = new List<string>();
+        var perDocumentCount = new Dictionary<long, int>();
+        var totalChars = 0;
+        const int maxContextChars = 2400;
+        const int maxChunksPerDocument = 2;
+        const int maxDocuments = 3;
+
         foreach (var match in matches)
         {
+            if (parts.Count >= maxResults)
+                break;
+
+            if (!perDocumentCount.TryGetValue(match.DocumentId, out var documentCount))
+                documentCount = 0;
+
+            if (documentCount >= maxChunksPerDocument)
+                continue;
+
+            if (perDocumentCount.Count >= maxDocuments && !perDocumentCount.ContainsKey(match.DocumentId))
+                continue;
+
             parts.Add($"[Documento: {match.FileName} | Bloco {match.ChunkIndex + 1}]\n{match.Text}");
+            perDocumentCount[match.DocumentId] = documentCount + 1;
+            totalChars += parts[^1].Length;
+
+            if (totalChars >= maxContextChars)
+                break;
         }
 
-        return string.Join("\n\n", parts);
+        var context = string.Join("\n\n", parts);
+        return string.IsNullOrWhiteSpace(context) ? null : context;
     }
 
     private static string GetDocumentsDirectory()
@@ -298,24 +345,120 @@ public class RagDocumentService
         return extension != null && SupportedExtensions.Contains(extension, StringComparer.OrdinalIgnoreCase);
     }
 
-    private static readonly string[] SupportedExtensions = [".txt", ".md", ".json", ".pdf"];
+    private static readonly string[] SupportedExtensions = [".txt", ".md", ".json", ".pdf", ".docx"];
 
-    private static int ScoreChunk(string chunkText, IReadOnlyCollection<string> normalizedTerms, string originalQuery)
+    private static string ExtractDocxText(byte[] sourceBytes)
+    {
+        using var stream = new MemoryStream(sourceBytes, writable: false);
+        using var word = WordprocessingDocument.Open(stream, false);
+
+        var body = word.MainDocumentPart?.Document.Body;
+        if (body == null)
+            return string.Empty;
+
+        var sb = new StringBuilder();
+        foreach (var paragraph in body.Descendants<DocumentFormat.OpenXml.Wordprocessing.Paragraph>())
+        {
+            var text = string.Concat(paragraph.Descendants<DocumentFormat.OpenXml.Wordprocessing.Text>().Select(t => t.Text));
+            if (!string.IsNullOrWhiteSpace(text))
+                sb.AppendLine(text);
+        }
+
+        return sb.ToString();
+    }
+
+    private static int ScoreChunk(
+        string chunkText,
+        IReadOnlyCollection<string> normalizedTerms,
+        string originalQuery,
+        int corpusSize,
+        IReadOnlyDictionary<string, int> documentFrequency)
     {
         var normalizedChunk = NormalizeText(chunkText);
-        var score = 0;
+        var score = 0d;
+        var matchedTerms = 0;
 
         foreach (var term in normalizedTerms)
         {
-            if (normalizedChunk.Contains(term, StringComparison.Ordinal))
-                score += term.Length > 4 ? 3 : 2;
+            if (!normalizedChunk.Contains(term, StringComparison.Ordinal))
+                continue;
+
+            matchedTerms++;
+            var df = documentFrequency.TryGetValue(term, out var count) ? count : corpusSize;
+            var idf = Math.Log((corpusSize + 1d) / (df + 1d)) + 1d;
+            var termWeight = term.Length > 4 ? 2.5d : 1.5d;
+            score += termWeight * idf;
         }
 
         var phrase = NormalizeText(originalQuery);
         if (!string.IsNullOrWhiteSpace(phrase) && normalizedChunk.Contains(phrase, StringComparison.Ordinal))
-            score += 5;
+            score += 5d;
 
-        return score;
+        if (matchedTerms > 0)
+        {
+            var coverage = matchedTerms / (double)normalizedTerms.Count;
+            var tokenCount = Math.Max(1, normalizedChunk.Split(' ', StringSplitOptions.RemoveEmptyEntries).Length);
+            var density = matchedTerms / (double)tokenCount;
+            score += coverage * 2d;
+            score += Math.Min(2d, density * 12d);
+        }
+
+        return (int)Math.Round(score * 10d);
+    }
+
+    private static Dictionary<string, int> BuildDocumentFrequency(IEnumerable<ChunkCandidate> chunks, IReadOnlyCollection<string> normalizedTerms)
+    {
+        var frequency = normalizedTerms.ToDictionary(term => term, _ => 0, StringComparer.Ordinal);
+
+        foreach (var chunk in chunks)
+        {
+            var normalizedChunk = NormalizeText(chunk.Text);
+            foreach (var term in normalizedTerms)
+            {
+                if (normalizedChunk.Contains(term, StringComparison.Ordinal))
+                    frequency[term]++;
+            }
+        }
+
+        return frequency;
+    }
+
+    private static List<RagChunkMatch> PickDiverseMatches(IReadOnlyList<RagChunkMatch> ranked, int maxResults)
+    {
+        var selected = new List<RagChunkMatch>();
+        var perDocumentCount = new Dictionary<long, int>();
+        var seenDocuments = 0;
+
+        foreach (var match in ranked)
+        {
+            if (selected.Count >= maxResults)
+                break;
+
+            if (!perDocumentCount.TryGetValue(match.DocumentId, out var documentCount))
+                documentCount = 0;
+
+            if (documentCount >= 2)
+                continue;
+
+            if (seenDocuments >= Math.Min(maxResults, 3) && !perDocumentCount.ContainsKey(match.DocumentId))
+                continue;
+
+            selected.Add(match);
+            perDocumentCount[match.DocumentId] = documentCount + 1;
+            if (documentCount == 0)
+                seenDocuments++;
+        }
+
+        return selected;
+    }
+
+    private sealed class ChunkCandidate
+    {
+        public long DocumentId { get; init; }
+        public string DocumentName { get; init; } = string.Empty;
+        public string FileName { get; init; } = string.Empty;
+        public int ChunkIndex { get; init; }
+        public string Text { get; init; } = string.Empty;
     }
 
     private static List<string> NormalizeTerms(string text)

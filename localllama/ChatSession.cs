@@ -13,6 +13,7 @@ public class ChatSession
     public string Title { get; set; } // Ex: "Conversa sobre música"
     public string PersonalityName { get; set; } = Services.ChatPromptCatalog.DefaultPersonalityName;
     public string PersonalityPrompt { get; set; } = Services.ChatPromptCatalog.SystemPrompt;
+    public string SelectedDocumentIds { get; set; } = string.Empty;
     public List<ChatMessage> Messages { get; set; } = new();
 
     // Propriedade para exibir o número de mensagens

@@ -28,6 +28,8 @@ public class ChatViewModel : BindableObject
     private string _contextStatsText = "0 / 0";
     private string _memoryUsageText = "0 MB";
     private string _personalityName = ChatPromptCatalog.DefaultPersonalityName;
+    private bool _useAllDocuments = true;
+    private bool _isSyncingDocumentSelection;
 
     public ChatViewModel(string chatId)
     {
@@ -37,9 +39,12 @@ public class ChatViewModel : BindableObject
         SendMessageCommand = new Command(async () => await SendMessageAsync());
         ImportDocumentCommand = new Command(async () => await ImportDocumentAsync());
         ClearImageCommand = new Command(ClearSelectedImage);
+        SelectAllDocumentsCommand = new Command(SelectAllDocuments);
+        RefreshDocumentsCommand = new Command(async () => await LoadDocumentsAsync());
     }
 
     public ObservableCollection<Message> Messages { get; } = new();
+    public ObservableCollection<RagDocumentEntry> Documents { get; } = new();
 
     public bool IsDeveloperStatsVisible
     {
@@ -164,6 +169,8 @@ public class ChatViewModel : BindableObject
     public ICommand SendMessageCommand { get; }
     public ICommand ImportDocumentCommand { get; }
     public ICommand ClearImageCommand { get; }
+    public ICommand SelectAllDocumentsCommand { get; }
+    public ICommand RefreshDocumentsCommand { get; }
 
     public string PersonalityName
     {
@@ -177,6 +184,22 @@ public class ChatViewModel : BindableObject
             OnPropertyChanged();
         }
     }
+
+    public bool UseAllDocuments
+    {
+        get => _useAllDocuments;
+        set
+        {
+            if (_useAllDocuments == value)
+                return;
+
+            _useAllDocuments = value;
+            OnPropertyChanged();
+            OnPropertyChanged(nameof(HasDocumentSelection));
+        }
+    }
+
+    public bool HasDocumentSelection => Documents.Count > 0;
 
     public async Task InitializeAndLoadAsync()
     {
@@ -214,6 +237,7 @@ public class ChatViewModel : BindableObject
         {
             LoadingStatusText = "A preparar a conversa...";
             await LoadSessionAsync();
+            await LoadDocumentsAsync();
         }
         finally
         {
@@ -227,6 +251,7 @@ public class ChatViewModel : BindableObject
         _currentChat = await _conversationService.LoadOrCreateAsync(_chatId);
         PersonalityName = _currentChat.PersonalityName;
         _conversationService.PopulateMessages(Messages, _currentChat.Messages);
+        ApplySelectedDocuments(_currentChat.SelectedDocumentIds);
         RebuildInferenceSession();
         RefreshDeveloperStats();
     }
@@ -289,7 +314,7 @@ public class ChatViewModel : BindableObject
                 botMessage.Text = "A pesquisar na Web... 🌐";
             }
 
-        var prompt = await _ragOrchestratorService.BuildPromptAsync(promptText);
+        var prompt = await _ragOrchestratorService.BuildPromptAsync(promptText, GetAllowedDocumentIds());
         botMessage.Text = string.Empty;
 
         var result = attachedImagePath == null
@@ -303,12 +328,14 @@ public class ChatViewModel : BindableObject
                 _currentChat.Title,
                 Messages,
                 _currentChat.PersonalityName,
-                _currentChat.PersonalityPrompt);
+                _currentChat.PersonalityPrompt,
+                SerializeSelectedDocumentIds());
             _currentChat.Messages = Messages.Select(m => new ChatMessage
             {
                 Role = m.IsUser ? "user" : "bot",
                 Text = m.Text
             }).ToList();
+            _currentChat.SelectedDocumentIds = SerializeSelectedDocumentIds();
 
             RebuildInferenceSession();
             ApplyDeveloperStats(_developerStatsService.Build(
@@ -339,6 +366,7 @@ public class ChatViewModel : BindableObject
 
             var entry = await _ragDocumentService.ImportDocumentAsync(result);
             await ShowAlertAsync("Documento", $"{entry.DisplayName} foi adicionado ao RAG local.");
+            await LoadDocumentsAsync();
         }
         catch (Exception ex)
         {
@@ -387,6 +415,116 @@ public class ChatViewModel : BindableObject
     private void ClearSelectedImage()
     {
         SelectedImagePath = null;
+    }
+
+    private async Task LoadDocumentsAsync()
+    {
+        var documents = await _ragDocumentService.LoadDocumentsAsync();
+        var storedSelection = _currentChat?.SelectedDocumentIds;
+        var selectedIds = storedSelection == null ? null : ParseSelectedDocumentIds(storedSelection);
+
+        _isSyncingDocumentSelection = true;
+        try
+        {
+            Documents.Clear();
+            foreach (var document in documents)
+            {
+                document.PropertyChanged -= OnDocumentPropertyChanged;
+                document.PropertyChanged += OnDocumentPropertyChanged;
+                document.IsSelected = selectedIds == null || selectedIds.Contains(document.Id);
+                Documents.Add(document);
+            }
+
+            UseAllDocuments = Documents.Count == 0 || Documents.All(doc => doc.IsSelected);
+            OnPropertyChanged(nameof(HasDocumentSelection));
+        }
+        finally
+        {
+            _isSyncingDocumentSelection = false;
+        }
+    }
+
+    private void OnDocumentPropertyChanged(object? sender, System.ComponentModel.PropertyChangedEventArgs e)
+    {
+        if (e.PropertyName != nameof(RagDocumentEntry.IsSelected))
+            return;
+
+        if (_isSyncingDocumentSelection)
+            return;
+
+        UseAllDocuments = Documents.Count == 0 || Documents.All(doc => doc.IsSelected);
+        _currentChat?.SelectedDocumentIds = SerializeSelectedDocumentIds();
+        if (_currentChat != null)
+            _ = ChatStorage.UpdateChatSelectedDocumentsAsync(_chatId, _currentChat.SelectedDocumentIds);
+    }
+
+    private void SelectAllDocuments()
+    {
+        _isSyncingDocumentSelection = true;
+        try
+        {
+            foreach (var document in Documents)
+                document.IsSelected = true;
+
+            UseAllDocuments = true;
+            _currentChat?.SelectedDocumentIds = string.Empty;
+        }
+        finally
+        {
+            _isSyncingDocumentSelection = false;
+        }
+
+        if (_currentChat != null)
+            _ = ChatStorage.UpdateChatSelectedDocumentsAsync(_chatId, string.Empty);
+    }
+
+    private IReadOnlyCollection<long>? GetAllowedDocumentIds()
+    {
+        var selected = Documents.Where(doc => doc.IsSelected).Select(doc => doc.Id).ToList();
+        if (selected.Count == 0)
+            return [];
+
+        if (selected.Count == Documents.Count)
+            return null;
+
+        return selected;
+    }
+
+    private void ApplySelectedDocuments(string? selectedIds)
+    {
+        if (selectedIds == null)
+        {
+            foreach (var document in Documents)
+                document.IsSelected = true;
+            return;
+        }
+
+        var ids = ParseSelectedDocumentIds(selectedIds);
+        foreach (var document in Documents)
+            document.IsSelected = ids.Contains(document.Id);
+    }
+
+    private string SerializeSelectedDocumentIds()
+    {
+        var selected = Documents.Where(doc => doc.IsSelected).Select(doc => doc.Id).ToList();
+        if (selected.Count == 0)
+            return string.Empty;
+
+        if (selected.Count == Documents.Count)
+            return string.Join(',', Documents.Select(doc => doc.Id));
+
+        return string.Join(',', selected);
+    }
+
+    private static HashSet<long> ParseSelectedDocumentIds(string selectedIds)
+    {
+        var ids = selectedIds
+            .Split(',', StringSplitOptions.RemoveEmptyEntries | StringSplitOptions.TrimEntries)
+            .Select(part => long.TryParse(part, out var id) ? id : -1)
+            .Where(id => id > 0)
+            .ToHashSet();
+
+        return ids;
     }
 
     private void RefreshDeveloperStats()

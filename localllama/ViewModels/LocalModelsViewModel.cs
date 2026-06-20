@@ -1,4 +1,5 @@
 using System.Collections.ObjectModel;
+using System.Text.Json;
 using localllama.Models;
 using localllama.Services;
 
@@ -16,6 +17,7 @@ public class LocalModelsViewModel : BindableObject
         ImportModelCommand = new Command(async () => await ImportModelAsync());
         UseModelCommand = new Command<AIModel>(async m => await UseModelAsync(m));
         RemoveModelCommand = new Command<AIModel>(async m => await RemoveModelAsync(m));
+        ImportMmprojCommand = new Command<AIModel>(async m => await ImportMmprojAsync(m));
     }
 
     public ObservableCollection<AIModel> LocalModels { get; } = new();
@@ -24,6 +26,7 @@ public class LocalModelsViewModel : BindableObject
     public Command ImportModelCommand { get; }
     public Command<AIModel> UseModelCommand { get; }
     public Command<AIModel> RemoveModelCommand { get; }
+    public Command<AIModel> ImportMmprojCommand { get; }
 
     public bool IsImporting
     {
@@ -73,11 +76,14 @@ public class LocalModelsViewModel : BindableObject
             return;
         }
 
-        var files = Directory.GetFiles(modelsDir, "*.gguf", SearchOption.TopDirectoryOnly);
+        var files = Directory.GetFiles(modelsDir, "*", SearchOption.TopDirectoryOnly)
+            .Where(IsModelFile);
+
         foreach (var file in files)
         {
             var info = new FileInfo(file);
             var isSelected = string.Equals(file, ModelConfig.SelectedModelPath, StringComparison.OrdinalIgnoreCase);
+            var mmprojPath = LoadAssociatedMmprojPath(file);
             LocalModels.Add(new AIModel
             {
                 Name = Path.GetFileNameWithoutExtension(file),
@@ -86,9 +92,18 @@ public class LocalModelsViewModel : BindableObject
                 Url = string.Empty,
                 SizeText = FormatSize(info.Length),
                 DateText = info.LastWriteTime.ToString("yyyy-MM-dd"),
+                HasMmproj = !string.IsNullOrWhiteSpace(mmprojPath),
+                MmprojFileName = mmprojPath == null ? string.Empty : Path.GetFileName(mmprojPath),
                 IsSelected = isSelected
             });
         }
+    }
+
+    private static bool IsModelFile(string path)
+    {
+        var name = Path.GetFileName(path);
+        return name.EndsWith(".gguf", StringComparison.OrdinalIgnoreCase)
+            && !name.Contains(".mmproj", StringComparison.OrdinalIgnoreCase);
     }
 
     private async Task ImportModelAsync()
@@ -217,6 +232,95 @@ public class LocalModelsViewModel : BindableObject
         {
             await ShowAlertAsync("Erro", $"Não foi possível remover: {ex.Message}");
         }
+    }
+
+    private async Task ImportMmprojAsync(AIModel? model)
+    {
+        if (model == null)
+            return;
+
+        var modelsDir = Path.Combine(FileSystem.AppDataDirectory, "models");
+        var modelPath = Path.Combine(modelsDir, model.FileName);
+        if (!File.Exists(modelPath))
+        {
+            await ShowAlertAsync("Erro", "Modelo não encontrado.");
+            return;
+        }
+
+        var result = await FilePicker.Default.PickAsync(new PickOptions
+        {
+            PickerTitle = $"Importar mmproj para {model.FileName}",
+            FileTypes = new FilePickerFileType(new Dictionary<DevicePlatform, IEnumerable<string>>
+            {
+                { DevicePlatform.MacCatalyst, new[] { "mmproj", "bin", "gguf" } },
+                { DevicePlatform.iOS, new[] { "mmproj", "bin", "gguf" } },
+                { DevicePlatform.Android, new[] { "application/octet-stream" } },
+                { DevicePlatform.WinUI, new[] { ".mmproj", ".bin", ".gguf" } }
+            })
+        });
+
+        if (result == null)
+            return;
+
+        var targetPath = GetAssociatedMmprojPath(modelPath);
+        try
+        {
+            await using var src = await result.OpenReadAsync();
+            await using var dest = File.Open(targetPath, FileMode.Create, FileAccess.Write, FileShare.None);
+            await src.CopyToAsync(dest);
+            await dest.FlushAsync();
+
+            SaveAssociatedMmprojPath(modelPath, targetPath);
+            await LoadLocalModelsAsync();
+            await ShowAlertAsync("mmproj associado", Path.GetFileName(targetPath));
+        }
+        catch (Exception ex)
+        {
+            await ShowAlertAsync("Erro", $"Não foi possível importar o mmproj: {ex.Message}");
+        }
+    }
+
+    private static string GetAssociatedMmprojPath(string modelPath)
+    {
+        var dir = Path.GetDirectoryName(modelPath) ?? FileSystem.AppDataDirectory;
+        var baseName = Path.GetFileNameWithoutExtension(modelPath);
+        return Path.Combine(dir, $"{baseName}.mmproj.gguf");
+    }
+
+    private static string GetMmprojMetadataPath(string modelPath)
+        => $"{modelPath}.mmproj.json";
+
+    private static string? LoadAssociatedMmprojPath(string modelPath)
+    {
+        var metadataPath = GetMmprojMetadataPath(modelPath);
+        if (!File.Exists(metadataPath))
+            return null;
+
+        try
+        {
+            var json = File.ReadAllText(metadataPath);
+            var data = JsonSerializer.Deserialize<MmprojAssociation>(json);
+            if (data == null || string.IsNullOrWhiteSpace(data.MmprojPath))
+                return null;
+
+            return File.Exists(data.MmprojPath) ? data.MmprojPath : null;
+        }
+        catch
+        {
+            return null;
+        }
+    }
+
+    private static void SaveAssociatedMmprojPath(string modelPath, string mmprojPath)
+    {
+        var metadataPath = GetMmprojMetadataPath(modelPath);
+        var data = new MmprojAssociation { MmprojPath = mmprojPath };
+        File.WriteAllText(metadataPath, JsonSerializer.Serialize(data));
+    }
+
+    private sealed class MmprojAssociation
+    {
+        public string MmprojPath { get; set; } = string.Empty;
     }
 
     private static Task ShowAlertAsync(string title, string message)

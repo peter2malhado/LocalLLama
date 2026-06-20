@@ -134,19 +134,28 @@ public class ChatInferenceService
 
         try
         {
-            if (!string.IsNullOrWhiteSpace(imagePath))
-                _mtmdWeights?.LoadMedia(imagePath);
-
-            await foreach (var text in _session.ChatAsync(new ChatHistory.Message(AuthorRole.User, prompt), _inferenceParams))
+            if (!string.IsNullOrWhiteSpace(imagePath) && _mtmdWeights != null)
             {
-                reply += text;
-                updateCount++;
-
-                var cleaned = CleanReply(reply);
-                onPartial(cleaned);
-
-                if (updateCount % 3 == 0)
-                    await Task.Delay(1);
+                try
+                {
+                    _mtmdWeights.LoadMedia(imagePath);
+                    await foreach (var text in _session.ChatAsync(new ChatHistory.Message(AuthorRole.User, prompt), _inferenceParams))
+                        reply = AppendReplyChunk(reply, text, ref updateCount, onPartial);
+                }
+                catch (Exception ex) when (IsMultimodalTokenizeError(ex))
+                {
+                    _modelLoadDiagnostics.Add($"VisionFallback={ex.GetType().Name}:{ex.Message}");
+                    _mtmdWeights.ClearMedia();
+                    reply = string.Empty;
+                    updateCount = 0;
+                    await foreach (var text in _session.ChatAsync(new ChatHistory.Message(AuthorRole.User, prompt), _inferenceParams))
+                        reply = AppendReplyChunk(reply, text, ref updateCount, onPartial);
+                }
+            }
+            else
+            {
+                await foreach (var text in _session.ChatAsync(new ChatHistory.Message(AuthorRole.User, prompt), _inferenceParams))
+                    reply = AppendReplyChunk(reply, text, ref updateCount, onPartial);
             }
         }
         finally
@@ -163,6 +172,19 @@ public class ChatInferenceService
             FinalText = finalText,
             Elapsed = timer.Elapsed
         };
+    }
+
+    private static string AppendReplyChunk(string reply, string text, ref int updateCount, Action<string> onPartial)
+    {
+        reply += text;
+        updateCount++;
+
+        onPartial(CleanReply(reply));
+
+        if (updateCount % 3 == 0)
+            Task.Delay(1).GetAwaiter().GetResult();
+
+        return reply;
     }
 
     public static string BuildDetailedError(Exception ex)
@@ -183,6 +205,12 @@ public class ChatInferenceService
         return reply.Replace("bob:", "", StringComparison.OrdinalIgnoreCase)
             .Replace("User:", "", StringComparison.OrdinalIgnoreCase)
             .Trim();
+    }
+
+    private static bool IsMultimodalTokenizeError(Exception ex)
+    {
+        return ex.Message.Contains("Failed to tokenize multimodal prompt", StringComparison.OrdinalIgnoreCase) ||
+               ex.Message.Contains("multimodal prompt", StringComparison.OrdinalIgnoreCase);
     }
 
     private MtmdWeights? TryLoadVisionWeights(LLamaWeights model, string modelPath)
@@ -213,6 +241,10 @@ public class ChatInferenceService
 
     private static string? ResolveMmprojPath(string modelPath)
     {
+        var associated = ResolveAssociatedMmprojPath(modelPath);
+        if (!string.IsNullOrWhiteSpace(associated))
+            return associated;
+
         var dir = Path.GetDirectoryName(modelPath);
         if (string.IsNullOrWhiteSpace(dir) || !Directory.Exists(dir))
             return null;
@@ -233,6 +265,32 @@ public class ChatInferenceService
 
         return Directory.GetFiles(dir, "*mmproj*", SearchOption.TopDirectoryOnly)
             .FirstOrDefault(File.Exists);
+    }
+
+    private static string? ResolveAssociatedMmprojPath(string modelPath)
+    {
+        var metadataPath = $"{modelPath}.mmproj.json";
+        if (!File.Exists(metadataPath))
+            return null;
+
+        try
+        {
+            var json = File.ReadAllText(metadataPath);
+            var data = System.Text.Json.JsonSerializer.Deserialize<MmprojAssociation>(json);
+            if (data == null || string.IsNullOrWhiteSpace(data.MmprojPath))
+                return null;
+
+            return File.Exists(data.MmprojPath) ? data.MmprojPath : null;
+        }
+        catch
+        {
+            return null;
+        }
+    }
+
+    private sealed class MmprojAssociation
+    {
+        public string MmprojPath { get; set; } = string.Empty;
     }
 
     private static string ResolveModelPath(string? selectedModelPath, string defaultModelFile, List<string>? diagnostics = null)

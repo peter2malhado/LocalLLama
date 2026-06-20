@@ -25,11 +25,22 @@
   <component name="ChangeListManager">
     <list default="true" id="3d9c196b-eab1-473a-a7fa-71a922d2b3a8" name="Changes" comment="">
       <change beforePath="$PROJECT_DIR$/.idea/.idea.localllama/.idea/workspace.xml" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/.idea.localllama/.idea/workspace.xml" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/localllama/ChatSession.cs" beforeDir="false" afterPath="$PROJECT_DIR$/localllama/ChatSession.cs" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/localllama/ChatStorage.cs" beforeDir="false" afterPath="$PROJECT_DIR$/localllama/ChatStorage.cs" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/localllama/ChatViewModel.cs" beforeDir="false" afterPath="$PROJECT_DIR$/localllama/ChatViewModel.cs" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/localllama/DatabaseHelper.cs" beforeDir="false" afterPath="$PROJECT_DIR$/localllama/DatabaseHelper.cs" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/localllama/GenerateDocumentPage.xaml" beforeDir="false" afterPath="$PROJECT_DIR$/localllama/GenerateDocumentPage.xaml" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/localllama/LocalModelsPage.xaml" beforeDir="false" afterPath="$PROJECT_DIR$/localllama/LocalModelsPage.xaml" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/localllama/Models/AIModel.cs" beforeDir="false" afterPath="$PROJECT_DIR$/localllama/Models/AIModel.cs" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/localllama/Models/RagDocumentEntry.cs" beforeDir="false" afterPath="$PROJECT_DIR$/localllama/Models/RagDocumentEntry.cs" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/localllama/Services/ChatConversationService.cs" beforeDir="false" afterPath="$PROJECT_DIR$/localllama/Services/ChatConversationService.cs" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/localllama/Services/ChatInferenceService.cs" beforeDir="false" afterPath="$PROJECT_DIR$/localllama/Services/ChatInferenceService.cs" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/localllama/Services/RagDocumentPickerOptions.cs" beforeDir="false" afterPath="$PROJECT_DIR$/localllama/Services/RagDocumentPickerOptions.cs" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/localllama/Services/RagDocumentService.cs" beforeDir="false" afterPath="$PROJECT_DIR$/localllama/Services/RagDocumentService.cs" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/localllama/Services/RagOrchestratorService.cs" beforeDir="false" afterPath="$PROJECT_DIR$/localllama/Services/RagOrchestratorService.cs" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/localllama/ViewModels/LocalModelsViewModel.cs" beforeDir="false" afterPath="$PROJECT_DIR$/localllama/ViewModels/LocalModelsViewModel.cs" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/localllama/chatpage.xaml" beforeDir="false" afterPath="$PROJECT_DIR$/localllama/chatpage.xaml" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/localllama/localllama.csproj" beforeDir="false" afterPath="$PROJECT_DIR$/localllama/localllama.csproj" afterDir="false" />
     </list>
     <option name="SHOW_DIALOG" value="false" />
     <option name="HIGHLIGHT_CONFLICTS" value="true" />
@@ -171,7 +182,7 @@
     </decayedShown>
   </component>
   <component name="ProblemsViewState">
-    <option name="selectedTabId" value="CurrentFile" />
+    <option name="selectedTabId" value="SWEA" />
   </component>
   <component name="ProjectColorInfo">{
   &quot;associatedIndex&quot;: 4
@@ -187,44 +198,44 @@
     <option name="hideEmptyMiddlePackages" value="true" />
     <option name="showLibraryContents" value="true" />
   </component>
-  <component name="PropertiesComponent">{
-  &quot;keyToString&quot;: {
-    &quot;Android.chatbot.executor&quot;: &quot;Run&quot;,
-    &quot;Android.localllama.executor&quot;: &quot;Debug&quot;,
-    &quot;Device#class com.jetbrains.rider.run.multiPlatform.ios.devices.IOSSimulatorKind#com.jetbrains.rider.run.multiPlatform.ios.devices.IOSDevicesProvider#iOS: chatbot&quot;: &quot;iPhone 16e (iOS 26.0)&quot;,
-    &quot;Device#class com.jetbrains.rider.run.multiPlatform.ios.devices.IOSSimulatorKind#com.jetbrains.rider.run.multiPlatform.ios.devices.IOSDevicesProvider#iOS: localllama&quot;: &quot;iPhone 17 Pro (iOS 26.0)&quot;,
-    &quot;DeviceKind#com.jetbrains.rider.run.multiPlatform.ios.devices.IOSDevicesProvider&quot;: &quot;Simulator&quot;,
-    &quot;ModuleVcsDetector.initialDetectionPerformed&quot;: &quot;true&quot;,
-    &quot;Publish to folder.Publish chatbot to folder.executor&quot;: &quot;Run&quot;,
-    &quot;Publish to folder.Publish localllama to folder.executor&quot;: &quot;Run&quot;,
-    &quot;Publish to folder.Publish test.executor&quot;: &quot;Run&quot;,
-    &quot;Publish to folder.o melhor .executor&quot;: &quot;Run&quot;,
-    &quot;RunOnceActivity.MCP Project settings loaded&quot;: &quot;true&quot;,
-    &quot;RunOnceActivity.ShowReadmeOnStart&quot;: &quot;true&quot;,
-    &quot;RunOnceActivity.TerminalTabsStorage.copyFrom.TerminalArrangementManager.252&quot;: &quot;true&quot;,
-    &quot;RunOnceActivity.cidr.known.project.marker&quot;: &quot;true&quot;,
-    &quot;RunOnceActivity.git.unshallow&quot;: &quot;true&quot;,
-    &quot;RunOnceActivity.readMode.enableVisualFormatting&quot;: &quot;true&quot;,
-    &quot;RunOnceActivity.typescript.service.memoryLimit.init&quot;: &quot;true&quot;,
-    &quot;cidr.known.project.marker&quot;: &quot;true&quot;,
-    &quot;codeWithMe.voiceChat.enabledByDefault&quot;: &quot;false&quot;,
-    &quot;com.intellij.ml.llm.matterhorn.ej.ui.settings.DefaultModelSelectionForGA.v1&quot;: &quot;true&quot;,
-    &quot;git-widget-placeholder&quot;: &quot;copilot-docs-generation&quot;,
-    &quot;iOS.chatbot.executor&quot;: &quot;Run&quot;,
-    &quot;iOS.localllama.executor&quot;: &quot;Debug&quot;,
-    &quot;junie.onboarding.icon.badge.shown&quot;: &quot;true&quot;,
-    &quot;macOS.chatbot.executor&quot;: &quot;Run&quot;,
-    &quot;macOS.localllama.executor&quot;: &quot;Run&quot;,
-    &quot;node.js.detected.package.eslint&quot;: &quot;true&quot;,
-    &quot;node.js.detected.package.tslint&quot;: &quot;true&quot;,
-    &quot;node.js.selected.package.eslint&quot;: &quot;(autodetect)&quot;,
-    &quot;node.js.selected.package.tslint&quot;: &quot;(autodetect)&quot;,
-    &quot;nodejs_package_manager_path&quot;: &quot;npm&quot;,
-    &quot;settings.editor.selected.configurable&quot;: &quot;editor.preferences.fonts.default&quot;,
-    &quot;to.speed.mode.migration.done&quot;: &quot;true&quot;,
-    &quot;vue.rearranger.settings.migration&quot;: &quot;true&quot;
+  <component name="PropertiesComponent"><![CDATA[{
+  "keyToString": {
+    "Android.chatbot.executor": "Run",
+    "Android.localllama.executor": "Debug",
+    "Device#class com.jetbrains.rider.run.multiPlatform.ios.devices.IOSSimulatorKind#com.jetbrains.rider.run.multiPlatform.ios.devices.IOSDevicesProvider#iOS: chatbot": "iPhone 16e (iOS 26.0)",
+    "Device#class com.jetbrains.rider.run.multiPlatform.ios.devices.IOSSimulatorKind#com.jetbrains.rider.run.multiPlatform.ios.devices.IOSDevicesProvider#iOS: localllama": "iPhone 17 Pro (iOS 26.0)",
+    "DeviceKind#com.jetbrains.rider.run.multiPlatform.ios.devices.IOSDevicesProvider": "Simulator",
+    "ModuleVcsDetector.initialDetectionPerformed": "true",
+    "Publish to folder.Publish chatbot to folder.executor": "Run",
+    "Publish to folder.Publish localllama to folder.executor": "Run",
+    "Publish to folder.Publish test.executor": "Run",
+    "Publish to folder.o melhor .executor": "Run",
+    "RunOnceActivity.MCP Project settings loaded": "true",
+    "RunOnceActivity.ShowReadmeOnStart": "true",
+    "RunOnceActivity.TerminalTabsStorage.copyFrom.TerminalArrangementManager.252": "true",
+    "RunOnceActivity.cidr.known.project.marker": "true",
+    "RunOnceActivity.git.unshallow": "true",
+    "RunOnceActivity.readMode.enableVisualFormatting": "true",
+    "RunOnceActivity.typescript.service.memoryLimit.init": "true",
+    "cidr.known.project.marker": "true",
+    "codeWithMe.voiceChat.enabledByDefault": "false",
+    "com.intellij.ml.llm.matterhorn.ej.ui.settings.DefaultModelSelectionForGA.v1": "true",
+    "git-widget-placeholder": "copilot-docs-generation",
+    "iOS.chatbot.executor": "Run",
+    "iOS.localllama.executor": "Debug",
+    "junie.onboarding.icon.badge.shown": "true",
+    "macOS.chatbot.executor": "Run",
+    "macOS.localllama.executor": "Run",
+    "node.js.detected.package.eslint": "true",
+    "node.js.detected.package.tslint": "true",
+    "node.js.selected.package.eslint": "(autodetect)",
+    "node.js.selected.package.tslint": "(autodetect)",
+    "nodejs_package_manager_path": "npm",
+    "settings.editor.selected.configurable": "editor.preferences.fonts.default",
+    "to.speed.mode.migration.done": "true",
+    "vue.rearranger.settings.migration": "true"
   }
-}</component>
+}]]></component>
   <component name="RunManager" selected="macOS.localllama">
     <configuration name="Publish chatbot to folder" type="DotNetFolderPublish" factoryName="Publish to folder">
       <riderPublish configuration="Release" platform="Any CPU" self_contained="true" target_folder="$PROJECT_DIR$/chatbot/bin/Release/net9.0-maccatalyst/publish" target_framework="net9.0-maccatalyst" uuid_high="-3276868341325936462" uuid_low="-7237507979231653480">
@@ -367,7 +378,7 @@
       <workItem from="1777203759612" duration="1430000" />
       <workItem from="1777624672240" duration="259000" />
       <workItem from="1777652839269" duration="2687000" />
-      <workItem from="1781623079363" duration="8744000" />
+      <workItem from="1781623079363" duration="21550000" />
     </task>
     <task id="LOCAL-00001" summary="fix para o mac os &#10;tive de fazer que o mac os puxe os dll manualmente no nativelibraryhelper uma classe so para o macos">
       <option name="closed" value="true" />
@@ -505,7 +516,15 @@
       <option name="project" value="LOCAL" />
       <updated>1781796191455</updated>
     </task>
-    <option name="localTasksCounter" value="18" />
+    <task id="LOCAL-00018" summary="Correção do chat page com a foto mudanças estética só">
+      <option name="closed" value="true" />
+      <created>1781801630435</created>
+      <option name="number" value="00018" />
+      <option name="presentableId" value="LOCAL-00018" />
+      <option name="project" value="LOCAL" />
+      <updated>1781801630435</updated>
+    </task>
+    <option name="localTasksCounter" value="19" />
     <servers />
   </component>
   <component name="TypeScriptGeneratedFilesManager">
@@ -589,7 +608,8 @@
     <MESSAGE value="fica em pauza" />
     <MESSAGE value="esta merda so nao funcinaa" />
     <MESSAGE value="novas Funções &#10;uma de fazer docs o user faz um pormpt e ele cria um docs pdf ou codigo mesmo &#10;&#10;agora em testes a funcao de ele ver uma imagem e poder interpertar ela" />
-    <option name="LAST_COMMIT_MESSAGE" value="novas Funções &#10;uma de fazer docs o user faz um pormpt e ele cria um docs pdf ou codigo mesmo &#10;&#10;agora em testes a funcao de ele ver uma imagem e poder interpertar ela" />
+    <MESSAGE value="Correção do chat page com a foto mudanças estética só" />
+    <option name="LAST_COMMIT_MESSAGE" value="Correção do chat page com a foto mudanças estética só" />
   </component>
   <component name="XDebuggerManager">
     <breakpoint-manager>

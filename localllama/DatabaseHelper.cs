@@ -71,7 +71,8 @@ public static class DatabaseHelper
                     UserId TEXT,
                     Title TEXT NOT NULL,
                     PersonalityName TEXT,
-                    PersonalityPrompt TEXT
+                    PersonalityPrompt TEXT,
+                    SelectedDocumentIds TEXT
                 );";
 
         // Criar tabela de mensagens
@@ -129,6 +130,7 @@ public static class DatabaseHelper
 
         EnsureColumnExists(connection, "ChatSessions", "PersonalityName", "TEXT");
         EnsureColumnExists(connection, "ChatSessions", "PersonalityPrompt", "TEXT");
+        EnsureColumnExists(connection, "ChatSessions", "SelectedDocumentIds", "TEXT");
 
         using var command2 = new SqliteCommand(createMessagesTable, connection);
         command2.ExecuteNonQuery();

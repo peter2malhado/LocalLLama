@@ -13,8 +13,11 @@ public class RagOrchestratorService
     }
 
     public async Task<string> BuildPromptAsync(string userInput)
+        => await BuildPromptAsync(userInput, null);
+
+    public async Task<string> BuildPromptAsync(string userInput, IReadOnlyCollection<long>? allowedDocumentIds)
     {
-        var localContext = await _ragDocumentService.BuildContextBlockAsync(userInput);
+        var localContext = await _ragDocumentService.BuildContextBlockAsync(userInput, allowedDocumentIds: allowedDocumentIds);
         var webContext = await _webSearchService.SearchWebAsync(userInput);
         var memoryContext = await PersistentMemoryService.BuildContextBlockAsync(userInput);
 

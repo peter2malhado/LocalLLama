@@ -45,7 +45,8 @@ public class ChatConversationService
         string title,
         IEnumerable<Message> messages,
         string? personalityName = null,
-        string? personalityPrompt = null)
+        string? personalityPrompt = null,
+        string? selectedDocumentIds = null)
     {
         var allChats = await ChatStorage.LoadChatsAsync();
         var existing = allChats.FirstOrDefault(c => c.Id == chatId);
@@ -61,6 +62,7 @@ public class ChatConversationService
             existing.Title = title;
             existing.PersonalityName = personalityName ?? existing.PersonalityName;
             existing.PersonalityPrompt = personalityPrompt ?? existing.PersonalityPrompt;
+            existing.SelectedDocumentIds = selectedDocumentIds ?? existing.SelectedDocumentIds;
             existing.Messages = mappedMessages;
         }
         else
@@ -71,6 +73,7 @@ public class ChatConversationService
                 Title = title,
                 PersonalityName = personalityName ?? PersonalitySelectionService.Selected.Name,
                 PersonalityPrompt = personalityPrompt ?? PersonalitySelectionService.Selected.Prompt,
+                SelectedDocumentIds = selectedDocumentIds ?? string.Empty,
                 Messages = mappedMessages
             });
         }

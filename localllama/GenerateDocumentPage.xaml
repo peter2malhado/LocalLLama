@@ -77,24 +77,26 @@
                 <Border.StrokeShape>
                     <RoundRectangle CornerRadius="14" />
                 </Border.StrokeShape>
-                <Grid ColumnDefinitions="Auto,*" ColumnSpacing="12">
-                    <Label Text="Extensão"
-                           TextColor="#D0D5E6"
-                           FontSize="15"
-                           VerticalOptions="Center" />
-                    <Picker Grid.Column="1"
-                            ItemsSource="{Binding CodeExtensions}"
-                            SelectedItem="{Binding SelectedCodeExtension}"
-                            Title="Escolher extensão"
-                            TextColor="White"
-                            TitleColor="#777F99"
-                            BackgroundColor="Transparent"
-                            VerticalOptions="Center" />
-                </Grid>
-                <Label Text="A extensão escolhida fica no ficheiro gerado e no botão Exportar."
-                       TextColor="#8E96B2"
-                       FontSize="11"
-                       Margin="0,8,0,0" />
+                <VerticalStackLayout Spacing="6">
+                    <Grid ColumnDefinitions="Auto,*" ColumnSpacing="12">
+                        <Label Text="Extensão"
+                               TextColor="#D0D5E6"
+                               FontSize="15"
+                               VerticalOptions="Center" />
+                        <Picker Grid.Column="1"
+                                ItemsSource="{Binding CodeExtensions}"
+                                SelectedItem="{Binding SelectedCodeExtension}"
+                                Title="Escolher extensão"
+                                TextColor="White"
+                                TitleColor="#777F99"
+                                BackgroundColor="Transparent"
+                                VerticalOptions="Center" />
+                    </Grid>
+                    <Label Text="A extensão escolhida fica no ficheiro gerado e no botão Exportar."
+                           TextColor="#8E96B2"
+                           FontSize="11"
+                           Margin="0,8,0,0" />
+                </VerticalStackLayout>
             </Border>
 
             <!-- Botão Gerar -->

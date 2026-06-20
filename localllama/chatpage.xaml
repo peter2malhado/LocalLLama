@@ -4,211 +4,285 @@
              BackgroundColor="#1E1E1E"
              Padding="10">
 
-    <Grid RowDefinitions="Auto,*,Auto,Auto">
+    <Grid ColumnDefinitions="300,*"
+          RowDefinitions="*">
 
-        <Grid Grid.Row="0"
-              ColumnDefinitions="*,Auto"
-              Padding="4,0,4,10">
-            <Label Text="Conversa"
-                   FontSize="22"
-                   FontAttributes="Bold"
-                   TextColor="White"
-                   VerticalOptions="Center" />
+        <Border Grid.Column="0"
+                BackgroundColor="#171B28"
+                Stroke="#2A3044"
+                StrokeThickness="1"
+                Padding="14"
+                Margin="0,0,10,0">
+            <Border.StrokeShape>
+                <RoundRectangle CornerRadius="24" />
+            </Border.StrokeShape>
 
-            <Frame Grid.Column="1"
-                   Padding="12,6"
-                   BackgroundColor="#2B2B40"
-                   BorderColor="#45456B"
-                   CornerRadius="16"
+            <VerticalStackLayout Spacing="14">
+                <Grid ColumnDefinitions="*,Auto">
+                    <Label Text="Fontes"
+                           FontSize="22"
+                           FontAttributes="Bold"
+                           TextColor="White" />
+                    <Button Grid.Column="1"
+                            Text="Todos"
+                            BackgroundColor="#2D3550"
+                            TextColor="White"
+                            CornerRadius="16"
+                            Padding="14,8"
+                            Command="{Binding SelectAllDocumentsCommand}" />
+                </Grid>
+
+                <Button Text="Atualizar"
+                        BackgroundColor="#23293C"
+                        TextColor="White"
+                        CornerRadius="16"
+                        Command="{Binding RefreshDocumentsCommand}" />
+
+                <CollectionView ItemsSource="{Binding Documents}"
+                                BackgroundColor="Transparent"
+                                SelectionMode="None"
+                                HeightRequest="560">
+                    <CollectionView.ItemTemplate>
+                        <DataTemplate>
+                            <Frame BackgroundColor="#20263A"
+                                   BorderColor="#2F3650"
+                                   CornerRadius="16"
+                                   Padding="12"
+                                   HasShadow="False"
+                                   Margin="0,0,0,10">
+                                <Grid ColumnDefinitions="Auto,*"
+                                      ColumnSpacing="12">
+                                    <CheckBox IsChecked="{Binding IsSelected, Mode=TwoWay}"
+                                              Color="#C86A46"
+                                              VerticalOptions="Start" />
+                                    <VerticalStackLayout Grid.Column="1"
+                                                         Spacing="2">
+                                        <Label Text="{Binding DisplayName}"
+                                               TextColor="White"
+                                               FontAttributes="Bold"
+                                               LineBreakMode="TailTruncation" />
+                                        <Label Text="{Binding ChunkCount, StringFormat='{0} blocos'}"
+                                               TextColor="#A6AEC6"
+                                               FontSize="12" />
+                                        <Label Text="{Binding DateText}"
+                                               TextColor="#7F87A3"
+                                               FontSize="12" />
+                                    </VerticalStackLayout>
+                                </Grid>
+                            </Frame>
+                        </DataTemplate>
+                    </CollectionView.ItemTemplate>
+                </CollectionView>
+            </VerticalStackLayout>
+        </Border>
+
+        <Grid Grid.Column="1"
+              RowDefinitions="Auto,*,Auto,Auto">
+            <Grid Grid.Row="0"
+                  ColumnDefinitions="*,Auto"
+                  Padding="4,0,4,10">
+                <Label Text="Conversa"
+                       FontSize="22"
+                       FontAttributes="Bold"
+                       TextColor="White"
+                       VerticalOptions="Center" />
+
+                <Frame Grid.Column="1"
+                       Padding="12,6"
+                       BackgroundColor="#2B2B40"
+                       BorderColor="#45456B"
+                       CornerRadius="16"
+                       HasShadow="False"
+                       HorizontalOptions="End">
+                    <Label Text="{Binding PersonalityName}"
+                           TextColor="#E7D9FF"
+                           FontSize="13"
+                           FontAttributes="Bold" />
+                </Frame>
+            </Grid>
+
+            <!-- Lista de mensagens -->
+            <CollectionView x:Name="MessagesView"
+                            Grid.Row="1"
+                            ItemsSource="{Binding Messages}"
+                            VerticalOptions="FillAndExpand"
+                            BackgroundColor="Transparent"
+                            Margin="0,0,0,10">
+                <CollectionView.ItemsLayout>
+                    <LinearItemsLayout Orientation="Vertical" ItemSpacing="10" />
+                </CollectionView.ItemsLayout>
+                <CollectionView.ItemTemplate>
+                    <DataTemplate>
+                        <Grid Padding="0,5">
+                            <Frame CornerRadius="15"
+                                   Padding="12"
+                                   HasShadow="False"
+                                   BackgroundColor="{Binding IsUser, Converter={StaticResource MessageColorConverter}}"
+                                   HorizontalOptions="{Binding IsUser, Converter={StaticResource MessageAlignmentConverter}}"
+                                   MaximumWidthRequest="280">
+                                <VerticalStackLayout Spacing="8">
+                                    <Image Source="{Binding ImagePath}"
+                                           IsVisible="{Binding HasImage}"
+                                           Aspect="AspectFill"
+                                           HeightRequest="180" />
+                                    <Label Text="{Binding Text}"
+                                           TextColor="White"
+                                           FontSize="16"
+                                           LineBreakMode="WordWrap" />
+                                </VerticalStackLayout>
+                            </Frame>
+                        </Grid>
+                    </DataTemplate>
+                </CollectionView.ItemTemplate>
+            </CollectionView>
+
+            <!-- Área de input -->
+            <Border Grid.Row="2"
+                    BackgroundColor="#2C2C2C"
+                    Stroke="#3A3A52"
+                    StrokeThickness="1"
+                    Padding="14,14,14,16">
+                <Border.StrokeShape>
+                    <RoundRectangle CornerRadius="22" />
+                </Border.StrokeShape>
+
+                <Grid RowDefinitions="Auto,Auto"
+                      ColumnDefinitions="Auto,*,Auto"
+                      RowSpacing="14"
+                      ColumnSpacing="14">
+
+                    <Grid Grid.Row="0"
+                          Grid.ColumnSpan="3"
+                          IsVisible="{Binding HasSelectedImage}"
+                          ColumnDefinitions="Auto,*">
+                        <Grid WidthRequest="132"
+                              HeightRequest="132">
+                            <Frame Padding="0"
+                                   CornerRadius="18"
+                                   BackgroundColor="#141824"
+                                   BorderColor="#45456B"
+                                   HasShadow="False"
+                                   Margin="0">
+                                <Image Source="{Binding SelectedImagePath}"
+                                       Aspect="AspectFill" />
+                            </Frame>
+                            <Button HorizontalOptions="End"
+                                    VerticalOptions="Start"
+                                    Margin="8"
+                                    Text="✕"
+                                    WidthRequest="28"
+                                    HeightRequest="28"
+                                    CornerRadius="14"
+                                    FontSize="12"
+                                    BackgroundColor="#8A2F3B"
+                                    TextColor="White"
+                                    Command="{Binding ClearImageCommand}" />
+                        </Grid>
+                    </Grid>
+
+                    <Button Grid.Row="1"
+                            Text="📎"
+                            FontSize="20"
+                            TextColor="White"
+                            BackgroundColor="#3A3A52"
+                            WidthRequest="48"
+                            HeightRequest="48"
+                            CornerRadius="24"
+                            Command="{Binding ImportDocumentCommand}"
+                            VerticalOptions="End" />
+
+                    <Entry x:Name="MessageEntry"
+                           Grid.Row="1"
+                           Grid.Column="1"
+                           Placeholder="Write a message..."
+                           Text="{Binding CurrentMessage, Mode=TwoWay}"
+                           FontSize="16"
+                           TextColor="White"
+                           PlaceholderColor="#888"
+                           BackgroundColor="Transparent"
+                           VerticalOptions="End"
+                           Margin="4,0"
+                           Completed="MessageEntry_Completed" />
+
+                    <Button Grid.Row="1"
+                            Grid.Column="2"
+                            Text="➤"
+                            FontSize="20"
+                            TextColor="White"
+                            BackgroundColor="#C86A46"
+                            WidthRequest="48"
+                            HeightRequest="48"
+                            CornerRadius="24"
+                            Command="{Binding SendMessageCommand}"
+                            VerticalOptions="End" />
+                </Grid>
+            </Border>
+
+            <Frame Grid.Row="3"
+                   Margin="0,8,0,0"
+                   Padding="10"
+                   CornerRadius="14"
                    HasShadow="False"
-                   HorizontalOptions="End">
-                <Label Text="{Binding PersonalityName}"
-                       TextColor="#E7D9FF"
-                       FontSize="13"
-                       FontAttributes="Bold" />
+                   BorderColor="#2A2A3D"
+                   BackgroundColor="#232338"
+                   IsVisible="{Binding IsDeveloperStatsVisible}">
+                <Grid ColumnDefinitions="*,*"
+                      RowDefinitions="Auto,Auto"
+                      ColumnSpacing="12"
+                      RowSpacing="8">
+                    <VerticalStackLayout Grid.Row="0"
+                                         Grid.Column="0"
+                                         Spacing="2">
+                        <Label Text="Tempo de resposta"
+                               FontSize="12"
+                               TextColor="#9AA0B4" />
+                        <Label Text="{Binding ResponseTimeText}"
+                               FontSize="15"
+                               FontAttributes="Bold"
+                               TextColor="White" />
+                    </VerticalStackLayout>
+
+                    <VerticalStackLayout Grid.Row="0"
+                                         Grid.Column="1"
+                                         Spacing="2">
+                        <Label Text="Tokens estimados"
+                               FontSize="12"
+                               TextColor="#9AA0B4" />
+                        <Label Text="{Binding TokenStatsText}"
+                               FontSize="15"
+                               FontAttributes="Bold"
+                               TextColor="White" />
+                    </VerticalStackLayout>
+
+                    <VerticalStackLayout Grid.Row="1"
+                                         Grid.Column="0"
+                                         Spacing="2">
+                        <Label Text="Contexto"
+                               FontSize="12"
+                               TextColor="#9AA0B4" />
+                        <Label Text="{Binding ContextStatsText}"
+                               FontSize="15"
+                               FontAttributes="Bold"
+                               TextColor="White" />
+                    </VerticalStackLayout>
+
+                    <VerticalStackLayout Grid.Row="1"
+                                         Grid.Column="1"
+                                         Spacing="2">
+                        <Label Text="Uso de RAM"
+                               FontSize="12"
+                               TextColor="#9AA0B4" />
+                        <Label Text="{Binding MemoryUsageText}"
+                               FontSize="15"
+                               FontAttributes="Bold"
+                               TextColor="White" />
+                    </VerticalStackLayout>
+                </Grid>
             </Frame>
         </Grid>
 
-        <!-- Lista de mensagens -->
-        <CollectionView x:Name="MessagesView"
-                        Grid.Row="1"
-                        ItemsSource="{Binding Messages}"
-                        VerticalOptions="FillAndExpand"
-                        BackgroundColor="Transparent"
-                        Margin="0,0,0,10">
-            <CollectionView.ItemsLayout>
-                <LinearItemsLayout Orientation="Vertical" ItemSpacing="10" />
-            </CollectionView.ItemsLayout>
-            <CollectionView.ItemTemplate>
-                <DataTemplate>
-                    <Grid Padding="0,5">
-                        <Frame CornerRadius="15"
-                               Padding="12"
-                               HasShadow="False"
-                               BackgroundColor="{Binding IsUser, Converter={StaticResource MessageColorConverter}}"
-                               HorizontalOptions="{Binding IsUser, Converter={StaticResource MessageAlignmentConverter}}"
-                               MaximumWidthRequest="280">
-                            <VerticalStackLayout Spacing="8">
-                                <Image Source="{Binding ImagePath}"
-                                       IsVisible="{Binding HasImage}"
-                                       Aspect="AspectFill"
-                                       HeightRequest="180" />
-                                <Label Text="{Binding Text}"
-                                       TextColor="White"
-                                       FontSize="16"
-                                       LineBreakMode="WordWrap" />
-                            </VerticalStackLayout>
-                        </Frame>
-                    </Grid>
-                </DataTemplate>
-            </CollectionView.ItemTemplate>
-        </CollectionView>
-
-        <!-- Área de input -->
-        <Border Grid.Row="2"
-                BackgroundColor="#2C2C2C"
-                Stroke="#3A3A52"
-                StrokeThickness="1"
-                Padding="14,14,14,16">
-            <Border.StrokeShape>
-                <RoundRectangle CornerRadius="22" />
-            </Border.StrokeShape>
-
-            <Grid RowDefinitions="Auto,Auto"
-                  ColumnDefinitions="Auto,*,Auto"
-                  RowSpacing="14"
-                  ColumnSpacing="14">
-
-                <Grid Grid.Row="0"
-                      Grid.ColumnSpan="3"
-                      IsVisible="{Binding HasSelectedImage}"
-                      ColumnDefinitions="Auto,*">
-                    <Grid WidthRequest="132"
-                          HeightRequest="132">
-                        <Frame Padding="0"
-                               CornerRadius="18"
-                               BackgroundColor="#141824"
-                               BorderColor="#45456B"
-                               HasShadow="False"
-                               Margin="0">
-                            <Image Source="{Binding SelectedImagePath}"
-                                   Aspect="AspectFill" />
-                        </Frame>
-                        <Button HorizontalOptions="End"
-                                VerticalOptions="Start"
-                                Margin="8"
-                                Text="✕"
-                                WidthRequest="28"
-                                HeightRequest="28"
-                                CornerRadius="14"
-                                FontSize="12"
-                                BackgroundColor="#8A2F3B"
-                                TextColor="White"
-                                Command="{Binding ClearImageCommand}" />
-                    </Grid>
-                </Grid>
-
-                <Button Grid.Row="1"
-                        Text="📎"
-                        FontSize="20"
-                        TextColor="White"
-                        BackgroundColor="#3A3A52"
-                        WidthRequest="48"
-                        HeightRequest="48"
-                        CornerRadius="24"
-                        Command="{Binding ImportDocumentCommand}"
-                        VerticalOptions="End" />
-
-                <Entry x:Name="MessageEntry"
-                       Grid.Row="1"
-                       Grid.Column="1"
-                       Placeholder="Write a message..."
-                       Text="{Binding CurrentMessage, Mode=TwoWay}"
-                       FontSize="16"
-                       TextColor="White"
-                       PlaceholderColor="#888"
-                       BackgroundColor="Transparent"
-                       VerticalOptions="End"
-                       Margin="4,0"
-                       Completed="MessageEntry_Completed" />
-
-                <Button Grid.Row="1"
-                        Grid.Column="2"
-                        Text="➤"
-                        FontSize="20"
-                        TextColor="White"
-                        BackgroundColor="#C86A46"
-                        WidthRequest="48"
-                        HeightRequest="48"
-                        CornerRadius="24"
-                        Command="{Binding SendMessageCommand}"
-                        VerticalOptions="End" />
-            </Grid>
-        </Border>
-
-        <Frame Grid.Row="3"
-               Margin="0,8,0,0"
-               Padding="10"
-               CornerRadius="14"
-               HasShadow="False"
-               BorderColor="#2A2A3D"
-               BackgroundColor="#232338"
-               IsVisible="{Binding IsDeveloperStatsVisible}">
-            <Grid ColumnDefinitions="*,*"
-                  RowDefinitions="Auto,Auto"
-                  ColumnSpacing="12"
-                  RowSpacing="8">
-                <VerticalStackLayout Grid.Row="0"
-                                     Grid.Column="0"
-                                     Spacing="2">
-                    <Label Text="Tempo de resposta"
-                           FontSize="12"
-                           TextColor="#9AA0B4" />
-                    <Label Text="{Binding ResponseTimeText}"
-                           FontSize="15"
-                           FontAttributes="Bold"
-                           TextColor="White" />
-                </VerticalStackLayout>
-
-                <VerticalStackLayout Grid.Row="0"
-                                     Grid.Column="1"
-                                     Spacing="2">
-                    <Label Text="Tokens estimados"
-                           FontSize="12"
-                           TextColor="#9AA0B4" />
-                    <Label Text="{Binding TokenStatsText}"
-                           FontSize="15"
-                           FontAttributes="Bold"
-                           TextColor="White" />
-                </VerticalStackLayout>
-
-                <VerticalStackLayout Grid.Row="1"
-                                     Grid.Column="0"
-                                     Spacing="2">
-                    <Label Text="Contexto"
-                           FontSize="12"
-                           TextColor="#9AA0B4" />
-                    <Label Text="{Binding ContextStatsText}"
-                           FontSize="15"
-                           FontAttributes="Bold"
-                           TextColor="White" />
-                </VerticalStackLayout>
-
-                <VerticalStackLayout Grid.Row="1"
-                                     Grid.Column="1"
-                                     Spacing="2">
-                    <Label Text="Uso de RAM"
-                           FontSize="12"
-                           TextColor="#9AA0B4" />
-                    <Label Text="{Binding MemoryUsageText}"
-                           FontSize="15"
-                           FontAttributes="Bold"
-                           TextColor="White" />
-                </VerticalStackLayout>
-            </Grid>
-        </Frame>
-
-        <Grid Grid.RowSpan="4"
+        <Grid Grid.RowSpan="1"
+              Grid.ColumnSpan="2"
               BackgroundColor="#B0000000"
               IsVisible="{Binding IsModelLoading}"
               InputTransparent="False">
