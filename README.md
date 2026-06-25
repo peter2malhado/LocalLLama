@@ -2,7 +2,7 @@
   <img src="localllama/Resources/AppIcon/o_melhor.png" alt="localllama logo" width="220" />
 </p>
 
-<h1 align="center">localllama</h1>
+<h1 align="center">LocalLLama</h1>
 
 <p align="center">
   A private AI chat app that runs local GGUF models on your own device.
@@ -19,9 +19,9 @@
   <img alt="LLamaSharp" src="https://img.shields.io/badge/LLamaSharp-Local%20Inference-0F172A?style=for-the-badge" />
 </p>
 
-## What is localllama?
+## What is LocalLLama?
 
-`localllama` is a local AI chat application built for people who want a simple, private, and practical way to run language models without depending on a cloud chatbot for the core experience.
+`LocalLLama` is a local AI chat application built for people who want a simple, private, and practical way to run language models without depending on a cloud chatbot for the core experience.
 
 You can sign in, load a local `.gguf` model, start conversations, save your chat history, and even add your own documents so the app can use them as extra context during replies.
 
